@@ -4,14 +4,14 @@ Service to query all item details, like images, ingredients, attributes and addi
 
 ### Concepts & Entities
 * Source: Data sources, it can be a retailer, data provider, laboratory, etc...
-* Object: Group of items gathered mostly by GTIN coincidence (previously item)
-* Item: Item representation on a retailers catalogue, as attribute they have: id, source, group
+* Item: Group of items gathered mostly by GTIN coincidence (previously item)
+* Product: Item representation on a retailer's catalogue, as attribute they have: product_id, source, item_uuid (previously item_retailer)
 * Clss: Class of attributes
 * Attr: Attribute, gathers anything related to a specific **item** (id, retailer)
 
 ## How to setup?
 
-1. Install and configure nginx, setup a server that listens to a unix socket named `./byprice-item.sock`
+1. Install and configure nginx, setup a server that listens to a unix socket named `./catalogue.sock`
 2. Check that you have an open connection to the db
 3. Install virtualenv `pip install virtualenv`
 4. Setup the virtual environment `virtualenv env`
