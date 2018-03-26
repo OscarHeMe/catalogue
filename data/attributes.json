@@ -1,0 +1,206 @@
+{
+    "active" : [],
+    "presentation" : [
+        {
+            "key" : "tablet",
+            "name" : "tabletas",
+            "has_value" : 1,
+            "match" : ["tableta","tabletas","tab","tabs","grajeas","grageas","tabl"]
+        },
+        {
+            "key" : "capsule",
+            "name" : "cápsulas",
+            "has_value" : 1,
+            "match" : ["capsula","capsulas","comprimidos","caps","cap"]
+        },
+        {
+            "key" : "cream",
+            "name" : "crema",
+            "match" : ["crema","cream"]
+        },
+        {
+            "key" : "unit",
+            "name" : "unidades",
+            "has_value" : 1,
+            "match" : ["unidades","unidad","units","pieza","piezas","pz","pzs","pzas", "u" , "h87", "1n", "counts"]
+        },
+        {
+            "key" : "kit",
+            "name" : "kit",
+            "has_value" : 1,
+            "match" : ["set", "sets", "kt", "kit", "kits"]
+        },
+        {
+            "key" : "ointment",
+            "name" : "ungüento",
+            "match" : ["unguento", "ung"]
+        },
+        {
+            "key" : "suspension",
+            "name" : "suspensión",
+            "match" : ["susp","suspension"]
+        },
+        {
+            "key" : "suppository",
+            "name" : "supositorio",
+            "match" : ["supositorio","suppository"]
+        },
+        {
+            "key" : "env",
+            "name" : "sobres",
+            "has_value" : 1,
+            "match" : ["sobre","sobres","envelopes"]
+        },
+        {
+            "key" : "gel",
+            "name" : "gel",
+            "match" : ["gel"]
+        },
+        {
+            "key" : "solution",
+            "name" : "solución",
+            "match" :["sol","solucion","solution","solución"]
+        },
+        {
+            "key" : "drops",
+            "name" : "gotas",
+            "match" :["gotas","gota","drops"]
+        },
+        {
+            "key" : "tube",
+            "name" : "tubo",
+            "match" : ["tubo","tub","tube"]
+        },
+        {
+            "key" : "ampoule",
+            "name" : "ampolletas",
+            "match" : ["ampolletas","ampoules","ampolleta"]
+        }
+    ],
+    "measure_units" : [
+        {
+            "key" : "ml",
+            "name" : "mililitro(s)",
+            "has_value" : 1,
+            "match" : ["ml","mililitros","mltrs","mls","militers", "mlt"]
+        },
+        {
+            "key" : "l",
+            "name" : "litro(s)",
+            "has_value" : 1,
+            "match" : ["l","litros","ltrs","liters", "ltr"]
+        },
+        {
+            "key" : "mg",
+            "name" : "miligramo(s)",
+            "has_value" : 1,
+            "match" : ["miligrams","miligramos","mg","miligramo","mgs", "mc"]
+        },
+        {
+            "key" : "ug",
+            "name" : "microgramo(s)",
+            "has_value" : 1,
+            "match" : ["micrograms","ug","miligramo","mgs"]
+        },
+        {
+            "key" : "g",
+            "name" : "gramo(s)",
+            "has_value" : 1,
+            "match" : ["grams","gramos","g","gramo","gr", "grm"]
+        },
+        {
+            "key" : "onz",
+            "name" : "onza(s)",
+            "has_value" : 1,
+            "match" : ["ounce","ounces","onza","onzas","onz"]
+        },
+        {
+            "key" : "pnt",
+            "name" : "pinta(s)",
+            "has_value" : 1,
+            "match" : ["pint","pinta","ptd", "pti"]
+        },
+        {
+            "key" : "bar",
+            "name" : "bar(es)",
+            "has_value" : 1,
+            "match" : ["bar","bares","bars"]
+        },
+        {
+            "key" : "kg",
+            "name" : "kilogramo(s)",
+            "has_value" : 1,
+            "match" : ["kg","kgs","kilogramos","kilogramo","kilograms","kilogram","kilos", "kilo", "kgm"]
+        },
+        {
+            "key" : "mm",
+            "name" : "milimetro(s)",
+            "has_value" : 1,
+            "match" : ["mm","mms","milimetros","milimetro","millimeters","millimeter", "mmt"]
+        },
+        {
+            "key" : "cm",
+            "name" : "centimetro(s)",
+            "has_value" : 1,
+            "match" : ["cm","cms","centimetros","centimetro","centimeters","centimeter"]
+        },
+        {
+            "key" : "m",
+            "name" : "metro(s)",
+            "has_value" : 1,
+            "match" : ["m","ms","mtr"]
+        },
+        {
+            "key" : "km",
+            "name" : "kilometro(s)",
+            "has_value" : 1,
+            "match" : ["km","kms","kilometros","kilometro","kilometers","kilometer", "kmt"]
+        },
+        {
+            "key" : "par",
+            "name" : "par(es)",
+            "has_value" : 1,
+            "match" : ["par", "pares", "pair", "pairs", "pr"]
+        }
+    ],
+    "size" : [
+        {
+            "key" : "dose",
+            "name" : "dosis",
+            "match" : ["dose","dosis","e27"]
+        },
+        {
+            "key" : "sm",
+            "name" : "chico",
+            "match" : ["ch","chico","pequeno","pequeño","small","sm","chicos","petite"]
+        },
+        {
+            "key" : "md",
+            "name" : "mediano",
+            "match" : ["md","mediano","medium","medianos"]
+        },
+        {
+            "key" : "lg",
+            "name" : "grande",
+            "match" : ["lg","large","grande","grandes"]
+        },
+        {
+            "key" : "xl",
+            "name" : "extra grande",
+            "match" : ["extragrande","extra grande","extra large","xl","xxl","xxxl","extralarge"]
+        }
+    ],
+    "rate": [
+        {
+            "key" : "each",
+            "name" : "cada uno",
+            "match" : ["cu","ea","each","each","c/u","cada"]
+        },
+        {
+            "key" : "portion",
+            "name" : "porciones",
+            "has_value" : 1,
+            "match" : ["numberofservingsperpackage","portions","portion","porciones","servings"]
+        }
+    ]
+}

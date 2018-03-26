@@ -1,0 +1,12 @@
+venv/
+env/
+.envvars
+.dbvars
+*.pyc
+*.csv
+.vscode/
+.envvars
+__pycache__/
+app/__pycache__/
+id_rsa
+

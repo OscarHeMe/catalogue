@@ -1,0 +1,40 @@
+# -*- coding: utf-8 -*-
+from flask import Blueprint, jsonify, request
+from app.models.brand import Brand
+from app.models.item import Item
+from app import errors, logger
+from flask_cors import CORS, cross_origin
+
+mod = Blueprint('brand',__name__,url_prefix="/brand")
+
+
+@mod.route('/')
+@cross_origin(origin="*")
+def get_all():
+    """ Get all brands of a given retailer
+         /brand?retailer=ims&p=1&ipp=200
+    """
+    retailer = request.args.get('retailer') or 'byprice'
+    p = None
+    ipp = None
+    try:
+        p = int(request.args.get('p')) if 'p' in request.args else 1
+        ipp = int(request.args.get('ipp')) if 'ipp' in request.args else 100000
+    except:
+        raise errors.ApiError('invalid_data_type', "Query params with wrong data types!")
+    brands = Brand.get_all(retailer=retailer,p=p,ipp=ipp)
+    if not brands:
+        raise errors.ApiError("invalid_request", "Could not fetch data from Postgres Providers")
+    return jsonify(brands)
+
+
+@mod.route('/filtered', methods=['POST'])
+@cross_origin(origin="*")
+def get_by_filters():
+    filters = request.get_json()
+    items = Item.get_by_filters(filters)
+    print(items)
+    if not items:
+        return jsonify([])
+    brands = Brand.get_by_items([i['item_uuid'] for i in items])
+    return jsonify(brands)

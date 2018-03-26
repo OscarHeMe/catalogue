@@ -1,0 +1,119 @@
+
+{
+    "active" : [],
+    "presentation" : [
+        {
+            "name" : "tablet",
+            "match" : ["tableta","tabletas","tab","tabs","grajeas","grageas","tabl"]
+        },
+        {
+            "name" : "capsule",
+            "match" : ["capsula","capsulas","comprimidos","caps"]
+        },
+        {
+            "name" : "cream",
+            "match" : ["crema"]
+        },
+        {
+            "name": "can",
+            "match": ["lata"]
+        },
+        {
+            "name" : "unit",
+            "match" : ["unidades","unidad","units","pieza","piezas","pz","pzs","pzas"]
+        },
+        {
+            "name" : "ointment",
+            "match" : ["unguento"]
+        },
+        {
+            "name" : "suspension",
+            "match" : ["susp","suspension"]
+        },
+        {
+            "name" : "suppository",
+            "match" : ["supositorio","supository"]
+        },
+        {
+            "name" : "env",
+            "match" : ["sobre","sobres","envelopes"]
+        },
+        {
+            "name" : "gel",
+            "match" : ["gel"]
+        },
+        {
+            "name" : "solution",
+            "match" :["sol","solucion","solution"]
+        },
+        {
+            "name" : "drops",
+            "match" :["gotas","gota","drops"]
+        },
+        {
+            "name" : "tube",
+            "match" : ["tubo","tub","tube"]
+        },
+        {
+            "name" : "ampoule",
+            "match" : ["ampolletas"]
+        }
+    ],
+    "measure_units" : [
+        {
+            "name" : "ml",
+            "match" : ["ml","mililitros","mltrs","mls","militers"]
+        },
+        {
+            "name" : "l",
+            "match" : ["l","litros","ltrs","liters"]
+        },
+        {
+            "name" : "mg",
+            "match" : ["miligrams","miligramos","mg","miligramo","mgs"]
+        },
+        {
+            "name" : "g",
+            "match" : ["grams","gramos","g","gramo","gr"]
+        },
+        {
+            "name" : "kg",
+            "match" : ["kg","kgs","kilogramos","kilogramo","kilograms","kilogram","kilos"]
+        },
+        {
+            "name" : "cm",
+            "match" : ["cm","cms","centimetros","centimetro","centimeters","centimeter"]
+        }
+    ],
+    "size" : [
+        {
+            "name" : "sm",
+            "match" : ["ch","chico","pequeno","small","sm","chicos","petite"]
+        },
+        {
+            "name" : "md",
+            "match" : ["md","mediano","medium","medianos"]
+        },
+        {
+            "name" : "lg",
+            "match" : ["lg","large","grande","grandes"]
+        },
+        {
+            "name" : "xl",
+            "match" : ["extragrande","extra grande","extra large","xl","xxl","xxxl","extralarge"]
+        }
+    ],
+    "presentation_value" : [],
+    "measure_value" : [],
+    "active" : [],
+    "dose" : [],
+    "ingredients" : [],
+    "flavour" : [],
+    "color" : [],
+    "model" : [],
+    "origin" : [],
+    "smell" : [],
+    "country" : [],
+    "type" : [],
+    "style" : []
+}
