@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+__version__ = 'v0.0.1'
 from flask import Flask, request, jsonify, g, session 
 from flask_cors import CORS
 import json
@@ -70,9 +71,10 @@ def initdb_cmd():
 @app.route('/')
 def main():
     return jsonify({
-        'service' : 'ByPrice Item',
-        'author' : 'Jorge Vizcayno',
-        'date' : datetime.datetime.utcnow()
+        'service' : 'ByPrice Catalogue',
+        'author' : 'Byprice Dev',
+        'date' : datetime.datetime.utcnow(),
+        'version': __version__
     })
 
 #Error Handlers
@@ -100,6 +102,7 @@ def handle_api_error(error):
 from app.controllers import item, category, source, provider, brand, ingredient
 
 app.register_blueprint(item.mod, url_prefix='/item')
+app.register_blueprint(item.mod, url_prefix='/product')
 app.register_blueprint(category.mod, url_prefix='/category')
 app.register_blueprint(source.mod, url_prefix='/source')
 app.register_blueprint(provider.mod, url_prefix='/provider')

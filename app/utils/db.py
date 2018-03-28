@@ -40,7 +40,7 @@ def initdb():
 def connectdb():
     """Connects to the specific database."""
     logger.debug("Trying to connect to")
-    logger.debug( str([SQL_HOST, config.SQL_DB, SQL_USER, SQL_PASSWORD, SQL_PORT]) )
+    logger.debug( str([SQL_HOST, config.SQL_DB, SQL_USER, SQL_PORT]) )
     return Pygres(dict(
         SQL_HOST = SQL_HOST,
         SQL_DB = config.SQL_DB,
