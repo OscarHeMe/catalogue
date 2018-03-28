@@ -9,4 +9,4 @@ env/
 __pycache__/
 app/__pycache__/
 id_rsa
-
+run_local.sh

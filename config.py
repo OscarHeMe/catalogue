@@ -12,14 +12,14 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 BASEDIR = BASE_DIR
 PATH = os.path.dirname(os.path.realpath(__file__)) + "/"
 
-# Logging and remote logging
-LOG_LEVEL = os.getenv('LOG_LEVEL', ('DEBUG' if ENV != 'PRODUCTION' else 'DEBUG'))
-LOG_HOST = os.getenv('LOG_HOST', 'logs5.papertrailapp.com')
-LOG_PORT = os.getenv('LOG_PORT', 27971)
-
 # Env
 TESTING=False
 ENV = os.getenv('ENV','DEV')
+
+# Logging and remote logging
+LOG_LEVEL = os.getenv('LOG_LEVEL', ('DEBUG' if ENV != 'PRODUCTION' else 'INFO'))
+LOG_HOST = os.getenv('LOG_HOST', 'logs5.papertrailapp.com')
+LOG_PORT = os.getenv('LOG_PORT', 27971)
 
 # DB vars
 SQL_HOST = os.getenv('SQL_HOST','127.0.0.1')
