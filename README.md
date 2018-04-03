@@ -66,7 +66,6 @@ export LOG_HOST='<remote logging host>'
 export LOG_PORT='<remote logging port>'
 ```
 
-
 ## How do I run it?
 
 ### Web Service
