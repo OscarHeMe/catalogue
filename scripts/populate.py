@@ -23,8 +23,8 @@ print('Connecting to Catalogue PSQL....')
 _db = db.getdb()
 print('Connected to Catalogue PSQL!')
 msrc = _db.model("source","key")
+mit = _db.model("item","item_uuid")
 #mpr = _db.model("product","product_uuid")
-#mit = _db.model("item","item_uuid")
 #mat = _db.model("attr","id_attr")
 #mai = _db.model("attr_item")
 #mii = _db.model("item_image","id_item_image")
@@ -35,7 +35,7 @@ def save_attr_item(obj):
     pass
 
 def save_source(obj):
-    """ Upsert source
+    """ Upsert `Source` Table
     """
     _exists  = _db\
         .query("SELECT EXISTS (SELECT 1 FROM source WHERE key = '{}')"\
@@ -58,15 +58,23 @@ def save_source(obj):
         print(e)
         return False
 
+def save_gtin(obj):
+    """ Upsert `Gtin` Table
+    """
+    pass
+
 def save_items(items):
     """ Loop products and save all information
     """
-    print('Product format:')
+    print('Product format: ')
     pprint(items[:1])
     # Loop all items
-    for prods in items:
+    for gtin in items:
+        # Save GTIN
+        save_gtin(gtin)
         # Loop all products
-        for prod in prods:
+        for prod in gtin['gtin_retailers']:
+            pprint(prod)
             break ### Temp break
             # Save the product information
             mpr.product_uuid = prod['item_uuid']
@@ -123,13 +131,13 @@ if __name__ == '__main__':
             print('Loading:',_k)
             # Save source
             save_source(_r)
-    print('Saved Sources')
-    import sys
-    sys.exit()
+    print('Saved Sources!')
     page = 1
     catalogue_page = []
     # While there is a file, open it
     for _file in os.listdir("data/dumps/"):
+        if 'catalogue' not in _file:
+            continue
         page = "data/dumps/" + str(_file)
         print("Opening page: {}".format(page))
         with open(page) as fobj:
