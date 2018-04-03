@@ -2,7 +2,8 @@
 
 Service to query all item details, like images, ingredients, attributes and additional info.
 
-### Concepts & Entities
+## Concepts & Entities
+
 * Source: Data sources, it can be a retailer, data provider, laboratory, etc...
 * Item: Group of items gathered mostly by GTIN coincidence (previously item)
 * Product: Item representation on a retailer's catalogue, as attribute they have: product_id, source, item_uuid (previously item_retailer)
@@ -20,20 +21,23 @@ Service to query all item details, like images, ingredients, attributes and addi
 
 ## Configuration
 
-Set the execution mode of the service through the **MODE** environment variable  
+Set the execution mode of the service through the **MODE** environment variable
+
 ```shell
 export MODE='<SERVICE|CONSUMER>'
 ```
 
-App env vars 
+App env vars
+
 ```shell
 export FLASK_APP='app/__init__.py'
 export APP_DIR='<home dir of the app: $PWD>'
 export APP_NAME='<app name>'
-export ENV='<DEV|PROD>' 
+export ENV='<DEV|PROD>'
 ```
 
 PostgreSQL DB env vars
+
 ```shell
 export SQL_HOST='<postgresql ip or hostname>'
 export SQL_PORT='<postgresql port number>'
@@ -45,7 +49,8 @@ export SRV_GEOLOCATION='<url to the geolocation service>'
 ```
 
 Consumer env vars
-```shell 
+
+```shell
 export STREAMER='rabbitmq'
 export STREAMER_HOST='<ip or hostname>'
 export STREAMER_ROUTING_KEY=''
@@ -54,6 +59,7 @@ export STREAMER_EXCHANGE_TYPE='direct'
 ```
 
 Logger env vars
+
 ```shell
 export LOG_LEVEL='<DEBUG|INFO|...>'
 export LOG_HOST='<remote logging host>'
@@ -65,10 +71,12 @@ export LOG_PORT='<remote logging port>'
 
 ### Web Service
 
+```bash
+. envvars && MODE='SERVICE' $APP_DIR/bin/run.sh
 ```
-$ . envvars && MODE='SERVICE' $APP_DIR/bin/run.sh
-```
-####Manually
+
+#### Manually
+
 1. Activate virtual environments `source env/bin/activate`
 2. Export environment variables `source .envvars`
 3. Initialize database `flask initdb`
@@ -76,16 +84,23 @@ $ . envvars && MODE='SERVICE' $APP_DIR/bin/run.sh
 
 ### Consumer
 
+```bash
+. envvars && MODE='CONSUMER' $APP_DIR/bin/run.sh
 ```
-$ . envvars && MODE='CONSUMER' $APP_DIR/bin/run.sh
-```
-####Manually
+
+#### Manually
+
 1. Activate virtual environments `source env/bin/activate`
 2. Export environment variables `source .envvars`
 3. Initialize database `flask initdb`
 4. Run gunicorn process `flask consumer`
 
+## License
+
+ByPrice Copyright (c) 2018
+
 ## To Do
 
 * Add endpoints to add/modify items
 * Add endpoints to remove duplicates
+* Consumer flow

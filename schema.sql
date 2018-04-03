@@ -67,6 +67,7 @@ CREATE TABLE "product" (
     name varchar(255),
     gtin varchar(14),
     description text,
+    normalized text,
     raw_product json,
     raw_html text,
     categories text,
