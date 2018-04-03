@@ -10,6 +10,8 @@ logger = logging.getLogger(APP_NAME)
 # Database creation
 def initdb():
     ''' Initialize the db '''
+    # Define schema
+    _schema = 'schema.sql' if not TESTING else 'schemaT.sql'
     try:
         db_init = Pygres(dict(
             SQL_DB='postgres',
@@ -18,7 +20,11 @@ def initdb():
             SQL_HOST=SQL_HOST,
             SQL_PORT=SQL_PORT
         ),autocommit=True)
-        db_init.query('create database {}'.format(config.SQL_DB))
+        try:
+            db_init.query('create database {}'.format(config.SQL_DB))
+            logger.info("Created DB!")
+        except:
+            raise Exception("Db was already initialized!")
         db_init.close()
         del db_init
         # insert the tables
@@ -29,12 +35,15 @@ def initdb():
             SQL_PASSWORD = SQL_PASSWORD,
             SQL_PORT=SQL_PORT,
         ))
-        with open( BASE_DIR + '/schema.sql','r') as f:
-            db_init.query(f.read())
+        with open( BASE_DIR + '/'+_schema,'r') as f:
+            try:
+                db_init.query(f.read())
+                logger.info("Schema generated in DB!")
+            except Exception as e:
+                raise Exception(str(e))
         db_init.close()
-        logger.info("Initialized database")
-    except:
-        logger.info('DB already initialized!')
+    except Exception as e:
+        logger.info(e)
 
 
 def connectdb():
