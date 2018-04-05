@@ -26,8 +26,8 @@ msrc = _db.model("source","key")
 matcls = _db.model("clss","id_clss")
 mit = _db.model("item","item_uuid")
 mcat = _db.model("category","id_category")
+mat = _db.model("attr","id_attr")
 #mpr = _db.model("product","product_uuid")
-#mat = _db.model("attr","id_attr")
 #mai = _db.model("attr_item")
 #mii = _db.model("item_image","id_item_image")
 
@@ -58,6 +58,35 @@ def save_attr_classes(obj):
     except Exception as e:
         print(e)
         return False
+
+def save_attrs(obj):
+    """ Upsert `Attr` Table
+    """
+    _exists  = _db\
+        .query("SELECT EXISTS (SELECT 1 FROM attr WHERE key = '{}')"\
+            .format(obj['key'])).fetch()
+    if _exists[0]['exists']:
+        print('Attr already in DB!')
+        return True
+    # Load model
+    mat.id_attr = obj['id_attribute']
+    mat.id_clss = obj['id_attribute_class']
+    mat.name = obj['name']
+    mat.key = obj['key']
+    mat.match = obj['match']
+    mat.has_value = 1 if obj['has_value'] else 0
+    if 'meta' in obj:
+        mat.source = obj['meta']
+    if 'retailer' in obj:
+        mat.source = obj['retailer']
+    try:
+        mat.save()
+        print('Saved attr:', mat.last_id)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
 
 def save_source(obj):
     """ Upsert `Source` Table
@@ -240,6 +269,13 @@ if __name__ == '__main__':
             # Save attribute classes
             save_attr_classes(_r)
     print('Saved Clsses!')
+    # Attributes upload
+    with open('data/dumps/attributes.json', 'r') as _fr:
+        for _k, _r in json.loads(_fr.read()).items():
+            print('Loading:',_k)
+            # Save attributes
+            save_attrs(_r)
+    print('Saved Attrs!')
     page = 1
     catalogue_page = []
     # While there is a file, open it

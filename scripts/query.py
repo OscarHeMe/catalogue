@@ -19,14 +19,19 @@ def get_retailers():
     return retailers
 
 def get_categories():
-    cats = db_items.query("select * from category ").fetch()
+    cats = db_items.query("select * from category").fetch()
     categs = { r['key'] : r for r in cats }
     return categs
 
 def get_attr_classes():
-    at_class = db_items.query("select * from attribute_class ").fetch()
+    at_class = db_items.query("select * from attribute_class order by id_attribute_class desc ").fetch()
     at_class = { r['key'] : r for r in at_class }
     return at_class
+
+def get_attributes():
+    attr = db_items.query("select * from attribute order by id_attribute desc").fetch()
+    attr = { r['key'] : r for r in attr }
+    return attr
 
 def get_products():
     print("Getting products...")
@@ -208,6 +213,11 @@ def run():
     with open("data/dumps/attribute_classes.json","w") as file:
         json.dump(attr_classes, file)
         print("Saved attribute classes")
+    # Attributes
+    attrs = get_attributes()
+    with open("data/dumps/attributes.json","w") as file:
+        json.dump(attrs, file)
+        print("Saved attributes")
     # Get all information of every retailer of every product
     page = 0
     catalogue_page = []
