@@ -31,10 +31,33 @@ mcat = _db.model("category","id_category")
 #mai = _db.model("attr_item")
 #mii = _db.model("item_image","id_item_image")
 
-def save_attr_item(obj):
-    """ Save attr_product
+
+def save_attr_classes(obj):
+    """ Upsert `Clss` Table
     """
-    pass
+    _exists  = _db\
+        .query("SELECT EXISTS (SELECT 1 FROM clss WHERE key = '{}')"\
+            .format(obj['key'])).fetch()
+    if _exists[0]['exists']:
+        print('Clss already in DB!')
+        return True
+    # Load model
+    matcls.id_clss = obj['id_attribute_class']
+    matcls.name = obj['name']
+    matcls.name_es = obj['name_es']
+    matcls.match = obj['match']
+    matcls.key = obj['key']
+    if 'description' in obj:
+        matcls.description = obj['description']
+    if 'retailer' in obj:
+        matcls.source = obj['retailer']
+    try:
+        matcls.save()
+        print('Saved clss:', matcls.last_id)
+        return True
+    except Exception as e:
+        print(e)
+        return False
 
 def save_source(obj):
     """ Upsert `Source` Table
@@ -210,6 +233,13 @@ if __name__ == '__main__':
             # Save category
             save_category(_r)
     print('Saved Categories!')
+    # Attribute Class upload
+    with open('data/dumps/attribute_classes.json', 'r') as _fr:
+        for _k, _r in json.loads(_fr.read()).items():
+            print('Loading:',_k)
+            # Save attribute classes
+            save_attr_classes(_r)
+    print('Saved Clsses!')
     page = 1
     catalogue_page = []
     # While there is a file, open it
