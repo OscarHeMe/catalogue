@@ -37,13 +37,13 @@ def get_products():
     print("Getting products...")
     # Query identity
     gtins = db_identity\
-        .query("select * from gtin order by item_uuid limit 2000")\
+        .query("select * from gtin order by item_uuid limit 20")\
         .fetch()
     gtin_uuids = set([ g['item_uuid'] for g in gtins ]) 
     # Gtin retailers
     gtin_retailers = {}
     gtin_ret = db_identity\
-        .query("select * from gtin_retailer order by item_uuid limit 10000 ")\
+        .query("select * from gtin_retailer order by item_uuid limit 1000 ")\
         .fetch()
     for gr in gtin_ret:
         gr['date'] = gr['date'].strftime("%Y-%m-%d")
@@ -236,8 +236,9 @@ def run():
         if 'gtin_retailers' in item:
             for prod in item['gtin_retailers']:
                 # Get item retailers
-                prod.update(get_items(prod['item_uuid'], prod['retailer']))
-                prods.append(prod)
+                _tmp = get_items(prod['item_uuid'], prod['retailer'])
+                _tmp.update(prod)
+                prods.append(_tmp)
             # Update vars
             item.update({'gtin_retailers': prods})
         # Store in catalogue page

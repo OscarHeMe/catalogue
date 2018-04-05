@@ -27,7 +27,7 @@ matcls = _db.model("clss","id_clss")
 mit = _db.model("item","item_uuid")
 mcat = _db.model("category","id_category")
 mat = _db.model("attr","id_attr")
-#mpr = _db.model("product","product_uuid")
+mpr = _db.model("product","product_uuid")
 #mai = _db.model("attr_item")
 #mii = _db.model("item_image","id_item_image")
 
@@ -124,7 +124,8 @@ def save_gtin(obj):
     # Loading model
     mit.item_uuid = str(obj['item_uuid'])
     mit.gtin = str(obj['gtin']).zfill(14)[-14:]
-    mit.checksum = int(obj['checksum'])
+    if obj['checksum'] :
+        mit.checksum = int(obj['checksum'])
     mit.name = obj['name']
     if 'description' in obj:
         mit.description = str(obj['description'])
@@ -180,12 +181,61 @@ def save_category(obj):
     except Exception as e:
         print(e)
         return False
+
+
+def save_product(obj):
+    """ Upsert `Product` Table
+    """
+    _qry = """SELECT EXISTS 
+            (SELECT 1 FROM product WHERE product_id = '{}'
+            AND source = '{}')"""\
+            .format(obj['item_id'], obj['retailer'])
+    _exists  = _db.query(_qry).fetch()
+    if _exists[0]['exists']:
+        print('Product already in DB!')
+        return False
+    # Loading model
+    mpr.item_uuid = obj['item_uuid']
+    mpr.source = obj['retailer']
+    mpr.product_id = obj['item_id']
+    mpr.name = obj['name']
+    mpr.gtin = obj['gtin']
+    if 'description' in obj and obj['description']:
+        mpr.description = obj['description']
+    if 'raw_item' in obj:
+        try:
+            _raw_prod = json.loads(obj['raw_item'])
+            mpr.raw_product = json.dumps(_raw_prod)
+        except:
+            pass
+    if 'categories' in obj and obj['categories']:
+        mpr.categories = str(obj['categories'])
+    if 'ingredients' in obj and obj['ingredients']:
+        mpr.ingredients = str(obj['ingredients'])
+    if 'brand' in obj and obj['brand']:
+        mpr.brand = str(obj['brand'])
+    if 'provider' in obj and obj['provider']:
+        mpr.provider = str(obj['provider'])
+    if 'url' in obj and obj['url']:
+        mpr.url = str(obj['url'])
+    if 'images' in obj and obj['images']:
+        mpr.images = str(obj['images'])
+    mpr.last_modified = str(obj['last_modified'])
+    try:
+        mpr.save()
+        print('Saved product:', mpr.last_id)
+        return mpr.last_id
+    except Exception as e:
+        print(e)
+        return False
     
+
 def save_items(items):
     """ Loop products and save all information
     """
     print('Product format: ')
     pprint(items[:1])
+    print('***********')
     # Loop all items
     for gtin in items:
         # Save GTIN
@@ -194,48 +244,32 @@ def save_items(items):
         # Loop all products
         for prod in gtin['gtin_retailers']:
             pprint(prod)
-            continue
+            print("#########")
+            if not (len(prod.keys()) > 8):
+                continue
             # Save the product information
-            mpr.product_uuid = prod['item_uuid']
-            mpr.gtin = prod['gtin']
-            mpr.checksum = prod['checksum']
-            mpr.name = prod['name']
-            mpr.description = prod['description']
-            mpr.date = prod['date']
-            mpr.save()
-            # Iterate over the items...
-            if 'items' in prod and len(prod['items']) > 0:
-                for item in prod['items']:
-
-                    # Save the item
-                    mit.source = item['retailer']
-                    mit.product_uuid = item['item_uuid']
-                    mit.url = item['url']
-                    mit.name = item['name']
-                    mit.description = item['description']
-                    gtin = item['gtin']
-                    mit.categories = item['categories']
-                    mit.save()
-                    print("Saved prod")
-                    item_uuid = mit.last_id
-
-                    # Save categories
-
-                    # Save the images
-                    
-                    # Save all the attributes
-                    if 'attributes' in item and item['attributes']:
-                        for attr in item['attributes']:
-                            # Check tne class / attribute
-                            id_clss = check_clss(attr['clss_name'], attr['source'])
-                            id_attr = check_attr(attr['attr_name'], attr['source'], id_clss)
-                            # Save the attribute value
-                            save_attr_item({
-                                "id_attr" : id_attr,
-                                "source" : attr['source'],
-                                "value" : attr['value'],
-                            })
-        break ### Temp break
+            if not save_product(prod):
+                continue
+            import sys
+            sys.exit()
+            # Save categories
+            # Save the images
+            # Save all the attributes
+            """
+            if 'attributes' in item and item['attributes']:
+                for attr in item['attributes']:
+                    # Check tne class / attribute
+                    id_clss = check_clss(attr['clss_name'], attr['source'])
+                    id_attr = check_attr(attr['attr_name'], attr['source'], id_clss)
+                    # Save the attribute value
+                    save_attr_item({
+                        "id_attr" : id_attr,
+                        "source" : attr['source'],
+                        "value" : attr['value'],
+                    })
+            """
+        if len(prod.keys()) > 8:
+            break ### Temp break
 
                     
 
