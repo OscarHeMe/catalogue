@@ -14,7 +14,7 @@ CREATE TABLE "source"(
 );
 
 /* Class */
-/* Provider, Brand, Presentation, Retailer, Color, etc... */
+/* Provider, Brand, Presentation, Color, etc... */
 CREATE TABLE "clss" (
     id_clss serial PRIMARY KEY NOT NULL,
     name text,

@@ -23,6 +23,7 @@ print('Connecting to Catalogue PSQL....')
 _db = db.getdb()
 print('Connected to Catalogue PSQL!')
 msrc = _db.model("source","key")
+matcls = _db.model("clss","id_clss")
 mit = _db.model("item","item_uuid")
 #mpr = _db.model("product","product_uuid")
 #mat = _db.model("attr","id_attr")
@@ -41,7 +42,7 @@ def save_source(obj):
         .query("SELECT EXISTS (SELECT 1 FROM source WHERE key = '{}')"\
             .format(obj['key'])).fetch()
     if _exists[0]['exists']:
-        print('Already in DB!')
+        print('Source already in DB!')
         return True
     # Load model
     msrc.key = obj['key']
@@ -61,8 +62,28 @@ def save_source(obj):
 def save_gtin(obj):
     """ Upsert `Gtin` Table
     """
-    pass
-
+    _exists  = _db\
+        .query("SELECT EXISTS (SELECT 1 FROM item WHERE item_uuid = '{}')"\
+            .format(obj['item_uuid'])).fetch()
+    if _exists[0]['exists']:
+        print('Item already in DB!')
+        return True
+    # Loading model
+    mit.item_uuid = str(obj['item_uuid'])
+    mit.gtin = str(obj['gtin']).zfill(14)[-14:]
+    mit.checksum = int(obj['checksum'])
+    mit.name = obj['name']
+    if 'description' in obj:
+        mit.description = str(obj['description'])
+    mit.last_modified = obj['date'] if 'date' in obj else obj['last_modified']
+    try:
+        mit.save()
+        print('Saved item:', mit.last_id)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+    
 def save_items(items):
     """ Loop products and save all information
     """
@@ -71,11 +92,12 @@ def save_items(items):
     # Loop all items
     for gtin in items:
         # Save GTIN
-        save_gtin(gtin)
+        if not save_gtin(gtin):
+            continue
         # Loop all products
         for prod in gtin['gtin_retailers']:
             pprint(prod)
-            break ### Temp break
+            continue
             # Save the product information
             mpr.product_uuid = prod['item_uuid']
             mpr.gtin = prod['gtin']
@@ -126,6 +148,7 @@ if __name__ == '__main__':
         entire catalogue
     """
     print("Starting populator!")
+    # Source upload
     with open('data/dumps/retailers.json', 'r') as _fr:
         for _k, _r in json.loads(_fr.read()).items():
             print('Loading:',_k)

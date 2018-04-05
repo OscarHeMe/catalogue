@@ -7,16 +7,16 @@ def connect_psql_identity():
     return Pygres(dict(
         SQL_HOST = "localhost",
         SQL_DB = "identity",
-        SQL_USER = "postgres",
+        SQL_USER = "byprice",
         SQL_PASSWORD = os.getenv("IDENTITY_PASSWORD", "postgres"),
-        SQL_PORT="5432"
+        SQL_PORT="5434"
     ))
 
 def connect_psql_items():
    return Pygres(dict(
         SQL_HOST = "localhost",
         SQL_DB = "items",
-        SQL_USER = "postgres",
+        SQL_USER = "byprice",
         SQL_PASSWORD = os.getenv("ITEMS_PASSWORD", "postgres"),
-        SQL_PORT="5432"
+        SQL_PORT="5433"
     ))

@@ -18,14 +18,28 @@ def get_retailers():
     retailers = { r['key'] : r for r in rets }
     return retailers
 
+def get_categories():
+    cats = db_items.query("select * from category ").fetch()
+    categs = { r['key'] : r for r in cats }
+    return categs
+
+def get_attr_classes():
+    at_class = db_items.query("select * from attribute_class ").fetch()
+    at_class = { r['key'] : r for r in at_class }
+    return at_class
+
 def get_products():
     print("Getting products...")
     # Query identity
-    gtins = db_identity.query("select * from gtin").fetch()
+    gtins = db_identity\
+        .query("select * from gtin order by item_uuid limit 2000")\
+        .fetch()
     gtin_uuids = set([ g['item_uuid'] for g in gtins ]) 
     # Gtin retailers
     gtin_retailers = {}
-    gtin_ret = db_identity.query("select * from gtin_retailer ").fetch()
+    gtin_ret = db_identity\
+        .query("select * from gtin_retailer order by item_uuid limit 10000 ")\
+        .fetch()
     for gr in gtin_ret:
         gr['date'] = gr['date'].strftime("%Y-%m-%d")
         gr['date_matched'] = gr['date_matched'].strftime("%Y-%m-%d") if gr['date_matched'] else None
@@ -38,7 +52,6 @@ def get_products():
         if gtin['item_uuid'] in gtin_retailers:
             gtins[i]['gtin_retailers'] = gtin_retailers[gtin['item_uuid']]
         gtins[i]['date'] = gtin['date'].strftime("%Y-%m-%d")
-
     # All items to check if there are some that dont exists in gtin
     items = db_items.query("select item_uuid from item ").fetch()
     item_uuids = set([ i['item_uuid'] for i in items ])
@@ -180,10 +193,21 @@ def run():
     """
     products = []
     products = get_products()
+    # Retailers
     retailers = get_retailers()
     with open("data/dumps/retailers.json","w") as file:
         json.dump(retailers, file)
         print("Saved retailers")
+    # Categories
+    categs = get_categories()
+    with open("data/dumps/categories.json","w") as file:
+        json.dump(categs, file)
+        print("Saved categories")
+    # Attribute classes
+    attr_classes = get_attr_classes()
+    with open("data/dumps/attribute_classes.json","w") as file:
+        json.dump(attr_classes, file)
+        print("Saved attribute classes")
     # Get all information of every retailer of every product
     page = 0
     catalogue_page = []
@@ -195,7 +219,9 @@ def run():
                 json.dump(catalogue_page, file)
                 print("Saving catalogue...", str(page))
             catalogue_page = []
-            break ## remove this if not testing
+            ### temp break
+            import sys
+            sys.exit()
         prods = []
         if 'gtin_retailers' in item:
             for prod in item['gtin_retailers']:
@@ -206,6 +232,10 @@ def run():
             item.update({'gtin_retailers': prods})
         # Store in catalogue page
         catalogue_page.append(item)
+    # Save last loop
+    with open("data/dumps/catalogue_"+str(page)+".json","w") as file:
+        json.dump(catalogue_page, file)
+        print("Saving catalogue...", str(page))
 
 if __name__ == '__main__':
     run()
