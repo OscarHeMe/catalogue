@@ -100,6 +100,22 @@ ByPrice Copyright (c) 2018
 
 ## To Do
 
-* Add endpoints to add/modify items
-* Add endpoints to remove duplicates
-* Consumer flow
+- Consumer flow, conectar a RabbitMQ y por cada mensaje:
+  - Verificar si existe producto en la tabla de `product`
+  - Si existe hacer Update sino crear el registro
+  - Por cada categoría:
+    - Verificar si existe categoría en la tabla de `category`
+    - Si existe hacer Update sino crear el registro
+    - Verificar si existe categoría en la tabla de `product_category`
+    - Si existe hacer Update sino crear el registro
+  - Por cada atributo (provider, brand, ingredients, etc.):
+    - Verificar si existe clase de atributo en la tabla de `clss`
+    - Si existe hacer Update sino crear el registro
+    - Verificar si existe atributo en la tabla de `attr`
+    - Si existe hacer Update sino crear el registro
+    - Verificar si existe atributo en la tabla de `product_attr`
+    - Si existe hacer Update sino crear el registro
+  - Verificar si existe imagen en la tabla de `product_image`
+  - Si existe hacer Update sino crear el registro
+
+Todos los campos de la DB necesarios por tabla están en el archivo de [schema.sql](./schema.sql)
