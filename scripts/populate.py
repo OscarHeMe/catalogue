@@ -25,6 +25,7 @@ print('Connected to Catalogue PSQL!')
 msrc = _db.model("source","key")
 matcls = _db.model("clss","id_clss")
 mit = _db.model("item","item_uuid")
+mcat = _db.model("category","id_category")
 #mpr = _db.model("product","product_uuid")
 #mat = _db.model("attr","id_attr")
 #mai = _db.model("attr_item")
@@ -79,6 +80,50 @@ def save_gtin(obj):
     try:
         mit.save()
         print('Saved item:', mit.last_id)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+def garanty_parent(id_cat):
+    """ Verify if parent exists otherwise create provisional empty record
+    """
+    _exists  = _db\
+        .query("SELECT EXISTS (SELECT 1 FROM category WHERE id_category = {})"\
+            .format(id_cat)).fetch()
+    if _exists[0]['exists']:
+        print('Parent OK!')
+        return True
+    mcat.id_category = id_cat
+    try:
+        mcat.save()
+        print('Created provisional parent:', mcat.last_id)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+def save_category(obj):
+    """ Upsert `Category` Table
+    """
+    _exists  = _db\
+        .query("SELECT EXISTS (SELECT 1 FROM category WHERE key = '{}')"\
+            .format(obj['key'])).fetch()
+    if _exists[0]['exists']:
+        print('Category already in DB!')
+        return True
+    # Loading model
+    if obj['id_parent'] and obj['id_parent'] != 0:
+        garanty_parent(obj['id_parent'])
+        mcat.id_parent = obj['id_parent']
+    mcat.id_category = obj['id_category']
+    mcat.source = obj['retailer']
+    mcat.name = obj['name']
+    mcat.key = obj['key']
+    mcat.code = obj['code']
+    try:
+        mcat.save()
+        print('Saved category:', mcat.last_id)
         return True
     except Exception as e:
         print(e)
@@ -155,6 +200,16 @@ if __name__ == '__main__':
             # Save source
             save_source(_r)
     print('Saved Sources!')
+    # Category upload
+    with open('data/dumps/categories.json', 'r') as _fr:
+        _tl = list([_r for _k, _r in json.loads(_fr.read()).items()])
+        for _r in sorted(_tl,
+                        key=lambda d: d['id_parent'] if d['id_parent'] else 0,
+                        reverse=False):
+            print('Loading:', _r['key'])
+            # Save category
+            save_category(_r)
+    print('Saved Categories!')
     page = 1
     catalogue_page = []
     # While there is a file, open it

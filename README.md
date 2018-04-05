@@ -102,4 +102,4 @@ ByPrice Copyright (c) 2018
 
 * Add endpoints to add/modify items
 * Add endpoints to remove duplicates
-* Consumer flow
+* Consumer flow -> Review this in `dev_cons` branch
