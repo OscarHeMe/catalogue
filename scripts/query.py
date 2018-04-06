@@ -37,17 +37,20 @@ def get_products():
     print("Getting products...")
     # Query identity
     gtins = db_identity\
-        .query("select * from gtin order by item_uuid")\
+        .query("""select * from gtin order by item_uuid limit 100""")\
         .fetch()
-    gtin_uuids = set([ g['item_uuid'] for g in gtins ]) 
+    gtin_uuids = set([ g['item_uuid'] for g in gtins ])
     # Gtin retailers
     gtin_retailers = {}
     gtin_ret = db_identity\
-        .query("select * from gtin_retailer order by item_uuid ")\
+        .query("""select gr.*, gra.attribute as name 
+            from gtin_retailer gr left outer join gtin_retailer_attribute gra 
+            on (gra.id_gtin_retailer = gr.id_gtin_retailer) 
+            where attribute_type = 'name' order by item_uuid limit 5000""")\
         .fetch()
     for gr in gtin_ret:
-        gr['date'] = gr['date'].strftime("%Y-%m-%d")
-        gr['date_matched'] = gr['date_matched'].strftime("%Y-%m-%d") if gr['date_matched'] else None
+        gr['date'] = str(gr['date']) #.strftime("%Y-%m-%d")
+        gr['date_matched'] = str(gr['date_matched']) #.strftime("%Y-%m-%d") if gr['date_matched'] else None
         if gr['item_uuid'] not in gtin_retailers:
             gtin_retailers[gr['item_uuid']] = []
         gtin_retailers[gr['item_uuid']].append(gr)
@@ -56,7 +59,9 @@ def get_products():
         # Get the item_retailers        
         if gtin['item_uuid'] in gtin_retailers:
             gtins[i]['gtin_retailers'] = gtin_retailers[gtin['item_uuid']]
-        gtins[i]['date'] = gtin['date'].strftime("%Y-%m-%d")
+        gtins[i]['date'] = str(gtin['date']) #.strftime("%Y-%m-%d")
+        if 'date_matched' in gtins[i]:
+            gtins[i]['date'] = str(gtin['date'])
     # All items to check if there are some that dont exists in gtin
     items = db_items.query("select item_uuid from item ").fetch()
     item_uuids = set([ i['item_uuid'] for i in items ])
@@ -183,7 +188,7 @@ def get_items(uuid, ret):
                 })
         # Set the attributes of the item_retailer
         try:
-            items[i]['last_modified'] = items[i]['last_modified'].strftime("%Y-%m-%d")
+            items[i]['last_modified'] = str(items[i]['last_modified']) #.strftime("%Y-%m-%d")
         except:
             pass
         if attrs:
@@ -224,6 +229,9 @@ def run():
         print("Product: {}".format(i))
         if len(catalogue_page) >= 1000:
             page+=1
+            #for i, c in enumerate(catalogue_page):
+            #    c.update({'date':str(c['date']), 'date_matched':str(c['date_matched'])})
+            #    catalogue_page[i] = c
             with open("data/dumps/catalogue_"+str(page)+".json","w") as file:
                 json.dump(catalogue_page, file)
                 print("Saving catalogue...", str(page))
@@ -239,6 +247,9 @@ def run():
             item.update({'gtin_retailers': prods})
         # Store in catalogue page
         catalogue_page.append(item)
+    #for i, c in enumerate(catalogue_page):
+    #    c.update({'date':str(c['date']), 'date_matched':str(c['date_matched'])})
+    #      catalogue_page[i] = c
     # Save last loop
     with open("data/dumps/catalogue_"+str(page)+".json","w") as file:
         json.dump(catalogue_page, file)

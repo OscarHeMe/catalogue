@@ -5,7 +5,7 @@ import os
 
 def connect_psql_identity():
     return Pygres(dict(
-        SQL_HOST = "identity.byprice.db",
+        SQL_HOST = "identity.byprice.db", #"0.0.0.0", #
         SQL_DB = "identity",
         SQL_USER = "byprice",
         SQL_PASSWORD = os.getenv("IDENTITY_PASSWORD", "postgres"),
@@ -14,7 +14,7 @@ def connect_psql_identity():
 
 def connect_psql_items():
    return Pygres(dict(
-        SQL_HOST = "items.byprice.db",
+        SQL_HOST = "items.byprice.db", # "0.0.0.0", #
         SQL_DB = "items",
         SQL_USER = "byprice",
         SQL_PASSWORD = os.getenv("ITEMS_PASSWORD", "postgres"),

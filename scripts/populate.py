@@ -93,8 +93,9 @@ def save_attrs(obj):
     if 'retailer' in obj:
         _exists  = _db\
             .query("""SELECT EXISTS (SELECT 1 FROM attr 
-            WHERE key = '{}' AND source = '{}')"""\
-                .format(obj['key'], obj['retailer'])).fetch()
+            WHERE key = '{}' AND source = '{}' AND id_clss = {})"""\
+                .format(obj['key'], obj['retailer'], obj['id_attribute_class']))\
+            .fetch()
     else:
         _exists  = _db\
             .query("SELECT EXISTS (SELECT 1 FROM attr WHERE key = '{}')"\
@@ -160,7 +161,13 @@ def save_gtin(obj):
         return True
     # Loading model
     mit.item_uuid = str(obj['item_uuid'])
-    mit.gtin = str(obj['gtin']).zfill(14)[-14:]
+    try:
+        mit.gtin = str(obj['gtin']).zfill(14)[-14:]
+    except Exception as e:
+        print(e)
+        print(obj)
+        import sys
+        sys.exit()
     if obj['checksum'] :
         mit.checksum = int(obj['checksum'])
     mit.name = obj['name']
@@ -235,8 +242,10 @@ def save_product(obj):
     mpr.item_uuid = obj['item_uuid']
     mpr.source = obj['retailer']
     mpr.product_id = obj['item_id']
-    mpr.name = obj['name']
-    mpr.gtin = obj['gtin']
+    if 'name' in obj:
+        mpr.name = obj['name'] if obj['name'] else ''
+    if 'gtin' in obj:
+        mpr.gtin = obj['gtin'] if obj['gtin'] else ''
     if 'description' in obj and obj['description']:
         mpr.description = obj['description']
     if 'raw_item' in obj:
@@ -257,7 +266,8 @@ def save_product(obj):
         mpr.url = str(obj['url'])
     if 'images' in obj and obj['images']:
         mpr.images = str(obj['images'])
-    mpr.last_modified = str(obj['last_modified'])
+    mpr.last_modified = str(obj['last_modified']) \
+        if 'last_modified' in obj else str(datetime.datetime.utcnow())
     try:
         mpr.save()
         print('Saved product:', mpr.last_id)
@@ -392,17 +402,16 @@ def save_images(obj, p_uuid):
 def save_items(items):
     """ Loop products and save all information
     """
+    print('Saving items')
     # Loop all items
     for gtin in items:
         # Save GTIN
         if not save_gtin(gtin):
             continue
+        if 'gtin_retailers' not in gtin:
+            continue
         # Loop all products
         for prod in gtin['gtin_retailers']:
-            if 'attributes' not in prod: # Delete this
-                continue # Delete this
-            if not prod['attributes']: ### Delete this
-                continue ### Delete this
             # Save the product information
             _prod_uuid = save_product(prod)
             if not _prod_uuid:
@@ -426,14 +435,9 @@ def save_items(items):
                         "product_uuid": _prod_uuid,
                         "value" : _attr['value'],
                     })
-            pprint(prod)
             # Save the images
             save_images(prod, _prod_uuid)
-            break
-        if 'attributes' in prod and prod['attributes']: 
-            break ### Temp break
 
-                    
 
 if __name__ == '__main__':
     """
