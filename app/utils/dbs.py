@@ -9,7 +9,7 @@ def connect_psql_identity():
         SQL_DB = "identity",
         SQL_USER = "byprice",
         SQL_PASSWORD = os.getenv("IDENTITY_PASSWORD", "postgres"),
-        SQL_PORT="5434"
+        SQL_PORT="5432"
     ))
 
 def connect_psql_items():
@@ -18,5 +18,5 @@ def connect_psql_items():
         SQL_DB = "items",
         SQL_USER = "byprice",
         SQL_PASSWORD = os.getenv("ITEMS_PASSWORD", "postgres"),
-        SQL_PORT="5433"
+        SQL_PORT="5432"
     ))

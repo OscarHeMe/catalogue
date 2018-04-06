@@ -228,9 +228,6 @@ def run():
                 json.dump(catalogue_page, file)
                 print("Saving catalogue...", str(page))
             catalogue_page = []
-            ### temp break
-            import sys
-            sys.exit()
         prods = []
         if 'gtin_retailers' in item:
             for prod in item['gtin_retailers']:

@@ -13,7 +13,7 @@ BASEDIR = BASE_DIR
 PATH = os.path.dirname(os.path.realpath(__file__)) + "/"
 
 # Env
-TESTING=True
+TESTING=False
 ENV = os.getenv('ENV','DEV')
 
 # Logging and remote logging
