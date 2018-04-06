@@ -82,7 +82,9 @@ CREATE TABLE "product" (
 CREATE TABLE "product_image" (
     id_product_image serial PRIMARY KEY,
     product_uuid uuid REFERENCES "product" (product_uuid),
-    image text
+    image text,
+    descriptor json,
+    last_modified timestamp
 );
 
 /* productRetailerAttribute */

@@ -3,6 +3,7 @@ import app.utils.db as db
 import os
 from pprint import pprint
 import datetime
+import ast
 
 # Retailer types
 source_types = {
@@ -31,7 +32,7 @@ mat = _db.model("attr","id_attr")
 mpr = _db.model("product","product_uuid")
 mprcat = _db.model("product_category","id_product_category")
 mprat = _db.model("product_attr","id_product_attr")
-#mii = _db.model("item_image","id_item_image")
+mii = _db.model("product_image","id_product_image")
 
 
 def save_attr_classes(obj):
@@ -275,6 +276,14 @@ def save_prod_categ(p_uuid, obj):
     if not _cat_id:
         print('Category not in DB!')
         return False
+    _qry = """SELECT EXISTS ( SELECT 1 FROM product_category
+             WHERE product_uuid = '{}' AND id_category = {})"""\
+            .format(p_uuid, _cat_id[0]['id_category'])
+    _exists = _db.query(_qry).fetch()
+    if _exists[0]['exists']:
+        print('Product Category already in DB!')
+        return True
+    # Load model
     mprcat.id_category = _cat_id[0]['id_category']
     mprcat.product_uuid = p_uuid
     mprcat.last_modified = obj['last_modified'] \
@@ -347,6 +356,39 @@ def save_prod_attr(obj):
         print(e)
         return False
 
+def save_images(obj, p_uuid):
+    """ Upsert `Product_image` Table
+    """
+    try:
+        imgs = ast.literal_eval(obj['images'])
+        assert isinstance(imgs, list)
+    except:
+        try:
+            if not obj['images'] or str(obj['images']) == 'None':
+                raise Exception('No images available')
+            imgs = [str(obj['images'])]
+        except:
+            print('No images to load!')
+            return False
+    for _img in imgs:
+        _qry = """SELECT EXISTS (SELECT 1 FROM product_image 
+                WHERE product_uuid = '{}' AND image = '{}')"""\
+                .format(p_uuid, _img)
+        _exists  = _db.query(_qry).fetch()
+        if _exists[0]['exists']:
+            print('Product Image already in DB!')
+            continue
+        # Load model
+        mii.product_uuid = p_uuid
+        mii.image = str(_img)
+        mii.last_modified = str(datetime.datetime.utcnow())
+        try:
+            mii.save()
+            print('Saved product image:', mii.last_id)
+        except Exception as e:
+            print(e)
+    return True
+
 def save_items(items):
     """ Loop products and save all information
     """
@@ -385,9 +427,9 @@ def save_items(items):
                         "value" : _attr['value'],
                     })
             pprint(prod)
-            break
             # Save the images
-            ##
+            save_images(prod, _prod_uuid)
+            break
         if 'attributes' in prod and prod['attributes']: 
             break ### Temp break
 
