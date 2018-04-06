@@ -30,7 +30,7 @@ mcat = _db.model("category","id_category")
 mat = _db.model("attr","id_attr")
 mpr = _db.model("product","product_uuid")
 mprcat = _db.model("product_category","id_product_category")
-#mai = _db.model("attr_item")
+mprat = _db.model("product_attr","id_product_attr")
 #mii = _db.model("item_image","id_item_image")
 
 
@@ -57,22 +57,53 @@ def save_attr_classes(obj):
     try:
         matcls.save()
         print('Saved clss:', matcls.last_id)
+        if 'id_attribute_class' in obj:
+            update_clss_seq()
         return True
     except Exception as e:
         print(e)
         return False
 
+def update_attr_seq():
+    """ Update attr.id_attr PSQL sequence to avoid issues
+    """ 
+    _seq = _db.query("""SELECT id_attr FROM attr 
+        ORDER BY id_attr DESC LIMIT 1""").fetch()
+    if not _seq:
+        return False
+    _db.query("ALTER SEQUENCE attr_id_attr_seq RESTART WITH {}"\
+        .format(_seq[0]['id_attr'] + 1))
+    return True
+
+def update_clss_seq():
+    """ Update clss.id_clss PSQL sequence to avoid issues
+    """ 
+    _seq = _db.query("""SELECT id_clss FROM clss 
+        ORDER BY id_clss DESC LIMIT 1""").fetch()
+    if not _seq:
+        return False
+    _db.query("ALTER SEQUENCE clss_id_clss_seq RESTART WITH {}"\
+        .format(_seq[0]['id_clss'] + 1))
+    return True
+
 def save_attrs(obj):
     """ Upsert `Attr` Table
     """
-    _exists  = _db\
-        .query("SELECT EXISTS (SELECT 1 FROM attr WHERE key = '{}')"\
-            .format(obj['key'])).fetch()
+    if 'retailer' in obj:
+        _exists  = _db\
+            .query("""SELECT EXISTS (SELECT 1 FROM attr 
+            WHERE key = '{}' AND source = '{}')"""\
+                .format(obj['key'], obj['retailer'])).fetch()
+    else:
+        _exists  = _db\
+            .query("SELECT EXISTS (SELECT 1 FROM attr WHERE key = '{}')"\
+                .format(obj['key'])).fetch()
     if _exists[0]['exists']:
         print('Attr already in DB!')
         return True
     # Load model
-    mat.id_attr = obj['id_attribute']
+    if 'id_attribute' in obj:
+        mat.id_attr = obj['id_attribute']
     mat.id_clss = obj['id_attribute_class']
     mat.name = obj['name']
     mat.key = obj['key']
@@ -85,7 +116,9 @@ def save_attrs(obj):
     try:
         mat.save()
         print('Saved attr:', mat.last_id)
-        return True
+        if 'id_attribute' in obj:
+            update_attr_seq()
+        return mat.last_id
     except Exception as e:
         print(e)
         return False
@@ -254,7 +287,65 @@ def save_prod_categ(p_uuid, obj):
     except Exception as e:
         print(e)
         return False
-    
+
+def check_clss(obj):
+    """ Verify `Clss` Table records
+    """
+    _qry = """SELECT id_clss FROM clss WHERE key = '{}' LIMIT 1"""\
+            .format(obj['clss_key'])
+    id_clss = _db.query(_qry).fetch()
+    if id_clss:
+        return id_clss[0]['id_clss']
+    print('Class not in DB!')
+    return None
+
+def check_attr(obj, id_clss):
+    """ Verify `Attr` Table records
+    """
+    _qry = """SELECT id_attr FROM attr 
+        WHERE key = '{}' AND id_clss = {} AND source = '{}'
+        LIMIT 1""".format(obj['attr_key'], id_clss, obj['source'])
+    id_attr = _db.query(_qry).fetch()
+    if not id_attr:
+        id_attr = save_attrs({
+            'key': obj['attr_key'],
+            'name': obj['attr_name'],
+            'retailer': obj['source'],
+            'has_value': 1 if obj['value'] else 0,
+            'id_attribute_class': id_clss,
+            'match': None
+            })
+        if not id_attr:
+            return None
+    else:
+        id_attr = id_attr[0]['id_attr']
+    return id_attr
+
+def save_prod_attr(obj):
+    """ Upsert `Product_attr` Table
+    """
+    _qry = """SELECT EXISTS (SELECT 1 FROM product_attr 
+            WHERE product_uuid = '{}' AND id_attr = '{}')"""\
+            .format(obj['product_uuid'], obj['id_attr'])
+    _exists  = _db.query(_qry).fetch()
+    if _exists[0]['exists']:
+        print('Product Attr already in DB!')
+        return False
+    mprat.id_attr = obj['id_attr']
+    mprat.product_uuid = obj['product_uuid']
+    mprat.value = obj['value']
+    mprat.last_modified = obj['last_modified'] \
+        if 'last_modified' in obj \
+            else str(datetime.datetime.utcnow())
+    if 'last_modified' in obj:
+        mprat.precision = obj['precision']
+    try:
+        mprat.save()
+        print('Saved product attr:', mprat.last_id)
+        return True
+    except Exception as e:
+        print(e)
+        return False
 
 def save_items(items):
     """ Loop products and save all information
@@ -280,20 +371,23 @@ def save_items(items):
                     if _attr['clss_key'] == 'category':
                         # Save categories
                         save_prod_categ(_prod_uuid, _attr)
-                        continue
-                    continue
                     # Check the class / attribute
-                    id_clss = check_clss(attr['clss_name'], attr['source'])
-                    id_attr = check_attr(attr['attr_name'], attr['source'], id_clss)
+                    id_clss = check_clss(_attr)
+                    if not id_clss:
+                        continue
+                    id_attr = check_attr(_attr, id_clss)
+                    if not id_attr:
+                        continue
                     # Save the attribute value
-                    save_attr_item({
+                    save_prod_attr({
                         "id_attr" : id_attr,
-                        "source" : attr['source'],
-                        "value" : attr['value'],
+                        "product_uuid": _prod_uuid,
+                        "value" : _attr['value'],
                     })
             pprint(prod)
             break
             # Save the images
+            ##
         if 'attributes' in prod and prod['attributes']: 
             break ### Temp break
 
@@ -334,7 +428,9 @@ if __name__ == '__main__':
         "brand": {'name': 'Brand', 'name_es': 'Marca',
             'key': 'brand', 'match': None},
         "provider": {'name': 'Provider', 'name_es': 'Proveedor',
-            'key': 'provider', 'match': None}
+            'key': 'provider', 'match': None},
+        "category": {'name': 'Category', 'name_es': 'Categoría',
+            'key': 'category', 'match': None}
     }
     for _k, _r in brand_prov.items():
         print('Loading:', _k)

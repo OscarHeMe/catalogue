@@ -104,7 +104,7 @@ def get_items(uuid, ret):
                     "attr_name" : attr['attr_name'],
                     "attr_key" : attr['attr_key'],
                     "value" : attr['value'],
-                    "soure" : it['retailer']
+                    "source" : it['retailer']
                 })
         # Categories
         cats = db_items.query("""
