@@ -43,7 +43,7 @@ def get_products():
     # Gtin retailers
     gtin_retailers = {}
     gtin_ret = db_identity\
-        .query("select * from gtin_retailer order by item_uuid limit 1000 ")\
+        .query("select * from gtin_retailer order by item_uuid limit 10000 ")\
         .fetch()
     for gr in gtin_ret:
         gr['date'] = gr['date'].strftime("%Y-%m-%d")
@@ -96,7 +96,7 @@ def get_items(uuid, ret):
             and retailer = %s
         """,(it['item_uuid'], it['retailer'])).fetch()
         if attributes:
-            print(attributes)
+            print('Attrs', attributes)
             for attr in attributes:
                 attrs.append({
                     "clss_name" : attr['clss_name'],
@@ -106,7 +106,6 @@ def get_items(uuid, ret):
                     "value" : attr['value'],
                     "soure" : it['retailer']
                 })
-
         # Categories
         cats = db_items.query("""
             select c.name as name, c.key as key, c.code 
@@ -116,7 +115,7 @@ def get_items(uuid, ret):
             and retailer = %s
         """,(it['item_uuid'], it['retailer'])).fetch()
         if cats:
-            print(cats)
+            print('Categories', cats)
             for cat in cats:
                 attrs.append({
                     'clss_name' : 'Categoría',

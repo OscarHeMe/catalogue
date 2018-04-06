@@ -2,6 +2,7 @@ import json
 import app.utils.db as db
 import os
 from pprint import pprint
+import datetime
 
 # Retailer types
 source_types = {
@@ -28,6 +29,7 @@ mit = _db.model("item","item_uuid")
 mcat = _db.model("category","id_category")
 mat = _db.model("attr","id_attr")
 mpr = _db.model("product","product_uuid")
+mprcat = _db.model("product_category","id_product_category")
 #mai = _db.model("attr_item")
 #mii = _db.model("item_image","id_item_image")
 
@@ -42,7 +44,8 @@ def save_attr_classes(obj):
         print('Clss already in DB!')
         return True
     # Load model
-    matcls.id_clss = obj['id_attribute_class']
+    if 'id_attribute_class' in obj:
+        matcls.id_clss = obj['id_attribute_class']
     matcls.name = obj['name']
     matcls.name_es = obj['name_es']
     matcls.match = obj['match']
@@ -228,14 +231,34 @@ def save_product(obj):
     except Exception as e:
         print(e)
         return False
+
+def save_prod_categ(p_uuid, obj):
+    """ Upsert `Product_category` Table
+    """
+    _qry = """SELECT id_category FROM category WHERE key = '{}'
+            AND source = '{}'"""\
+            .format(obj['attr_key'], obj['source'])
+    _cat_id  = _db.query(_qry).fetch()
+    if not _cat_id:
+        print('Category not in DB!')
+        return False
+    mprcat.id_category = _cat_id[0]['id_category']
+    mprcat.product_uuid = p_uuid
+    mprcat.last_modified = obj['last_modified'] \
+        if 'last_modified' in obj \
+            else str(datetime.datetime.utcnow())
+    try:
+        mprcat.save()
+        print('Saved product category:', mprcat.last_id)
+        return True
+    except Exception as e:
+        print(e)
+        return False
     
 
 def save_items(items):
     """ Loop products and save all information
     """
-    print('Product format: ')
-    pprint(items[:1])
-    print('***********')
     # Loop all items
     for gtin in items:
         # Save GTIN
@@ -243,22 +266,23 @@ def save_items(items):
             continue
         # Loop all products
         for prod in gtin['gtin_retailers']:
-            pprint(prod)
-            print("#########")
-            if not (len(prod.keys()) > 8):
-                continue
+            if 'attributes' not in prod: # Delete this
+                continue # Delete this
+            if not prod['attributes']: ### Delete this
+                continue ### Delete this
             # Save the product information
-            if not save_product(prod):
+            _prod_uuid = save_product(prod)
+            if not _prod_uuid:
                 continue
-            import sys
-            sys.exit()
-            # Save categories
-            # Save the images
-            # Save all the attributes
-            """
-            if 'attributes' in item and item['attributes']:
-                for attr in item['attributes']:
-                    # Check tne class / attribute
+            # Save all the attributes            
+            if 'attributes' in prod and prod['attributes']:
+                for _attr in prod['attributes']:
+                    if _attr['clss_key'] == 'category':
+                        # Save categories
+                        save_prod_categ(_prod_uuid, _attr)
+                        continue
+                    continue
+                    # Check the class / attribute
                     id_clss = check_clss(attr['clss_name'], attr['source'])
                     id_attr = check_attr(attr['attr_name'], attr['source'], id_clss)
                     # Save the attribute value
@@ -267,8 +291,10 @@ def save_items(items):
                         "source" : attr['source'],
                         "value" : attr['value'],
                     })
-            """
-        if len(prod.keys()) > 8:
+            pprint(prod)
+            break
+            # Save the images
+        if 'attributes' in prod and prod['attributes']: 
             break ### Temp break
 
                     
@@ -303,6 +329,18 @@ if __name__ == '__main__':
             # Save attribute classes
             save_attr_classes(_r)
     print('Saved Clsses!')
+    # Upload Brand and Provider as  Attribute Class
+    brand_prov = {
+        "brand": {'name': 'Brand', 'name_es': 'Marca',
+            'key': 'brand', 'match': None},
+        "provider": {'name': 'Provider', 'name_es': 'Proveedor',
+            'key': 'provider', 'match': None}
+    }
+    for _k, _r in brand_prov.items():
+        print('Loading:', _k)
+        # Save attribute classes
+        save_attr_classes(_r)
+    print('Saved Brand and Provider as Clsses!')
     # Attributes upload
     with open('data/dumps/attributes.json', 'r') as _fr:
         for _k, _r in json.loads(_fr.read()).items():
