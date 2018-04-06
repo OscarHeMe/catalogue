@@ -6,13 +6,13 @@ import requests
 import ast
 import json
 
-class Brand(object):
+class Attr(object):
     """
-        Model for fetching brands
+        Model for fetching attributes, items by attributes
     """
 
     @staticmethod
-    def get_all(retailer="byprice", fields=['brand_uuid','name'],p=None,ipp=None):
+    def get_all(source="byprice", fields=['brand_uuid','name'],p=None,ipp=None):
         """ Get list of brands of a given retailer
         """
 

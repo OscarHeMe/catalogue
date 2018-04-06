@@ -23,7 +23,7 @@ class Product(object):
         try:
             q = g._db.query("SELECT * FROM product LIMIT 1").fetch()
         except:
-            logger.error("Postgres Items Connection error")
+            logger.error("Postgres Catalogue Connection error")
             return False
         for i in q:
             logger.info('Product UUID: ' + str(i['product_uuid']))
