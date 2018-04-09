@@ -11,9 +11,11 @@ from app.norm.normalize_text import key_format
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
 
 class Item(object):
+    """ Class perform Query methods on PostgreSQL items
     """
-        Class perform Query methods on PostgreSQL items
-    """
+
+    def __init__(self):
+        pass
 
     @staticmethod
     def get_one():
@@ -28,3 +30,5 @@ class Item(object):
         for i in q:
             logger.info('Item UUID: ' + str(i['item_uuid']))
         return {'msg':'Postgres Catalogue One Working!'}
+
+
