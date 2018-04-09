@@ -3,7 +3,7 @@ import os
 import sys
 
 # General
-APP_MODE = os.getenv('APP_MODE','SERVICE')
+APP_MODE = os.getenv('APP_MODE','CONSUMER')
 APP_NAME='catalogue-'+APP_MODE.lower()
 APP_SECRET = os.getenv('APP_SECRET', '#catalogue')
 
@@ -37,8 +37,8 @@ SRV_GEOLOCATION = "dev."+SRV_GEOLOCATION if ENV.upper() == 'DEV' else SRV_GEOLOC
 
 # Consumer vars
 STREAMER = os.getenv('STREAMER', 'rabbitmq')
-STREAMER_HOST = os.getenv('STREAMER_HOST', 'localhost')
-STREAMER_PORT = os.getenv('STREAMER_PORT', '')
+STREAMER_HOST = os.getenv('STREAMER_HOST', 'rabbitmq')
+STREAMER_PORT = os.getenv('STREAMER_PORT', '9092')
 STREAMER_EXCHANGE = os.getenv('STREAMER_EXCHANGE', 'data')
 STREAMER_EXCHANGE_TYPE = os.getenv('STREAMER_EXCHANGE_TYPE', 'direct')
 

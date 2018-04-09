@@ -2,9 +2,9 @@
 from config import *
 import datetime
 import json
-from .models import item
-from .rabbit_engine import RabbitEngine
-from . import applogger
+from .models.product import Product
+from .utils.rabbit_engine import RabbitEngine
+from .utils import applogger
 import sys
 
 # Logging
@@ -21,11 +21,17 @@ def callback(ch, method, properties, body):
     new_item = json.loads(body.decode('utf-8'))
     logger.debug("Debugging new item")
     logger.debug(new_item)
-    try:
-        ###
-        # Hacer aqui todo el flow del consumer
-        ###
-    except Exception as e:
+    #try:
+    if True:
+
+        if not Product.validate(new_item):
+            logger.warning('Not a valid product!!!')
+        else:
+            logger.debug('Valid product!!!')
+            product = Product(new_item) 
+        pass
+    #except Exception as e:
+    if False:
         logger.error(e)
         logger.warning("Could not save product in DB!")
     try: 

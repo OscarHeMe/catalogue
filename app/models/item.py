@@ -1,6 +1,6 @@
 import datetime
 from flask import g
-from app import errors, logger
+from app.utils import errors, applogger
 from config import *
 import requests
 from pprint import pformat as pf
@@ -9,6 +9,7 @@ import json
 from app.norm.normalize_text import key_format
 
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
+logger = applogger.get_logger()
 
 class Item(object):
     """

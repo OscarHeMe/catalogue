@@ -9,6 +9,7 @@ import datetime
 import app.utils.applogger as applogger
 import app.utils.errors as errors
 import app.utils.db as db
+from app import consumer
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -18,6 +19,9 @@ CORS(app)
 applogger.create_logger()
 logger = applogger.get_logger()
    
+@app.cli.command('consumer')
+def consumer_cmd():
+    consumer.start()
 
 @app.cli.command('initdb')
 def initdb_cmd():
