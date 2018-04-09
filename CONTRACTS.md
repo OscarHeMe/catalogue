@@ -169,7 +169,7 @@
 }
 ```
 
-## <a name="get_resp"></a>  Get Products by Item UUIDs
+## Get Products by Item UUIDs
 
 **Method**:  GET
 
@@ -184,7 +184,7 @@
 
 *Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
 
-**Response:**
+<a name="get_resp"></a>  **Response:**
 
 ```json
 {
