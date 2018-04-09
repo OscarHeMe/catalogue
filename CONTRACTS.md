@@ -169,7 +169,7 @@
 }
 ```
 
-## Get Products by Item UUID
+## <a name="get_resp"></a>  Get Products by Item UUIDs
 
 **Method**:  GET
 
@@ -228,3 +228,22 @@
         }, // ...
     ], // optional
 ```
+
+## Get Products by Product UUIDs
+
+**Method**:  GET
+
+**Endpoint**: `/product/by/puuid?keys=<product_uuids | required>&cols=<product_table_fields | optional>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| keys  | Comma Separated Product UUIDs | required |
+| cols  | Product attributes (categories, ingredients, etc.) | optional |
+
+*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+
+**Response:**
+
+Same as previous [endpoint](#get_resp).
