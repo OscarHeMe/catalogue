@@ -34,21 +34,27 @@ def modify_prod():
 	jsonify({'status': 'in_construction'})
 
 
-@mod.route("/by_iuuid", methods=['GET'])
+@mod.route("/by/iuuid", methods=['GET'])
 def get_byitem():
 	""" Endpoint to fetch `Product`s by item_uuid's.
 	"""
 	jsonify({'status': 'in_construction'})
 
 
-@mod.route("/by_puuid", methods=['GET'])
+@mod.route("/by/puuid", methods=['GET'])
 def get_byprod():
 	""" Endpoint to fetch `Product`s by product_uuid's.
 	"""
 	jsonify({'status': 'in_construction'})
 
 
-@mod.route("/by_attr", methods=['GET'])
+@mod.route("/by/source", methods=['GET'])
+def get_byattr():
+	""" Endpoint to fetch `Product`s by attr's.
+	"""
+	jsonify({'status': 'in_construction'})
+
+@mod.route("/by/attr", methods=['GET'])
 def get_byattr():
 	""" Endpoint to fetch `Product`s by attr's.
 	"""
