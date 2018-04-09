@@ -22,18 +22,34 @@ def get_one():
 def add_item():
 	""" Endpoint to add a new `Item`
 	"""
-	jsonify({"status": "in_construction"})
+	logger.info("Adding new Item...")
+	params = request.get_json()
+	logger.debug(params)
+	if not params:
+		raise errors.ApiError(70001, "Missing required key params")
+	# Verify needed key-values
+	_needed_params = {'gtin','name','description'}
+	if not _needed_params.issubset(params.keys()):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Call to save Item
+	_item = Item(params)
+	_item.save()
+	return jsonify({
+		"status": "OK",
+		"message": _item.message,
+		"item_uuid": _item.item_uuid
+		})
 
 
 @mod.route('/modify', methods=['POST'])
 def modify_item():
 	""" Endpoint to modify a new `Item`
 	"""
-	jsonify({"status": "in_construction"})
+	return jsonify({"status": "in_construction"})
 
 
 @mod.route('/delete', methods=['GET'])
 def delete_item():
 	""" Endpoint to delete a new `Item`
 	"""
-	jsonify({"status": "in_construction"})
+	return jsonify({"status": "in_construction"})

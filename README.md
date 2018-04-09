@@ -95,8 +95,12 @@ export LOG_PORT='<remote logging port>'
 
 ## Testing
 
+Set the environment variable `$MODE` to the test the consumer or the web service and then run the following:
+
+```bash
+source bin/tests.sh
 ```
-```
+
 
 ## License
 

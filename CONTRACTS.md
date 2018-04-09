@@ -329,3 +329,10 @@ Same as previous [endpoint](#get_resp).
     "message": "Product Attr correctly deleted! (44128)"
 }
 ```
+
+------
+
+# Errors
+
+- **70001** : "Missing required key params"
+- **70002** : "Issues saving in DB!"
