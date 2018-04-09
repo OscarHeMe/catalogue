@@ -63,7 +63,7 @@ def delete_prod():
 
 
 @mod.route("/delete/attr", methods=['GET'])
-def delete_prod():
+def delete_prod_attr():
 	""" Endpoint to delete `Product`s attribute by product_uuid 
 		and  attribute key.
 	"""
