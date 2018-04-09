@@ -44,7 +44,6 @@ export SQL_PORT='<postgresql port number>'
 export SQL_USER='<postgresql username>'
 export SQL_PASSWORD='<postgresql passwd>'
 export SQL_DB='<postgresql db name: items>'
-export PGPASSWORD='<pwd>'
 export SRV_GEOLOCATION='<url to the geolocation service>'
 ```
 
@@ -93,6 +92,11 @@ export LOG_PORT='<remote logging port>'
 2. Export environment variables `source .envvars`
 3. Initialize database `flask initdb`
 4. Run gunicorn process `flask consumer`
+
+## Testing
+
+```
+```
 
 ## License
 
