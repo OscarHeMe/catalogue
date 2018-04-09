@@ -247,3 +247,85 @@
 **Response:**
 
 Same as previous [endpoint](#get_resp).
+
+## Get Products by Source
+
+**Method**:  GET
+
+**Endpoint**: `/product/by/source?keys=<source_key | required>&cols=<product_table_fields | optional>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| keys  | Comma Separated Source Keys | required |
+| cols  | Product attributes (categories, ingredients, etc.) | optional |
+
+*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+
+**Response:**
+
+Same as previous [endpoint](#get_resp).
+
+## Get Products by Attr
+
+**Method**:  GET
+
+**Endpoint**: `/product/by/attr?keys=<attr_key | required>&vals=<values | optional>&cols=<product_table_fields | optional>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| keys  | Comma Separated Attr Keys | required |
+| vals  | Comma Separated Attr Values | optional, default=None |
+| cols  | Product attributes (categories, ingredients, etc.) | optional |
+
+*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+
+**Response:**
+
+Same as previous [endpoint](#get_resp).
+
+## Delete Product
+
+**Method**:  GET
+
+**Endpoint**: `/product/delete?uuid=<item_uuid | required>`
+
+**Query Params:**
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| uuid  | Item UUID | required |
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Product correctly deleted! (sf84sd-68f44gsf86g4-sd8f644g)"
+}
+```
+
+## Delete Product Attr
+
+**Method**:  GET
+
+**Endpoint**: `/product/delete?uuid=<item_uuid | required>&id_p_attr=<id_product_attribute | optional>`
+
+**Query Params:**
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| uuid  | Item UUID | required |
+| id_p_attr  | Product Attribute ID | required |
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Product Attr correctly deleted! (44128)"
+}
+```
