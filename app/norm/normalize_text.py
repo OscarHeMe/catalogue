@@ -21,6 +21,12 @@ def remove_accents(data):
         return None
     return ''.join(x for x in unicodedata.normalize('NFKD', data) if x in string.ascii_letters+string.digits+"." or x == " ").lower()
 
+def tuplify(data):
+    _tup = tuple('{}'.format(x) for x in data.split(','))
+    if len(_tup) == 1:
+        return str(_tup).replace(',','')
+    return str(_tup)
+
 '''
 Normaliza el precio, de text a numeric
 '''

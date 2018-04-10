@@ -68,7 +68,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
             print(json.loads(_r.data.decode('utf-8')))
         except:
             pass
-        self.assertEquals(_r.status_code, 200)
+        self.assertEqual(_r.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()

@@ -6,7 +6,7 @@ import requests
 from pprint import pformat as pf
 import ast
 import json
-from app.norm.normalize_text import key_format
+from app.norm.normalize_text import key_format, tuplify
 
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
 
@@ -40,7 +40,7 @@ class Item(object):
                 self.item_uuid = None
         elif Item.exists({'gtin': self.gtin}):
             self.message = 'Item already exists!'
-            self.item_uuid = Item.get(['item_uuid'])['item_uuid']
+            self.item_uuid = Item.get(self.gtin)[0]['item_uuid']
             return True
         # Load model
         m_item = g._db.model('item', 'item_uuid')
@@ -84,6 +84,41 @@ class Item(object):
             logger.error(e)
             return False
         return exists
+    
+    @staticmethod
+    def get(_val, by='gtin', _cols=['item_uuid'], limit=None):
+        """ Static method to get Item info
+
+            Params:
+            -----
+            _val : str
+                Value to query from
+            by : str
+                Column to query in
+            _cols : list
+                Columns to retrieve
+            limit : int
+                Elements to limit query
+
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        _cols = ','.join(_cols) if _cols else 'item_uuid'
+        _query = "SELECT {} FROM item WHERE {} IN {}"\
+            .format(_cols, by, tuplify(_val))
+        if limit:
+            _query += ' LIMIT {}'.format(limit)
+        logger.debug(_query)
+        try:
+            _items = g._db.query(_query).fetch()
+            logger.debug("Got {} items".format(len(_items)))
+        except Exception as e:
+            logger.error(e)
+            raise errors.ApiError(70003, "Issues fetching elements in DB")
+        return _items
+
 
     @staticmethod
     def get_one():

@@ -336,3 +336,4 @@ Same as previous [endpoint](#get_resp).
 
 - **70001** : "Missing required key params"
 - **70002** : "Issues saving in DB!"
+- **70003** : "Issues fetching elements in DB"
