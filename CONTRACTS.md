@@ -101,9 +101,10 @@
         {
             "attr_name": "Medicamentos de Patente",
             "clss_name": "Categoría",
-            "value": "94B1",
+            "value": "94B1", // optional
             "attr_key": "medicamentos_de_patente",
-            "clss_key": "category"
+            "clss_key": "category",
+            "precision": "exact", // optional
         },
         // ...
     ] // optional

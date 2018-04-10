@@ -90,6 +90,7 @@ class Product(object):
             if self.categories:
                 self.save_categories()
             # Save product attrs
+            
         except Exception as e:
             logger.error(e)
             raise errors.ApiError(70002, "Issues saving in DB!")

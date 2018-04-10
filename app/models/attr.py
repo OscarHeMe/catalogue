@@ -5,45 +5,34 @@ from config import *
 import requests
 import ast
 import json
+from app.models.clss import Clss
+from app.norm.normalize_text import key_format
 
 class Attr(object):
-    """
-        Model for fetching attributes, items by attributes
+    """ Model for fetching attributes
     """
 
-    @staticmethod
-    def get_all(source="byprice", fields=['brand_uuid','name'],p=None,ipp=None):
-        """ Get list of brands of a given retailer
+    __attrs__ = ['id_attr', 'id_clss', 'name', 'key',
+        'match', 'has_value', 'meta', 'source']
+
+    def __init__(self):
+        """ Attr Constructor
+
+            Params:
+            -----
+            _args : dict
+                `Attr` model arguments
         """
+        # Arguments verification and addition
+        for _k in self.__attrs__:
+            if _k in _args:
+                self.__dict__[_k] = _args[_k]
+                continue
+            self.__dict__[_k] = None
+        # Formatting needed params
+        self.key = key_format(self.name)
+        if not self.match:
+            self.match = [self.key]
+        
 
-        if p and ipp:
-            offset = """ OFFSET %s LIMIT %s  """ % ( (p-1)*ipp, ipp)
-        else:
-            offset = """ """
-
-        rows = g._db.query("""
-            select """+ """, """.join(fields) +""" from brand 
-            where retailer = %s 
-            order by name asc
-            """ + offset + """
-        """, (retailer,)).fetch()        
-
-        return rows or []
-
-
-    @staticmethod
-    def get_by_items(items, retailer='byprice'):
-        ''' Get brands by item_uuids
-        '''
-        # Get the brands
-        brands = g._db.query("""
-            select * from brand 
-            where retailer = 'ims'
-            and brand_uuid in (
-                select brand_uuid from item_brand
-                where item_uuid in (""" +  (""", """.join(["%s" for i in items])) + """)
-            ) """
-            , items).fetch()
-        if not brands:
-            return []
-        return brands
+    
