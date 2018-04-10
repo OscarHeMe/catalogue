@@ -87,6 +87,17 @@ def update_clss_seq():
         .format(_seq[0]['id_clss'] + 1))
     return True
 
+def update_cat_seq():
+    """ Update category.id_category PSQL sequence to avoid issues
+    """ 
+    _seq = _db.query("""SELECT id_category FROM category 
+        ORDER BY id_category DESC LIMIT 1""").fetch()
+    if not _seq:
+        return False
+    _db.query("ALTER SEQUENCE category_id_category_seq RESTART WITH {}"\
+        .format(_seq[0]['id_category'] + 1))
+    return True
+
 def save_attrs(obj):
     """ Upsert `Attr` Table
     """
@@ -461,6 +472,8 @@ if __name__ == '__main__':
             print('Loading:', _r['key'])
             # Save category
             save_category(_r)
+        # Update category sequence
+        update_cat_seq()
     print('Saved Categories!')
     # Attribute Class upload
     with open('data/dumps/attribute_classes.json', 'r') as _fr:

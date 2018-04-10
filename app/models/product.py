@@ -6,6 +6,7 @@ import requests
 from pprint import pformat as pf
 import ast
 import json
+from app.models.category import Category
 from app.norm.normalize_text import key_format, tuplify
 
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
@@ -99,7 +100,7 @@ class Product(object):
         if self.url:
             m_prod.url = self.url
         if self.images:
-            m_prod.images = self.images
+            m_prod.images = ','.join(self.images)
         m_prod.last_modified = str(datetime.datetime.utcnow())
         try:
             self.message = "Correctly {} Product!".format('updated' \
@@ -107,12 +108,85 @@ class Product(object):
             m_prod.save()
             self.product_uuid = m_prod.last_id
             logger.info(self.message)
-            # Save product attrs
             # Save product images
+            if self.images:
+                self.save_images()
             # Save product categories
+            if self.categories:
+                self.save_categories()
+            # Save product attrs
         except Exception as e:
             logger.error(e)
             raise errors.ApiError(70002, "Issues saving in DB!")
+        return True
+
+    def save_images(self):
+        """ Class method to save product images
+        """
+        for _img in self.images:
+            try:
+                _exist = g._db.query("""SELECT EXISTS (
+                        SELECT 1 FROM product_image
+                        WHERE product_uuid = '{}'
+                        AND image = '{}')"""\
+                        .format(self.product_uuid, _img))\
+                    .fetch()[0]['exists']
+                if _exist:
+                    logger.info("Image already in DB!")
+                    continue
+                m_prod_im = g._db.model('product_image', 'id_product_image')
+                m_prod_im.product_uuid = self.product_uuid
+                m_prod_im.image = _img
+                m_prod_im.last_modified = str(datetime.datetime.utcnow())
+                m_prod_im.save()
+                logger.info("Product Image correctly saved! ({})"\
+                    .format(m_prod_im.last_id))
+            except Exception as e:
+                logger.error(e)
+                logger.warning("Could not save Product image!")
+        return True
+    
+    def save_categories(self):
+        """ Class method to save product categories
+        """
+        _parent = None
+        for _cat in self.categories.split(','):
+            try:
+                # Get ID if exists, otherwise create category                
+                id_cat = Category.get_id(_cat, self.source)
+                if not id_cat:
+                    categ = Category({
+                                'source': self.source,
+                                'id_parent' : Category.get_id(_cat, self.source, 'id_parent'),
+                                'name': _cat
+                            })
+                    id_cat = categ.save()
+                    # Emergency skip
+                    if not id_cat:
+                        continue
+                # Verify product category does not exist
+                _exists = g._db.query("""SELECT EXISTS (
+                        SELECT 1 FROM product_category
+                        WHERE id_category = {}
+                        AND product_uuid = '{}')"""\
+                        .format(id_cat, self.product_uuid))\
+                    .fetch()[0]['exists']
+                if _exists:
+                    logger.info("Category already assigned to Product!")
+                    continue
+                m_prod_cat = g._db.model('product_category', 'id_product_category')
+                m_prod_cat.product_uuid = self.product_uuid
+                m_prod_cat.id_category = id_cat
+                m_prod_cat.last_modified = str(datetime.datetime.utcnow())
+                m_prod_cat.save()
+                logger.info("Product Category correctly saved! ({})"\
+                    .format(m_prod_cat.last_id))
+                # Save category as Product attribute
+                # _attr = Attr()
+                # _attr.save()
+            except Exception as e:
+                logger.error(e)
+                logger.warning("Could not save Product category!")
         return True
 
     @staticmethod
@@ -161,7 +235,7 @@ class Product(object):
                 List of elements
         """
         _cols = ','.join(_cols) if _cols else 'product_uuid'
-        _where = ' AND '.join(["{} IN ({})"\
+        _where = ' AND '.join(["{} IN {}"\
                                 .format(z[0], tuplify(z[1])) \
                             for z in _by.items()]
                         )
