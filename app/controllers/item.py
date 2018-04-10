@@ -45,7 +45,23 @@ def add_item():
 def modify_item():
 	""" Endpoint to modify a new `Item`
 	"""
-	return jsonify({"status": "in_construction"})
+	logger.info("Modify Item...")
+	params = request.get_json()
+	logger.debug(params)
+	if not params:
+		raise errors.ApiError(70001, "Missing required key params")
+	# Verify needed key-values
+	_needed_params = {'item_uuid'}
+	if not _needed_params.issubset(params.keys()):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Call to save Item
+	_item = Item(params)
+	_item.save()
+	return jsonify({
+		"status": "OK",
+		"message": _item.message,
+		"item_uuid": _item.item_uuid
+		})
 
 
 @mod.route('/delete', methods=['GET'])

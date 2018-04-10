@@ -27,9 +27,12 @@ class Item(object):
         """
         self.item_uuid = params['item_uuid'] \
             if 'item_uuid' in params else None
-        self.name = params['name']
-        self.description = params['description']
-        self.gtin = str(params['gtin']).zfill(14)[-14:]
+        self.name = params['name'] \
+            if 'name' in params else None
+        self.description = params['description'] \
+            if 'description' in params else None
+        self.gtin = str(params['gtin']).zfill(14)[-14:] \
+            if 'gtin' in params else None
 
     def save(self):
         """ Class method to save Item record in DB 
@@ -52,8 +55,10 @@ class Item(object):
         m_item.description = self.description
         m_item.last_modified = str(datetime.datetime.utcnow())
         try:
+            self.message = "Correctly {} Item!".format('updated' \
+                if self.item_uuid else 'stored')
             m_item.save()
-            self.message = "Correctly stored Item!"
+            self.item_uuid = m_item.last_id
             logger.info(self.message)
         except Exception as e:
             logger.error(e)

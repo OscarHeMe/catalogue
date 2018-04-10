@@ -36,7 +36,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
     def setUp(self):
         """ Generating Flask App context for testing
         """
-        print("***************************")
+        print("\n***************************\n")
         self.app = app.app.test_client()
 
     def tearDown(self):
@@ -56,19 +56,42 @@ class CatalogueServiceTestCase(unittest.TestCase):
             self.assertFalse(True)
     
     #@unittest.skip('Already tested')
-    def test_1_add_item(self):
+    def test_01_add_item(self):
         """ Add New Item
         """ 
+        global new_item_test
         print("Add New Item")
         _r =  self.app.post('/item/add',
                 data=json.dumps(new_item_test),
                 headers={'content-type':'application/json'})
         print(_r.status_code)
         try:
-            print(json.loads(_r.data.decode('utf-8')))
+            _jr = json.loads(_r.data.decode('utf-8'))
+            print(_jr)
         except:
             pass
         self.assertEqual(_r.status_code, 200)
+        new_item_test['item_uuid'] = _jr['item_uuid']
+    
+    #@unittest.skip('Already tested')
+    def test_02_modify_item(self):
+        """ Modify existing Item
+        """ 
+        print("Modify existing Item")
+        global new_item_test
+        _tmp_item = new_item_test
+        _tmp_item['name'] = new_item_test['name'].upper()
+        _r =  self.app.post('/item/modify',
+                data=json.dumps(_tmp_item),
+                headers={'content-type':'application/json'})
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            print(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
+
 
 if __name__ == '__main__':
     unittest.main()
