@@ -34,11 +34,11 @@ def add_prod():
 		raise errors.ApiError(70001, "Missing required key params")
 	# Call to save Product
 	_prod = Product(params)
-	#_prod.save()
+	_prod.save()
 	return jsonify({
 		"status": "OK",
-		#"message": _prod.message,
-		#"item_uuid": _prod.item_uuid
+		"message": _prod.message,
+		"product_uuid": _prod.product_uuid
 		})
 
 

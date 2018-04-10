@@ -38,9 +38,12 @@ class Item(object):
         """ Class method to save Item record in DB 
         """
         logger.info("Saving Item...")
+        # Verify for update
         if self.item_uuid:
             if not Item.exists({'item_uuid': self.item_uuid}):
-                self.item_uuid = None
+                # If wants to update but wrong UUID, return Error                
+                raise errors.ApiError(70006, "Cannot update, UUID not in DB!")
+        # Verify for insert
         elif Item.exists({'gtin': self.gtin}):
             self.message = 'Item already exists!'
             self.item_uuid = Item.get(self.gtin)[0]['item_uuid']

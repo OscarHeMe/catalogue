@@ -339,3 +339,4 @@ Same as previous [endpoint](#get_resp).
 - **70003** : "Issues fetching elements in DB"
 - **70004** : "Could not apply transaction in DB"
 - **70005** : "Wrong DataType to save {table}!"
+- **70006** : "Cannot update, UUID not in DB!"
