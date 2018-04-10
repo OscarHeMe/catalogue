@@ -86,7 +86,7 @@
     "product_id": "0001245795", // required
     "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g", // optional
     "name": "LIPITOR 80 mg", // required
-    "normalized": "LIPITOR 80 mg", // required
+    "normalized": "LIPITOR 80 mg", // optional
     "description": "2 Caja, 15 Tabletas", // required
     "gtin": "07501234569781", // optional
     "raw_html": "<body>Lipitor <div>...</div></body>", // optional
@@ -115,7 +115,7 @@
 ```json
 {
     "status": "OK",
-    "message": "Product correctly added! (sf84sd-68f44gsf86g4-sd8f644g)",
+    "message": "Product correctly added!",
     "product_uuid": "sf84sd-68f44gsf86g4-sd8f644g"
 }
 ```
@@ -338,3 +338,4 @@ Same as previous [endpoint](#get_resp).
 - **70002** : "Issues saving in DB!"
 - **70003** : "Issues fetching elements in DB"
 - **70004** : "Could not apply transaction in DB"
+- **70005** : "Wrong DataType to save {table}!"

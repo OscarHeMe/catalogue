@@ -11,6 +11,22 @@ new_item_test = {
     "description": "refresco pepsi cola sin cafeina 354 ml"
 }
 
+# Add Product Test
+new_prod_test = {
+    "product_id": "00000000000000124900",
+    "gtin": "00000001249002",
+    "source": "chedraui",
+    "name": "refresco pepsi cola sin cafeina 354 ml",
+    "description": "refresco pepsi cola sin cafeina 354 ml",
+    "images" :  ['http://chedraui.com.mx/media/catalog/product/1/2/124900_00.jpg'],
+    "categories": "Despensa",
+    "url": "http://www.chedraui.com.mx/index.php/universidad/refresco-pepsi-cola-sin-cafeina-354ml.html",
+    "brand": "", # Missing
+    "provider": "", # Missing
+    "attributes": [], # Missing
+    "raw_html": "", # Missing
+    # "item_uuid": "" # Missing
+}
 
 class CatalogueServiceTestCase(unittest.TestCase):
     """ Test Case for Catalogue Service
@@ -43,7 +59,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         pass
 
     @unittest.skip('Already tested')
-    def test_0_catalogue_connection(self):
+    def test_00_catalogue_connection(self):
         """ Testing Catalogue DB connection
         """ 
         print("Testing Catalogue DB connection")
@@ -108,6 +124,22 @@ class CatalogueServiceTestCase(unittest.TestCase):
             pass
         self.assertEqual(_r.status_code, 200)
 
+    #@unittest.skip('Already tested')
+    def test_04_add_product(self):
+        """ Add New Product
+        """ 
+        global new_prod_test
+        print("Add New Product")
+        _r =  self.app.post('/product/add',
+                data=json.dumps(new_prod_test),
+                headers={'content-type':'application/json'})
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            print(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()
