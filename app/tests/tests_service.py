@@ -91,6 +91,22 @@ class CatalogueServiceTestCase(unittest.TestCase):
         except:
             pass
         self.assertEqual(_r.status_code, 200)
+    
+    #@unittest.skip('Already tested')
+    def test_03_delete_item(self):
+        """ Delete existing Item
+        """ 
+        print("Delete Item")
+        global new_item_test
+        _r =  self.app.get('/item/delete?uuid='\
+                        + new_item_test['item_uuid'])
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            print(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
 
 
 if __name__ == '__main__':

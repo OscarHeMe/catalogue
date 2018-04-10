@@ -123,6 +123,36 @@ class Item(object):
             logger.error(e)
             raise errors.ApiError(70003, "Issues fetching elements in DB")
         return _items
+    
+    @staticmethod
+    def delete(i_uuid):
+        """ Static method to verify Item existance
+
+            Params:
+            -----
+            i_uuid : str
+                Item UUID to delete
+
+            Returns:
+            -----
+            resp : bool
+                Transaction status
+        """
+        logger.debug("Deleting Item...")
+        if not Item.exists({'item_uuid': i_uuid}):
+            return {
+                'message': "Item UUID not in DB!"
+            }
+        try:
+            g._db.query("DELETE FROM item WHERE item_uuid='{}'"\
+                        .format(i_uuid))
+        except Exception as e:
+            logger.error(e)
+            raise errors.ApiError(70004, "Could not apply transaction in DB")
+        return {
+            'message': "Item ({}) correctly deleted!".format(i_uuid)
+        }
+        
 
 
     @staticmethod

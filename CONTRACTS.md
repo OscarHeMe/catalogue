@@ -21,7 +21,7 @@
 ```json
 {
     "status": "OK",
-    "message": "Item correctly added! (sf84sd-68f44gsf86g4-sd8f644g)",
+    "message": "Correctly stored Item!",
     "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g"
 }
 ```
@@ -48,7 +48,7 @@
 ```json
 {
     "status": "OK",
-    "message": "Item correctly modified! (sf84sd-68f44gsf86g4-sd8f644g)",
+    "message": "Correctly updated Item!",
     "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g"
 }
 ```
@@ -64,7 +64,7 @@
 ```json
 {
     "status": "OK",
-    "message": "Item correctly deleted! (sf84sd-68f44gsf86g4-sd8f644g)"
+    "message": "Item (sf84sd-68f44gsf86g4-sd8f644g) correctly deleted! "
 }
 ```
 
@@ -337,3 +337,4 @@ Same as previous [endpoint](#get_resp).
 - **70001** : "Missing required key params"
 - **70002** : "Issues saving in DB!"
 - **70003** : "Issues fetching elements in DB"
+- **70004** : "Could not apply transaction in DB"

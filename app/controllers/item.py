@@ -68,4 +68,18 @@ def modify_item():
 def delete_item():
 	""" Endpoint to delete a new `Item`
 	"""
-	return jsonify({"status": "in_construction"})
+	logger.info("Delete Item...")
+	params = request.args
+	logger.debug(params)
+	if not params:
+		raise errors.ApiError(70001, "Missing required key params")
+	# Verify needed key-values
+	_needed_params = {'uuid'}
+	if not _needed_params.issubset(params):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Call to delete Item
+	_resp = Item.delete(params['uuid'])
+	return jsonify({
+		"status": "OK",
+		"message": _resp['message']
+		})
