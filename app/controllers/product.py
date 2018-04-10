@@ -50,6 +50,13 @@ def modify_prod():
 	return jsonify({'status': 'in_construction'})
 
 
+@mod.route("/image/update", methods=['POST'])
+def update_img_prod():
+	""" Endpoint to update a `Product Image`.
+	"""
+	return jsonify({'status': 'in_construction'})
+
+
 @mod.route("/by/iuuid", methods=['GET'])
 def get_byitem():
 	""" Endpoint to fetch `Product`s by item_uuid's.

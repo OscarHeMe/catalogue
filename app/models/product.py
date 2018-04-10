@@ -72,35 +72,10 @@ class Product(object):
             return True
         # Load model
         m_prod = g._db.model('product', 'product_uuid')
-        if self.product_uuid:
-            m_prod.product_uuid = self.product_uuid
-        if self.item_uuid:
-            m_prod.item_uuid = self.item_uuid
-        if self.source:
-            m_prod.source = self.source
-        if self.product_id:
-            m_prod.product_id = self.product_id
-        if self.name:
-            m_prod.name = self.name
-        if self.description:
-            m_prod.description = self.description
-        if self.normalized:
-            m_prod.normalized = self.normalized
-        m_prod.raw_product = self.raw_product
-        if self.raw_html:
-            m_prod.raw_html = self.raw_html
-        if self.categories:
-            m_prod.categories = self.categories
-        if self.ingredients:
-            m_prod.ingredients = self.ingredients
-        if self.brand:
-            m_prod.brand = self.brand
-        if self.provider:
-            m_prod.provider = self.provider
-        if self.url:
-            m_prod.url = self.url
-        if self.images:
-            m_prod.images = ','.join(self.images)
+        for _k in self.__attrs__:
+            if _k != 'attributes' and self.__dict__[_k]:
+                m_prod.__dict__[_k] = self.__dict__[_k]
+        # Add date
         m_prod.last_modified = str(datetime.datetime.utcnow())
         try:
             self.message = "Correctly {} Product!".format('updated' \
