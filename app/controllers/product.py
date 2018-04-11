@@ -23,7 +23,7 @@ def add_prod():
 	""" Endpoint to add a new `Product` with respective,
 		product images, attributes and categories.
 	"""
-	logger.info("Adding new Item...")
+	logger.info("Adding new Product...")
 	params = request.get_json()
 	logger.debug(params)
 	if not params:
@@ -47,7 +47,23 @@ def modify_prod():
 	""" Endpoint to modify a `Product` with respective,
 		product images, attributes and categories.
 	"""
-	return jsonify({'status': 'in_construction'})
+	logger.info("Modify existing Product...")
+	params = request.get_json()
+	logger.debug(params)
+	if not params:
+		raise errors.ApiError(70001, "Missing required key params")
+	# Verify needed key-values
+	_needed_params = {'product_uuid'}
+	if not _needed_params.issubset(params.keys()):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Call to save Product
+	_prod = Product(params)
+	_prod.save()
+	return jsonify({
+		"status": "OK",
+		"message": _prod.message,
+		"product_uuid": _prod.product_uuid
+		})
 
 
 @mod.route("/image/update", methods=['POST'])

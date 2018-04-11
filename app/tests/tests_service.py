@@ -148,7 +148,25 @@ class CatalogueServiceTestCase(unittest.TestCase):
         new_prod_test['product_uuid'] = _jr['product_uuid']
     
     #@unittest.skip('Already tested')
-    def test_50_delete_product(self):
+    def test_05_modify_product(self):
+        """ Modify existing Product
+        """ 
+        global new_prod_test
+        print("Modify existing Product")
+        new_prod_test['name'] = new_prod_test['name'].upper()
+        _r =  self.app.post('/product/modify',
+                data=json.dumps(new_prod_test),
+                headers={'content-type':'application/json'})
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            print(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
+    
+    #@unittest.skip('Already tested')
+    def test_90_delete_product(self):
         """ Delete existing Product and its references
         """ 
         print("Delete existing Product and its references")
