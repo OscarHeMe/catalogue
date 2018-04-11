@@ -129,7 +129,7 @@ class Item(object):
     
     @staticmethod
     def delete(i_uuid):
-        """ Static method to verify Item existance
+        """ Static method to delete Item 
 
             Params:
             -----
@@ -155,7 +155,6 @@ class Item(object):
         return {
             'message': "Item ({}) correctly deleted!".format(i_uuid)
         }
-        
 
 
     @staticmethod

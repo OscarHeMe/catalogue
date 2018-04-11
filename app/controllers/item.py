@@ -66,7 +66,7 @@ def modify_item():
 
 @mod.route('/delete', methods=['GET'])
 def delete_item():
-	""" Endpoint to delete a new `Item`
+	""" Endpoint to delete an `Item` by item_uuid
 	"""
 	logger.info("Delete Item...")
 	params = request.args

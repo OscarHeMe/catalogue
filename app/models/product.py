@@ -301,3 +301,42 @@ class Product(object):
         for i in q:
             logger.info('Product UUID: ' + str(i['product_uuid']))
         return {'msg':'Postgres Items One Working!'}
+
+    @staticmethod
+    def delete(p_uuid):
+        """ Static method to delete Product
+
+            Params:
+            -----
+            p_uuid : str
+                Product UUID to delete
+
+            Returns:
+            -----
+            resp : bool
+                Transaction status
+        """
+        logger.debug("Deleting Product...")
+        if not Product.exists({'product_uuid': p_uuid}):
+            return {
+                'message': "Product UUID not in DB!"
+            }
+        try:
+            # Delete from Product image
+            g._db.query("DELETE FROM product_image WHERE product_uuid='{}'"\
+                        .format(p_uuid))
+            # Delete from Product Category
+            g._db.query("DELETE FROM product_category WHERE product_uuid='{}'"\
+                        .format(p_uuid))
+            # Delete from Product Attr
+            g._db.query("DELETE FROM product_attr WHERE product_uuid='{}'"\
+                        .format(p_uuid))
+            # Delete from Product
+            g._db.query("DELETE FROM product WHERE product_uuid='{}'"\
+                        .format(p_uuid))
+        except Exception as e:
+            logger.error(e)
+            raise errors.ApiError(70004, "Could not apply transaction in DB")
+        return {
+            'message': "Product ({}) correctly deleted!".format(p_uuid)
+        }

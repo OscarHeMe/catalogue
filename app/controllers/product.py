@@ -87,9 +87,24 @@ def get_byattr():
 
 @mod.route("/delete", methods=['GET'])
 def delete_prod():
-	""" Endpoint to delete `Product`s by product_uuid.
+	""" Endpoint to delete a `Product`s by product_uuid.
 	"""
-	return jsonify({'status': 'in_construction'})
+	logger.info("Delete Product...")
+	params = request.args
+	logger.debug(params)
+	if not params:
+		raise errors.ApiError(70001, "Missing required key params")
+	# Verify needed key-values
+	_needed_params = {'uuid'}
+	if not _needed_params.issubset(params):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Call to delete Item
+	_resp = Product.delete(params['uuid'])
+	return jsonify({
+		"status": "OK",
+		"message": _resp['message']
+		})
+
 
 
 @mod.route("/delete/attr", methods=['GET'])
