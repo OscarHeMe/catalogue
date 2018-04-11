@@ -171,6 +171,31 @@
 }
 ```
 
+## Update Product Image
+
+**Method**:  POST
+
+**Endpoint**: `/product/image`
+
+**Params**:
+
+```json
+{
+    "product_uuid": "sf84sd-68f4sd6f8h4f86g4-sd8f644g", // required
+    "image": "walmart", // required
+    "descriptor": [[2,3,4],[3,4,5]], // optional
+}
+```
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Product Image correctly updated!"
+}
+```
+
 ## Get Products by Item UUIDs
 
 **Method**:  GET
@@ -314,13 +339,13 @@ Same as previous [endpoint](#get_resp).
 
 **Method**:  GET
 
-**Endpoint**: `/product/delete?uuid=<item_uuid | required>&id_p_attr=<id_product_attribute | optional>`
+**Endpoint**: `/product/delete?uuid=<product_uuid | required>&id_p_attr=<id_product_attribute | required>`
 
 **Query Params:**
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
-| uuid  | Item UUID | required |
+| uuid  | Product UUID | required |
 | id_p_attr  | Product Attribute ID | required |
 
 **Response:**
@@ -329,6 +354,28 @@ Same as previous [endpoint](#get_resp).
 {
     "status": "OK",
     "message": "Product Attr correctly deleted! (44128)"
+}
+```
+
+## Delete Product Image
+
+**Method**:  GET
+
+**Endpoint**: `/product/image/delete?uuid=<item_uuid | required>&id_pimg=<id_product_image | required>`
+
+**Query Params:**
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| uuid  | Product UUID | required |
+| id_pimg  | Product Image ID | required |
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Product Image correctly deleted! (44128)"
 }
 ```
 

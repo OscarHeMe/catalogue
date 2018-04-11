@@ -66,11 +66,24 @@ def modify_prod():
 		})
 
 
-@mod.route("/image/update", methods=['POST'])
+@mod.route("/image", methods=['POST'])
 def update_img_prod():
 	""" Endpoint to update a `Product Image`.
 	"""
-	return jsonify({'status': 'in_construction'})
+	logger.info("Update Product image...")
+	params = request.get_json()
+	logger.debug(params)
+	if not params:
+		raise errors.ApiError(70001, "Missing required key params")
+	# Verify needed key-values
+	_needed_params = {'product_uuid', 'image'}
+	if not _needed_params.issubset(params.keys()):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Call to update prod image
+	return jsonify({
+		'status': 'OK',
+		'message': Product.update_image(params)['message']
+	})
 
 
 @mod.route("/by/iuuid", methods=['GET'])

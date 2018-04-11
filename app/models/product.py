@@ -203,17 +203,61 @@ class Product(object):
                     logger.info("Image already in DB!")
                     continue
                 # Load model
-                m_prod_im = g._db.model('product_image', 'id_product_image')
-                m_prod_im.product_uuid = self.product_uuid
-                m_prod_im.image = _img
-                m_prod_im.last_modified = str(datetime.datetime.utcnow())
-                m_prod_im.save()
-                logger.info("Product Image correctly saved! ({})"\
-                    .format(m_prod_im.last_id))
+                Product.save_pimage(self.product_uuid, _img)
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product image!")
         return True
+    
+    @staticmethod
+    def save_pimage(p_uuid, _img, id_pim=None, descs=[]):
+        """ Static method to store in `product image`
+        """
+        m_prod_im = g._db.model('product_image', 'id_product_image')
+        if id_pim:
+            m_prod_im.id_product_image = id_pim
+        m_prod_im.product_uuid = p_uuid
+        m_prod_im.image = _img
+        if descs:
+            m_prod_im.descriptor = json.dumps(descs)
+        m_prod_im.last_modified = str(datetime.datetime.utcnow())
+        m_prod_im.save()
+        logger.info("Product Image correctly saved! ({})"\
+            .format(m_prod_im.last_id))
+        return True
+    
+    @staticmethod
+    def update_image(p_obj):
+        """ Static method to update a product image
+
+            Params:
+            -----
+            p_obj : dict
+                Product Image details (product_uuid, image, descriptors) 
+        """
+        try:
+            # Verify if prod image exists
+            id_pimg = g._db.query("""SELECT id_product_image
+                    FROM product_image
+                    WHERE product_uuid = '{}'
+                    AND image = '{}'
+                    LIMIT 1"""\
+                    .format(p_obj['product_uuid'], p_obj['image']))\
+                .fetch()
+            if not id_pimg:
+                logger.info("Cannot update, image not in DB!")
+                raise errors.ApiError(70006, "Cannot update, image not in DB!")
+            id_pimg = id_pimg[0]['id_product_image']
+            # Load model
+            Product.save_pimage(p_obj['product_uuid'],
+                                p_obj['image'], id_pimg,
+                                p_obj['descriptor'] if 'descriptor' in p_obj \
+                                                else [])
+            return {'message': 'Product Image correctly updated!'}
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Could not save Product image!")
+            raise errors.ApiError(70004, "Could not apply transaction in DB")
     
     def save_categories(self):
         """ Class method to save product categories

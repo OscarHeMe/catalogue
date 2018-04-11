@@ -33,6 +33,14 @@ new_prod_test = {
     # "item_uuid": "" # Missing
 }
 
+# Update product image
+img_prod_test = {
+    "image" : "http://chedraui.com.mx/media/catalog/product/1/2/124900_00.jpg",
+    "descriptor" : [
+        [1,2,3,4], [1,2,3,4]
+    ]
+}
+
 class CatalogueServiceTestCase(unittest.TestCase):
     """ Test Case for Catalogue Service
     """
@@ -156,6 +164,24 @@ class CatalogueServiceTestCase(unittest.TestCase):
         new_prod_test['name'] = new_prod_test['name'].upper()
         _r =  self.app.post('/product/modify',
                 data=json.dumps(new_prod_test),
+                headers={'content-type':'application/json'})
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            print(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
+    
+    #@unittest.skip('Already tested')
+    def test_06_update_prod_img(self):
+        """ Update Product Image
+        """ 
+        global new_prod_test
+        print("Update Product Image")
+        img_prod_test['product_uuid'] = new_prod_test['product_uuid']
+        _r =  self.app.post('/product/image',
+                data=json.dumps(img_prod_test),
                 headers={'content-type':'application/json'})
         print(_r.status_code)
         try:
