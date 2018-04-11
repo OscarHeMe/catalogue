@@ -109,7 +109,7 @@ class Attr(object):
             Params:
             -----
             _attr : str
-                Category name
+                Attr name
             _source : str
                 Source key
 

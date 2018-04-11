@@ -93,11 +93,44 @@ class Product(object):
             # Save product attrs
             if self.attributes:
                 self.save_attributes()
-            # Save brand and provider as attributes
+            # Save category, brand and provider as attributes            
+            self.save_extras()
         except Exception as e:
             logger.error(e)
             raise errors.ApiError(70002, "Issues saving in DB!")
         return True
+
+    def save_extras(self):
+        """ Class method to save brand, provider and categs 
+            as attributes
+        """
+        self.attributes = []
+        # Load all elements as Attributes
+        if self.brand:
+            self.attributes.append({
+                'attr_name': self.brand,
+                'attr_key': key_format(self.brand),
+                'clss_name': 'Marca',
+                'clss_key': 'brand',
+                'clss_desc': 'Marca'
+            })
+        if self.provider:
+            self.attributes.append({
+                'attr_name': self.provider,
+                'attr_key': key_format(self.provider),
+                'clss_name': 'Proveedor',
+                'clss_key': 'provider',
+                'clss_desc': 'Proveedor, Laboratorio, Manufacturador, etc.'
+            })
+        for _c in self.categories.split(','):
+            self.attributes.append({
+                'attr_name': _c,
+                'attr_key': key_format(_c),
+                'clss_name': 'Categoría',
+                'clss_key': 'category',
+                'clss_desc': 'Categoría'
+            })
+        self.save_attributes()
 
     def save_attributes(self):
         """ Class method to save product attributes
@@ -217,9 +250,6 @@ class Product(object):
                 m_prod_cat.save()
                 logger.info("Product Category correctly saved! ({})"\
                     .format(m_prod_cat.last_id))
-                # Save category as Product attribute
-                # _attr = Attr()
-                # _attr.save()
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product category!")

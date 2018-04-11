@@ -21,15 +21,15 @@ new_prod_test = {
     "images" :  ['http://chedraui.com.mx/media/catalog/product/1/2/124900_00.jpg'],
     "categories": "Despensa",
     "url": "http://www.chedraui.com.mx/index.php/universidad/refresco-pepsi-cola-sin-cafeina-354ml.html",
-    "brand": "", # Missing
-    "provider": "", # Missing
+    "brand": "Pepsi Cola",
+    "provider": "Pepsico",
     "attributes": [{
         "attr_name": "Despensa",
         "attr_key": "despensa",
         "clss_name": "Categoría",
         "clss_key": "category",
     }],
-    "raw_html": "", # Missing
+    "raw_html": "<body>product_html</body>"
     # "item_uuid": "" # Missing
 }
 
@@ -148,7 +148,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         new_prod_test['product_uuid'] = _jr['product_uuid']
     
     #@unittest.skip('Already tested')
-    def test_05_delete_product(self):
+    def test_50_delete_product(self):
         """ Delete existing Product and its references
         """ 
         print("Delete existing Product and its references")
