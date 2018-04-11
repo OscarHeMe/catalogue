@@ -105,6 +105,7 @@
             "attr_key": "medicamentos_de_patente",
             "clss_key": "category",
             "precision": "exact", // optional
+            "clss_desc": "Categoría", // optional
         },
         // ...
     ] // optional

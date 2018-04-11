@@ -23,7 +23,12 @@ new_prod_test = {
     "url": "http://www.chedraui.com.mx/index.php/universidad/refresco-pepsi-cola-sin-cafeina-354ml.html",
     "brand": "", # Missing
     "provider": "", # Missing
-    "attributes": [], # Missing
+    "attributes": [{
+        "attr_name": "Despensa",
+        "attr_key": "despensa",
+        "clss_name": "Categoría",
+        "clss_key": "category",
+    }],
     "raw_html": "", # Missing
     # "item_uuid": "" # Missing
 }

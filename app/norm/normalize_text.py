@@ -27,34 +27,6 @@ def tuplify(data):
         return str(_tup).replace(',','')
     return str(_tup)
 
-'''
-Normaliza el precio, de text a numeric
-'''
-def price(price_raw):
-    # Checar si no es número
-    # Si no es número quitamos símbolos
-    # Si siguie sin poderse, regresamos none
-    if len(str(price_raw)) > 0:
-        if ( type(price_raw) is not int ) and ( type(price_raw) is not float ):
-            price = price_raw.replace('$', '').replace(',', '')
-            try:
-                price = float(price)
-            except ValueError:
-                price = None
-        else:
-            price = price_raw
-    return price
-
-
-'''
-Función que regresa texto normalizado de la
-promoción y el precio del item de la promoción
-promo = { 'description' : '<text>' , 'price' : <float> }
-'''
-def promotion(text):
-
-    return promo
-
 def standardize(text):
     # Measurement units
     tablets = 'TAB'

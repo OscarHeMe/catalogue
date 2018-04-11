@@ -7,6 +7,7 @@ from pprint import pformat as pf
 import ast
 import json
 from app.models.category import Category
+from app.models.attr import Attr
 from app.norm.normalize_text import key_format, tuplify
 
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
@@ -90,10 +91,67 @@ class Product(object):
             if self.categories:
                 self.save_categories()
             # Save product attrs
-            
+            if self.attributes:
+                self.save_attributes()
+            # Save brand and provider as attributes
         except Exception as e:
             logger.error(e)
             raise errors.ApiError(70002, "Issues saving in DB!")
+        return True
+
+    def save_attributes(self):
+        """ Class method to save product attributes
+        """
+        _nprs = {'attr_name', 'clss_name', 'attr_key', 'clss_key'}
+        for _attr in self.attributes:
+            # Validate attrs
+            if not _nprs.issubset(_attr.keys()):
+                logger.warning("Cannot add product attribute, missing keys!")
+                continue
+            # Verify if attr exists
+            id_attr = Attr.get_id(_attr['attr_name'], self.source)
+            # If not, create attr
+            if not id_attr:
+                attr = Attr({
+                    'name': _attr["attr_name"],
+                    "key": _attr["attr_key"],
+                    "has_value": 1 if "value" in _attr else 0,
+                    "source": self.source,
+                    "clss": {
+                        "name_es": _attr["clss_name"],
+                        "key": _attr["clss_key"],
+                        "description": _attr["clss_desc"] if "clss_desc" in _attr else None,
+                        "source": self.source
+                    }
+                })
+                id_attr = attr.save()
+            # Verify if product_attr exists
+            _exist = g._db.query("""SELECT EXISTS (
+                        SELECT 1 FROM product_attr
+                        WHERE product_uuid = '{}'
+                        AND id_attr = {})"""\
+                        .format(self.product_uuid, id_attr))\
+                    .fetch()[0]['exists']
+            # If not create product_attr
+            if _exist:
+                logger.info("Product Attr already in DB!")
+                continue
+            # Load model
+            try:
+                m_prod_at = g._db.model('product_attr', 'id_product_attr')
+                m_prod_at.product_uuid = self.product_uuid
+                m_prod_at.id_attr = id_attr
+                if 'value' in _attr:
+                    m_prod_at.value = _attr['value']
+                if 'precision' in _attr:
+                    m_prod_at.precision = _attr['precision']
+                m_prod_at.last_modified = str(datetime.datetime.utcnow())
+                m_prod_at.save()
+                logger.info("Product Attr correctly saved! ({})"\
+                    .format(m_prod_at.last_id))
+            except Exception as e:
+                logger.error(e)
+                logger.warning("Could not save Product attr!")
         return True
 
     def save_images(self):
@@ -101,6 +159,7 @@ class Product(object):
         """
         for _img in self.images:
             try:
+                # Verify if prod image exists
                 _exist = g._db.query("""SELECT EXISTS (
                         SELECT 1 FROM product_image
                         WHERE product_uuid = '{}'
@@ -110,6 +169,7 @@ class Product(object):
                 if _exist:
                     logger.info("Image already in DB!")
                     continue
+                # Load model
                 m_prod_im = g._db.model('product_image', 'id_product_image')
                 m_prod_im.product_uuid = self.product_uuid
                 m_prod_im.image = _img
