@@ -135,10 +135,17 @@ def delete_prod():
 		})
 
 
-
 @mod.route("/delete/attr", methods=['GET'])
 def delete_prod_attr():
 	""" Endpoint to delete `Product`s attribute by product_uuid 
 		and  attribute key.
+	"""
+	return jsonify({'status': 'in_construction'})
+
+
+@mod.route("/delete/image", methods=['GET'])
+def delete_prod_attr():
+	""" Endpoint to delete `Product`s image by product_uuid 
+		and  image url.
 	"""
 	return jsonify({'status': 'in_construction'})

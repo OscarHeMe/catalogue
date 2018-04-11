@@ -339,21 +339,21 @@ Same as previous [endpoint](#get_resp).
 
 **Method**:  GET
 
-**Endpoint**: `/product/delete?uuid=<product_uuid | required>&id_p_attr=<id_product_attribute | required>`
+**Endpoint**: `/product/delete?uuid=<product_uuid | required>&attr=<attr_key | required>`
 
 **Query Params:**
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | uuid  | Product UUID | required |
-| id_p_attr  | Product Attribute ID | required |
+| attr  | Attribute key | required |
 
 **Response:**
 
 ```json
 {
     "status": "OK",
-    "message": "Product Attr correctly deleted! (44128)"
+    "message": "Product Attr correctly deleted!"
 }
 ```
 
@@ -361,21 +361,21 @@ Same as previous [endpoint](#get_resp).
 
 **Method**:  GET
 
-**Endpoint**: `/product/image/delete?uuid=<item_uuid | required>&id_pimg=<id_product_image | required>`
+**Endpoint**: `/product/image/delete?uuid=<item_uuid | required>&img=<image_url | required>`
 
 **Query Params:**
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | uuid  | Product UUID | required |
-| id_pimg  | Product Image ID | required |
+| img  | Image URL | required |
 
 **Response:**
 
 ```json
 {
     "status": "OK",
-    "message": "Product Image correctly deleted! (44128)"
+    "message": "Product Image correctly deleted!"
 }
 ```
 
