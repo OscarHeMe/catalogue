@@ -22,6 +22,8 @@ class Product(object):
         "categories", "url", "brand", "provider", "attributes",
         "ingredients","raw_html", "raw_product"]
     
+    __extras__ = ['prod_attrs', 'prod_images', 'prod_categs']
+    
     def __init__(self, _args):
         """ Product constructor
 
@@ -414,3 +416,37 @@ class Product(object):
         return {
             'message': "Product ({}) correctly deleted!".format(p_uuid)
         }
+    
+    @staticmethod
+    def query(_by, **kwargs):
+        """ Static method to query by defined column values
+        """
+        logger.debug('Querying by: {}'.format(_by))
+        logger.debug('fetching: {}'.format(kwargs))
+        # Format params
+        if kwargs['cols']:
+            _cols = ','.join([x for x in kwargs['cols'].split(',') \
+                        if x in Product.__attrs__])
+        if kwargs['keys']:
+            _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
+        else:
+            _keys = 'WHERE {} IS NULL'.format(_by)
+        _p = int(kwargs['p'])
+        if _p < 1 :
+            _p = 1
+        _ipp = int(kwargs['ipp'])
+        # Build query
+        _qry = """SELECT {} FROM product {} OFFSET {} LIMIT {} """\
+            .format(_cols, _keys, (_p - 1)*_ipp, _ipp)
+        logger.debug(_qry)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()
+            logger.info("Found {} products".format(len(_resp)))
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB")
+            raise errors.ApiError(70003, "Issues fetching elements in DB")
+        # Verify for additional cols
+        ## Product.fetch_extras()
+        return _resp

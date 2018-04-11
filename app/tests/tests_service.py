@@ -3,6 +3,7 @@ import app
 import config
 import unittest
 import json
+from pprint import pprint
 
 # Add Item Test
 new_item_test = {
@@ -40,6 +41,13 @@ img_prod_test = {
         [1,2,3,4], [1,2,3,4]
     ]
 }
+
+# Cols to fetch on Test
+cols_test = [
+    'description', 'normalized', 'gtin',
+    'raw_product', 'raw_html', 'categories',
+    'ingredients', 'brand', 'provider', 'url', 'images'
+] #'prod_images', 'prod_attrs', 'prod_categs']
 
 class CatalogueServiceTestCase(unittest.TestCase):
     """ Test Case for Catalogue Service
@@ -192,6 +200,29 @@ class CatalogueServiceTestCase(unittest.TestCase):
         self.assertEqual(_r.status_code, 200)
     
     #@unittest.skip('Already tested')
+    def test_07_get_prods_by_item(self):
+        """ Get Products by Item UUID (p=1, ipp=50)
+        """ 
+        print("Get Products by Item UUID (p=1, ipp=50)")
+        _p, _ipp = 1, 50
+        global new_item_test
+        _r =  self.app.get('/product/by/iuuid?keys={}&cols={}&p={}&ipp={}'\
+                .format('', #new_item_test['item_uuid'],
+                    ','.join(cols_test),
+                    _p, _ipp
+                    )
+                )
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            pprint(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
+        #self.assertGreater(len(_jr), 0)
+        #self.assertTrue(set(cols_test).issubset(_jr[0].keys()))
+
+    #@unittest.skip('Already tested')
     def test_90_delete_product(self):
         """ Delete existing Product and its references
         """ 
@@ -206,6 +237,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         except:
             pass
         self.assertEqual(_r.status_code, 200)
+
 
 if __name__ == '__main__':
     unittest.main()

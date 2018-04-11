@@ -200,74 +200,86 @@
 
 **Method**:  GET
 
-**Endpoint**: `/product/by/iuuid?keys=<item_uuids | required>&cols=<product_table_fields | optional>`
+**Endpoint**: `/product/by/iuuid?keys=<item_uuids | required>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
 
 **Query Params**:
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | keys  | Comma Separated Item UUIDS | required |
-| cols  | Product attributes (categories, ingredients, etc.) | optional |
+| cols  | Product fields to retrieve | optional |
+| p | Page | optional, default=1 |
+| ipp | Items per page | optional, default=5 |
 
-*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `prod_images`, `prod_attrs` and `prod_categs`.
 
 <a name="get_resp"></a>  **Response:**
 
 ```json
 {
-    "product_uuid": "sf84sd-68f4sd6f8h4f86g4-sd8f644g", 
-    "source": "walmart",
-    "product_id": "0001245795",
-    "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g",
-    "name": "LIPITOR 80 mg", 
-    "normalized": "lipitor 80 miligramos", // optional
-    "description": "2 Caja, 15 Tabletas", // optional
-    "gtin": "07501234569781", // optional
-    "raw_html": "<body>Lipitor <div>...</div></body>", // optional
-    "categories": "Farmacia, Medicina",  // optional
-    "ingredients": "Atorvastatina",  // optional
-    "brand": "Lipitor", //optional
-    "provider": "Pfizer", // optional
-    "url": "http://www.walmart.com.mx/LIPITOR%2080%20mg", // optional,
-    "images": [ "http://www.walmart.com.mx/LIPITOR%2080%20mg_LARGE.jpg", "http://www.walmart.com.mx/LIPITOR%2080%20mg_SMAL.jpg"
-    ], // optional
-    "prod_images": [
-        {
-            "id_p_image": 45596,
-            "image": "Medicamentos de Patente",
-            "descriptor": [[0,2,3,1,4,5], [3,4,6,7,7]],
-            "last_mod": "2018-01-03"
-        }, // ...
-    ], // optional
-    "prod_attrs": [
-        {
-            "id_p_attr": 485,
-            "value": 80,
-            "attr": "Miligramos",
-            "clss": "Presentación"
-        }, // ...
-    ], // optional
-    "prod_categs": [
-        {
-            "id_p_cat": 75,
-            "code": "SD20",
-            "cat": "Medicamentos"
-        }, // ...
-    ], // optional
+    "status": "OK",
+    "products": [{
+        "product_uuid": "sf84sd-68f4sd6f8h4f86g4-sd8f644g",
+        "source": "walmart",
+        "product_id": "0001245795",
+        "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g",
+        "name": "LIPITOR 80 mg",
+        "last_modified": "2018-03-31",
+        "normalized": "lipitor 80 miligramos", // optional
+        "description": "2 Caja, 15 Tabletas", // optional
+        "gtin": "07501234569781", // optional
+        "raw_html": "<body>Lipitor <div>...</div></body>", // optional
+        "categories": "Farmacia, Medicina",  // optional
+        "ingredients": "Atorvastatina",  // optional
+        "brand": "Lipitor", //optional
+        "provider": "Pfizer", // optional
+        "url": "http://www.walmart.com.mx/LIPITOR%2080%20mg", // optional,
+        "images": [
+            "http://www.walmart.com.mx/LIPITOR%2080%20mg_LARGE.jpg", "http://www.walmart.com.mx/LIPITOR%2080%20mg_SMAL.jpg"
+        ], // optional
+        "prod_images": [
+            {
+                "id_p_image": 45596,
+                "image": "Medicamentos de Patente",
+                "descriptor": [[0,2,3,1,4,5], [3,4,6,7,7]],
+                "last_mod": "2018-01-03"
+            }, // ...
+        ], // optional
+        "prod_attrs": [
+            {
+                "id_p_attr": 485,
+                "value": 80,
+                "attr": "Miligramos",
+                "clss": "Presentación"
+            }, // ...
+        ], // optional
+        "prod_categs": [
+            {
+                "id_p_cat": 75,
+                "code": "SD20",
+                "cat": "Medicamentos"
+            }, // ...
+        ] // optional
+    },
+    // {}, ...
+    ]
+}
 ```
 
 ## Get Products by Product UUIDs
 
 **Method**:  GET
 
-**Endpoint**: `/product/by/puuid?keys=<product_uuids | required>&cols=<product_table_fields | optional>`
+**Endpoint**: `/product/by/puuid?keys=<product_uuids | required>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
 
 **Query Params**:
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | keys  | Comma Separated Product UUIDs | required |
-| cols  | Product attributes (categories, ingredients, etc.) | optional |
+| cols  | Product fields to retrieve | optional |
+| p | Page | optional, default=1 |
+| ipp | Items per page | optional, default=5 |
 
 *Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
 
@@ -279,14 +291,16 @@ Same as previous [endpoint](#get_resp).
 
 **Method**:  GET
 
-**Endpoint**: `/product/by/source?keys=<source_key | required>&cols=<product_table_fields | optional>`
+**Endpoint**: `/product/by/source?keys=<source_key | required>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
 
 **Query Params**:
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | keys  | Comma Separated Source Keys | required |
-| cols  | Product attributes (categories, ingredients, etc.) | optional |
+| cols  | Product fields to retrieve | optional |
+| p | Page | optional, default=1 |
+| ipp | Items per page | optional, default=5 |
 
 *Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
 
@@ -298,7 +312,7 @@ Same as previous [endpoint](#get_resp).
 
 **Method**:  GET
 
-**Endpoint**: `/product/by/attr?keys=<attr_key | required>&vals=<values | optional>&cols=<product_table_fields | optional>`
+**Endpoint**: `/product/by/attr?keys=<attr_key | required>&vals=<values | optional>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
 
 **Query Params**:
 
@@ -306,7 +320,9 @@ Same as previous [endpoint](#get_resp).
 | ----- | ----------- | --------- |
 | keys  | Comma Separated Attr Keys | required |
 | vals  | Comma Separated Attr Values | optional, default=None |
-| cols  | Product attributes (categories, ingredients, etc.) | optional |
+| cols  | Product fields to retrieve | optional |
+| p | Page | optional, default=1 |
+| ipp | Items per page | optional, default=5 |
 
 *Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
 

@@ -90,7 +90,23 @@ def update_img_prod():
 def get_byitem():
 	""" Endpoint to fetch `Product`s by item_uuid's.
 	"""
-	return jsonify({'status': 'in_construction'})
+	logger.info("Query Product by Item UUID...")
+	params = request.args
+	logger.debug(params)
+	# Validate required params
+	_needed_params = {'keys'}
+	if not _needed_params.issubset(params):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Complement optional params, and set default if needed
+	_opt_params = {'cols': '', 'p':1, 'ipp': 50}
+	for _o, _dft  in _opt_params.items():
+		if _o not in params:
+			params[_o] = _dft
+	_prods = Product.query('item_uuid', **params.to_dict())
+	return jsonify({
+		'status': 'OK',
+		'products': _prods
+		})
 
 
 @mod.route("/by/puuid", methods=['GET'])
@@ -144,7 +160,7 @@ def delete_prod_attr():
 
 
 @mod.route("/delete/image", methods=['GET'])
-def delete_prod_attr():
+def delete_prod_img():
 	""" Endpoint to delete `Product`s image by product_uuid 
 		and  image url.
 	"""
