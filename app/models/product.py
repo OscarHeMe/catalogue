@@ -64,11 +64,13 @@ class Product(object):
             with product_image, product_attr and product_category
         """
         logger.info("Saving Product...")
+        _is_update = False
         # Verify for update
         if self.product_uuid:
             if not Product.exists({'product_uuid': self.product_uuid}):
                 # If wants to update but wrong UUID, return Error                
                 raise errors.ApiError(70006, "Cannot update, UUID not in DB!")
+            _is_update = True
         # Verify for insert
         elif Product.exists({'product_id': self.product_id, 'source': self.source}):
             self.message = 'Product already exists!'
@@ -91,21 +93,21 @@ class Product(object):
             logger.info(self.message)
             # Save product images
             if self.images:
-                self.save_images()
+                self.save_images(_is_update)
             # Save product categories
             if self.categories:
-                self.save_categories()
+                self.save_categories(_is_update)
             # Save product attrs
             if self.attributes:
-                self.save_attributes()
+                self.save_attributes(_is_update)
             # Save category, brand and provider as attributes            
-            self.save_extras()
+            self.save_extras(_is_update)
         except Exception as e:
             logger.error(e)
             raise errors.ApiError(70002, "Issues saving in DB!")
         return True
 
-    def save_extras(self):
+    def save_extras(self, update=False):
         """ Class method to save brand, provider and categs 
             as attributes
         """
@@ -135,9 +137,9 @@ class Product(object):
                 'clss_key': 'category',
                 'clss_desc': 'Categoría'
             })
-        self.save_attributes()
+        self.save_attributes(update)
 
-    def save_attributes(self):
+    def save_attributes(self, update=False):
         """ Class method to save product attributes
         """
         _nprs = {'attr_name', 'clss_name', 'attr_key', 'clss_key'}
@@ -164,19 +166,23 @@ class Product(object):
                 })
                 id_attr = attr.save()
             # Verify if product_attr exists
-            _exist = g._db.query("""SELECT EXISTS (
-                        SELECT 1 FROM product_attr
+            id_prod_attr = g._db.query("""SELECT id_product_attr
+                        FROM product_attr
                         WHERE product_uuid = '{}'
-                        AND id_attr = {})"""\
+                        AND id_attr = {} LIMIT 1"""\
                         .format(self.product_uuid, id_attr))\
-                    .fetch()[0]['exists']
+                    .fetch()
             # If not create product_attr
-            if _exist:
-                logger.info("Product Attr already in DB!")
-                continue
+            if id_prod_attr:
+                if not update:
+                    logger.info("Product Attr already in DB!")
+                    continue
+                id_prod_attr = id_prod_attr[0]['id_product_attr']
             # Load model
             try:
                 m_prod_at = g._db.model('product_attr', 'id_product_attr')
+                if id_prod_attr:
+                    m_prod_at.id_product_attr = id_prod_attr
                 m_prod_at.product_uuid = self.product_uuid
                 m_prod_at.id_attr = id_attr
                 if 'value' in _attr:
@@ -192,7 +198,7 @@ class Product(object):
                 logger.warning("Could not save Product attr!")
         return True
 
-    def save_images(self):
+    def save_images(self, update=False):
         """ Class method to save product images
         """
         for _img in self.images:
@@ -205,7 +211,13 @@ class Product(object):
                         .format(self.product_uuid, _img))\
                     .fetch()[0]['exists']
                 if _exist:
-                    logger.info("Image already in DB!")
+                    if update:
+                        Product.update_image({
+                            'product_uuid': self.product_uuid,
+                            'image': _img
+                        }, True)
+                    else:
+                        logger.info("Image already in DB!")
                     continue
                 # Load model
                 Product.save_pimage(self.product_uuid, _img)
@@ -232,7 +244,7 @@ class Product(object):
         return True
     
     @staticmethod
-    def update_image(p_obj):
+    def update_image(p_obj, or_create=False):
         """ Static method to update a product image
 
             Params:
@@ -250,8 +262,10 @@ class Product(object):
                     .format(p_obj['product_uuid'], p_obj['image']))\
                 .fetch()
             if not id_pimg:
-                logger.info("Cannot update, image not in DB!")
-                raise errors.ApiError(70006, "Cannot update, image not in DB!")
+                if not or_create:
+                    logger.info("Cannot update, image not in DB!")
+                    raise errors.ApiError(70006, "Cannot update, image not in DB!")
+                id_pimg = None
             id_pimg = id_pimg[0]['id_product_image']
             # Load model
             Product.save_pimage(p_obj['product_uuid'],
@@ -264,7 +278,7 @@ class Product(object):
             logger.warning("Could not save Product image!")
             raise errors.ApiError(70004, "Could not apply transaction in DB")
     
-    def save_categories(self):
+    def save_categories(self, update=False):
         """ Class method to save product categories
         """
         _parent = None
@@ -283,16 +297,19 @@ class Product(object):
                     if not id_cat:
                         continue
                 # Verify product category does not exist
-                _exists = g._db.query("""SELECT EXISTS (
-                        SELECT 1 FROM product_category
+                id_prod_categ = g._db.query("""SELECT id_product_category FROM product_category
                         WHERE id_category = {}
-                        AND product_uuid = '{}')"""\
+                        AND product_uuid = '{}' LIMIT 1"""\
                         .format(id_cat, self.product_uuid))\
-                    .fetch()[0]['exists']
-                if _exists:
-                    logger.info("Category already assigned to Product!")
-                    continue
+                        .fetch()
+                if id_prod_categ:
+                    if not update:
+                        logger.info("Category already assigned to Product!")
+                        continue
+                    id_prod_categ = id_prod_categ[0]['id_product_category']
                 m_prod_cat = g._db.model('product_category', 'id_product_category')
+                if id_prod_categ:
+                    m_prod_cat.id_product_category = id_prod_categ
                 m_prod_cat.product_uuid = self.product_uuid
                 m_prod_cat.id_category = id_cat
                 m_prod_cat.last_modified = str(datetime.datetime.utcnow())
