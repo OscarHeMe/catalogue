@@ -250,14 +250,16 @@
                 "id_p_attr": 485,
                 "value": 80,
                 "attr": "Miligramos",
-                "clss": "Presentación"
+                "clss": "Presentación",
+                "last_mod": "2018-01-03"
             }, // ...
         ], // optional
         "prod_categs": [
             {
                 "id_p_cat": 75,
                 "code": "SD20",
-                "cat": "Medicamentos"
+                "cat": "Medicamentos",
+                "last_mod": "2018-01-03"
             }, // ...
         ] // optional
     },

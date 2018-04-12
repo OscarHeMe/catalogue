@@ -535,7 +535,7 @@ class Product(object):
         if 'prod_images' in _cols:
             # Fetch Product Images
             logger.info('Retrieving Product Images...')
-            #p_extrs['prod_images'] = Product.query_imgs(p_uuids)
+            p_extrs['prod_images'] = Product.query_imgs(p_uuids)
         if 'prod_categs' in _cols:
             # Fetch Product Images
             logger.info('Retrieving Product Categories...')
@@ -560,8 +560,6 @@ class Product(object):
             -----
             p_uuids : list
                 List of Product UUIDs
-            _cols : list
-                Additional columns to retrieve
             
             Returns:
             -----
@@ -571,7 +569,7 @@ class Product(object):
         p_attrs = {}
         _qry = """SELECT pat.product_uuid, 
             pat.id_product_attr as id_p_attr, pat.value,
-            to_char(pat.last_modified, 'YYYY-MM-DD HH24:00:00') as last_modified, 
+            to_char(pat.last_modified, 'YYYY-MM-DD HH24:00:00') as last_mod, 
             att.name as attr, att.name_es as clss 
             FROM product_attr pat 
             LEFT OUTER JOIN (
@@ -599,3 +597,46 @@ class Product(object):
         logger.info('Found {} attributes'.format(len(p_attrs)))
         logger.debug(p_attrs)
         return p_attrs
+    
+    @staticmethod
+    def query_imgs(p_uuids):
+        """ Fetch all images by Prod UUID
+
+            Params:
+            -----
+            p_uuids : list
+                List of Product UUIDs
+            _cols : list
+                Additional columns to retrieve
+            
+            Returns:
+            -----
+            p_imgs : dict
+                Product Images hashed by Product UUID
+        """
+        p_imgs = {}
+        _qry = """SELECT product_uuid, 
+            id_product_image as id_p_image,
+            image, descriptor,
+            to_char(last_modified, 'YYYY-MM-DD HH24:00:00') as last_modified
+            FROM product_image  
+            WHERE product_uuid IN {}
+            ORDER BY product_uuid
+            """.format(tuplify(p_uuids))
+        logger.debug(_qry)
+        try:
+            resp_im = g._db.query(_qry).fetch()
+            for _rim in resp_im:
+                _pu = _rim['product_uuid']
+                del _rim['product_uuid']
+                if _pu in p_imgs:
+                    p_imgs[_pu].append(_rim)
+                else:
+                    p_imgs[_pu] = [_rim]
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching Product Images!")
+            return {}
+        logger.info('Found {} images'.format(len(p_imgs)))
+        logger.debug(p_imgs)
+        return p_imgs
