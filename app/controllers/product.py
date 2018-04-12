@@ -136,7 +136,23 @@ def get_byprod():
 def get_bysource():
 	""" Endpoint to fetch `Product`s by source's.
 	"""
-	return jsonify({'status': 'in_construction'})
+	logger.info("Query Product by source...")
+	params = request.args
+	logger.debug(params)
+	# Validate required params
+	_needed_params = {'keys'}
+	if not _needed_params.issubset(params):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Complement optional params, and set default if needed
+	_opt_params = {'cols': '', 'p':1, 'ipp': 50}
+	for _o, _dft  in _opt_params.items():
+		if _o not in params:
+			params[_o] = _dft
+	_prods = Product.query('source', **params.to_dict())
+	return jsonify({
+		'status': 'OK',
+		'products': _prods
+		})
 
 
 @mod.route("/by/attr", methods=['GET'])
