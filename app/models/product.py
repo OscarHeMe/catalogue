@@ -525,28 +525,30 @@ class Product(object):
                 (key -> Prod UUID, values -> {'col': <list of attrs>})
         """
         # Initialize prod_ext dict
-        _prod_ext = {}
+        _prod_ext, p_extrs = {}, {}
         for z in p_uuids:
             _prod_ext[z]= {w:[] for w in _cols}
         if 'prod_attrs' in _cols:
             # Fetch Product Attrs
             logger.info('Retrieving Product Attrs...')
-            p_attrs = Product.query_attrs(p_uuids)
-            # Add attrs to complete dict
-            for _p in _prod_ext:
-                if _p in p_attrs:
-                    if not _prod_ext[_p]['prod_attrs']:
-                        _prod_ext[_p]['prod_attrs'] = p_attrs[_p]
-                    else:
-                        _prod_ext[_p]['prod_attrs'].append(p_attrs[_p])
+            p_extrs['prod_attrs'] = Product.query_attrs(p_uuids)
         if 'prod_images' in _cols:
             # Fetch Product Images
-            #Product.query_imgs()
             logger.info('Retrieving Product Images...')
+            #p_extrs['prod_images'] = Product.query_imgs(p_uuids)
         if 'prod_categs' in _cols:
             # Fetch Product Images
-            #Product.query_categs()
             logger.info('Retrieving Product Categories...')
+            #p_extrs['prod_categs'] = Product.query_categs()
+        # Add attrs, imgs and categs to complete dict
+        for _p in _prod_ext:
+            # Loop over available columns
+            for _cl in _cols:
+                if _p in p_extrs[_cl]:
+                    if not _prod_ext[_p][_cl]:
+                        _prod_ext[_p][_cl] = p_extrs[_cl][_p]
+                    else:
+                        _prod_ext[_p][_cl].append(p_extrs[_cl][_p])
         logger.debug(_prod_ext)
         return _prod_ext
 
