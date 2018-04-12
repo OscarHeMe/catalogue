@@ -706,3 +706,67 @@ class Product(object):
         logger.info('Found {} categories'.format(len(p_categs)))
         logger.debug(p_categs)
         return p_categs
+    
+    @staticmethod
+    def filter(field, valu, **kwargs):
+        """ Retrieve by defined filter
+
+            Params:
+            -----
+            field : str
+                Attribute key to perform filter by
+            valu : str
+                Values to perform filter by
+            kwargs : dict
+                Extra arguments such as (p, ipp, values, etc..)
+            
+            Returns:
+            -----
+            _resp : list
+                List of product objects
+        """
+        # Format querying keys
+        if kwargs['keys']:
+            _keys = ' WHERE ' + field + ' IN ' \
+                + str(tuplify([key_format(z) for z in kwargs['keys'].split(',')]))
+        else:
+            _keys = ' WHERE {} IS NULL'.format(_by)
+        # Format values if available
+        if kwargs['vals']:
+            _vals = ' AND ' + valu + ' IN ' \
+                + str(tuplify([y for y in kwargs['vals'].split(',')]))
+        else:
+            _vals = ''
+        # Format retailers if available
+        if kwargs['rets']:
+            _rets = ' AND ' + field.split('.')[0] \
+                + '.source IN ' \
+                + str(tuplify([y for y in kwargs['rets'].split(',')]))
+        else:
+            _rets = ''
+        # Build filter query
+        f_query = """SELECT {ref_table}.product_uuid FROM {table} 
+            INNER JOIN {ref_table} 
+            ON ({table}.id_{table} = {ref_table}.id_{table}) 
+            {keys} {vals} {rets} """\
+            .format(table=field.split('.')[0],
+                    ref_table=valu.split('.')[0],
+                    keys=_keys, 
+                    vals=_vals,
+                    rets=_rets)
+        logger.debug(f_query)
+        try:
+            _fres = g._db.query(f_query).fetch()
+            if not _fres:
+                return []
+            logger.info("Found {} prods by filters"\
+                .format(len(_fres)))
+        except Exception as e:
+            logger.error(e)
+            logger.warning ("Could not fetch Filters!")
+            return []
+        # Return Product query response
+        kwargs.update({
+            'keys': ','.join([_o['product_uuid'] for _o in _fres])
+            })
+        return Product.query('product_uuid', **kwargs)

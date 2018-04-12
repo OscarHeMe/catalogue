@@ -327,7 +327,7 @@ Same as previous [endpoint](#get_resp).
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | keys  | Comma Separated Attr Keys | required |
-| vals  | Comma Separated Attr Values | optional, default=None |
+| vals  | Comma Separated Attr Values | optional, default="" |
 | rets  | Comma Separated Retailer keys | optional |
 | cols  | Product fields to retrieve | optional |
 | p | Page | optional, default=1 |
