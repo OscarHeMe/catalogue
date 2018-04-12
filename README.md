@@ -44,7 +44,6 @@ export SQL_PORT='<postgresql port number>'
 export SQL_USER='<postgresql username>'
 export SQL_PASSWORD='<postgresql passwd>'
 export SQL_DB='<postgresql db name: items>'
-export PGPASSWORD='<pwd>'
 export SRV_GEOLOCATION='<url to the geolocation service>'
 ```
 
@@ -94,12 +93,22 @@ export LOG_PORT='<remote logging port>'
 3. Initialize database `flask initdb`
 4. Run gunicorn process `flask consumer`
 
+## Testing
+
+Set the environment variable `$MODE` to the test the consumer or the web service and then run the following:
+
+```bash
+source bin/tests.sh
+```
+
+
 ## License
 
 ByPrice Copyright (c) 2018
 
 ## To Do
 
+<<<<<<< HEAD
 - Consumer flow, conectar a RabbitMQ y por cada mensaje:
   - Verificar si existe producto en la tabla de `product`
   - Si existe hacer Update sino crear el registro
@@ -119,3 +128,8 @@ ByPrice Copyright (c) 2018
   - Si existe hacer Update sino crear el registro
 
 Todos los campos de la DB necesarios por tabla están en el archivo de [schema.sql](./schema.sql)
+=======
+* Add endpoints to add/modify items
+* Add endpoints to remove duplicates
+* Consumer flow -> Review this in `dev_cons` branch
+>>>>>>> dev

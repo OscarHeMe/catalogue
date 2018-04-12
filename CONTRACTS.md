@@ -1,388 +1,407 @@
-# Contracts
+# Item Contracts
 
-## Item related endpoints
+## Add new Item
 
-### GET `/item/<item_uuid>?retailer=<retailer_key>`
-#### Get item short info by retailer
-* **Response:**  
-```javascript
+**Method**:  POST
+
+**Endpoint**: `/item/add`
+
+**Params**:
+
+```json
 {
-    "description": "LIPITOR 2 Caja, 15 Tabletas, 80 mg", 
-    "gtin": "07501287640925", 
-    "images": [
-        "https://super.walmart.com.mx//images/product-images/img_small/00750128764092s.jpg", 
-        "https://super.walmart.com.mx//images/product-images/img_large/00750128764092L.jpg"
-    ], 
-    "item_uuid": "1af56b72-9955-4985-861a-69fddc6c0646", 
-    "name": "LIPITOR 2 Caja, 15 Tabletas, 80 mg,  ", 
-    "retailer": "Walmart", 
-    "retailer_key": "walmart", 
-    "url": "https://super.walmart.com.mx/Medicamentos-de-Patente/Lipitor-80-mg-tabletas-15-pzas/00750128764092?storeId=0000003845"
+    "gtin": "07501234569781", // required
+    "name": "LIPITOR 80 mg", // required
+    "description": "2 Caja, 15 Tabletas", // required
 }
 ```
 
-### GET `/item/catalogue?&p=<page>&ipp=<items_per_page>`
-#### Get item catalogue by retailer
 **Response:**
-```javascript
+
+```json
 {
-  "items": [
-    {
-      "additional": [], 
-      "attributes": [
-        {
-          "attr_key": [
-            "tablet"
-          ], 
-          "attr_name": [
-            "tabletas"
-          ], 
-          "class_name": null, 
-          "value": "92"
-        }
-      ], 
-      "brand": {
-        "key": "af valdecasas", 
-        "name": "A.F. VALDECASAS"
-      }, 
-      "categories": [
-        [ "Medicamentos"]
-      ], 
-      "date": "2017-08-02 00:00:00", 
-      "descriptions": [
-        "acido folico 5 mg oral 92 tab"
-      ], 
-      "gtin": "07501446000348", 
-      "images": null, 
-      "ingredients": [
-        "['acido folico']", 
-        "['PTERIDINE', 'PYRIDINE', 'FOLIC ACID']"
-      ], 
-      "item_uuid": "3321f4fd-fd0e-42dc-8dcf-c0fa8effff5b", 
-      "name": "A.F. VALDECASAS Frasco(s),92 Tabletas,5 mg", 
-      "names": [
-        "valdecas 92 tab caja", 
-        "A.F. VALDECASAS ACIDO FOLICO  5 MG. C/92 TAB"
-      ], 
-      "provider": {
-        "key": "valdecasas sa laboratorios", 
-        "name": "VALDECASAS, S.A., LABORATORIOS"
-      }, 
-      "retailers": [
-        "san_pablo", 
-        "f_ahorro"
-      ]
-    },
-    //...
-  ],
-  "missing" : "<true | false>"
+    "status": "OK",
+    "message": "Correctly stored Item!",
+    "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g"
 }
 ```
 
-### GET `/item/categories`
-#### Get list of item categories
-**Response:**
-```javascript
+## Modify existing Item
+
+**Method**:  POST
+
+**Endpoint**: `/item/modify`
+
+**Params**:
+
+```json
 {
-    "categories": [
-        {
-            "code": null, 
-            "id_category": 9646, 
-            "id_parent": null, 
-            "key": "equipo y botiquin cuidado de la salud", 
-            "name": "Equipo y Botiqu\u00edn / Cuidado de la salud", 
-            "retailer": "byprice", 
-            "retailer_reference": null
-        },
-        //...
-    ]
+    "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g", // required
+    "gtin": "07501234569781", // required
+    "name": "LIPITOR 80 mg", // required
+    "description": "2 Caja, 15 Tabletas", // required
 }
 ```
 
-### GET `/item/info/<info>`
-#### Get item detailed information
 **Response:**
-```javascript
+
+```json
 {
-    "additional": [], 
+    "status": "OK",
+    "message": "Correctly updated Item!",
+    "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g"
+}
+```
+
+## Delete Item
+
+**Method**:  GET
+
+**Endpoint**: `/item/delete?uuid=<item_uuid | required>`
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Item (sf84sd-68f44gsf86g4-sd8f644g) correctly deleted! "
+}
+```
+
+------
+
+# Product Contracts
+
+## Add new Product
+
+**Method**:  POST
+
+**Endpoint**: `/product/add`
+
+**Params**:
+
+```json
+{
+    "source": "walmart", // required
+    "product_id": "0001245795", // required
+    "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g", // optional
+    "name": "LIPITOR 80 mg", // required
+    "normalized": "LIPITOR 80 mg", // optional
+    "description": "2 Caja, 15 Tabletas", // required
+    "gtin": "07501234569781", // optional
+    "raw_html": "<body>Lipitor <div>...</div></body>", // optional
+    "categories": "Farmacia, Medicina",  // optional
+    "ingredients": "Atorvastatina",  // optional
+    "brand": "Lipitor", //optional
+    "provider": "Pfizer", // optional
+    "url": "http://www.walmart.com.mx/LIPITOR%2080%20mg", // optional,
+    "images": [ "http://www.walmart.com.mx/LIPITOR%2080%20mg_LARGE.jpg", "http://www.walmart.com.mx/LIPITOR%2080%20mg_SMAL.jpg"
+    ], // optional
     "attributes": [
         {
-        "attr_key": [
-            "mg", 
-            "tablet", 
-            "tablet"
-        ], 
-        "attr_name": [
-            "mg", 
-            "tabletas", 
-            "tabletas"
-        ], 
-        "class_name": null, 
-        "value": "275"
-        }
-    ], 
-    "brand": {
-        "key": "flanax", 
-        "name": "FLANAX"
-    }, 
-    "categories": [
-        [
-        "Medicamentos"
-        ], 
-        [
-        "Farmacia", 
-        "Analgésicos y sueros"
-        ], 
-    ], 
-    "descriptions": [
-        " flanax tab recubiertas 275 mg 20 uas ", 
-        "flanax tab recubiertas 275 mg 20 uas", 
-    ], 
-    "images": [
-        "https://super.walmart.com.mx//images/product-images/img_small/00750100849735s.jpg", 
-        "http://www.superama.com.mx/Content/images/products/img_large/0750100849735L.jpg", 
-    ], 
-    "ingredients": [
-        "['PROPIONIC ACID AND DERIVATIVES', 'PROPIOPHENONE', 'NAPROXEN']"
-    ], 
-    "names": [
-        " flanax tab recubiertas 275 mg 20 uas ", 
-        "flanax 275 mg 20 tab", 
-    ], 
-    "provider": {
-        "key": "bayer de mexico", 
-        "name": "BAYER DE MEXICO"
-    }, 
-    "retailers": [
-        "walmart", 
-        "superama", 
-    ]
+            "attr_name": "Medicamentos de Patente",
+            "clss_name": "Categoría",
+            "value": "94B1", // optional
+            "attr_key": "medicamentos_de_patente",
+            "clss_key": "category",
+            "precision": "exact", // optional
+            "clss_desc": "Categoría", // optional
+        },
+        // ...
+    ] // optional
 }
 ```
 
-### GET `/item/get_uuid?item_id=<external_id>&retailer=<retailer_key>`
-#### Get item uuid given its extenal id and retailer
-**Response:**  
-```javascript
-{
-    "description": "SIMILESS CAFE", 
-    "gtin": null, 
-    "images": null, 
-    "item_uuid": "6f54d70f-f703-405e-a0ea-7b95041c9563", 
-    "last_modified": "Wed, 23 Aug 2017 00:00:00 GMT", 
-    "name": "SIMILESS CAFE"
-}
-```
-
-### POST `/item/get_uuids`
-#### Get list of item uuids given a list of gtins
-**Request:**  
-```javascript
-{
-    "gtins": [
-        "07501075718188", 
-        "07501064550690", 
-        "07501089804334", 
-        "07502209852273"
-    ]
-}
-```
 **Response:**
-```javascript
-[
-    {
-        "gtin": "07501075718188",
-        "item_uuid": "8b4b9265-cc59-4a1d-b3a1-9d319d1dc584"
-    },
-    {
-        "gtin": "07501064550690",
-        "item_uuid": "22cbc81b-25aa-4d61-ae4e-62c9790807a8"
-    },
-    {
-        "gtin": "07501089804334",
-        "item_uuid": "7188cae6-e1c7-4485-a9eb-4f3a72702cd4"
-    },
-    {
-        "gtin": "07502209852273",
-        "item_uuid": "c6997052-95dc-4949-8fa9-fc7dc9f52ca4"
-    }
-]
+
+```json
+{
+    "status": "OK",
+    "message": "Product correctly added!",
+    "product_uuid": "sf84sd-68f44gsf86g4-sd8f644g"
+}
 ```
 
-### GET `/item/retailer?retailer=<retailer>&icategories=<comma_separated_ids>`
-#### Get list of items owned by retailer  
-**Response:**  
-```javascript
-[
-  {
-    "gtin": "00076808003918", 
-    "item_uuid": "9db09eb0-91ea-4aa1-9d3b-8d5b9d894c62", 
-    "name": "sopa de codo barilla sin gluten 340 g "
-  }, 
-  {
-    "gtin": "00800469015894", 
-    "item_uuid": "08cdcbaf-0101-440f-aab3-533e042afdc7", 
-    "name": "taglierini la molisana n\u00b0202 al huevo 250 g "
-  }, 
-  {
-    "gtin": "00029243000271", 
-    "item_uuid": "239cc1c3-b9bf-48fd-b3ad-02a49e4d8171", 
-    "name": "codito la moderna golden harvest 454 g "
-  },
-  //...
-]
+## Modify existing Product
+
+**Method**:  POST
+
+**Endpoint**: `/product/modify`
+
+**Params**:
+
+```json
+{
+    "product_uuid": "sf84sd-68f4sd6f8h4f86g4-sd8f644g", // required
+    "source": "walmart", // required
+    "product_id": "0001245795", // required
+    "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g", // optional
+    "name": "LIPITOR 80 mg", // required
+    "normalized": "LIPITOR 80 mg", // required
+    "description": "2 Caja, 15 Tabletas", // required
+    "gtin": "07501234569781", // optional
+    "raw_html": "<body>Lipitor <div>...</div></body>", // optional
+    "categories": "Farmacia, Medicina",  // optional
+    "ingredients": "Atorvastatina",  // optional
+    "brand": "Lipitor", //optional
+    "provider": "Pfizer", // optional
+    "url": "http://www.walmart.com.mx/LIPITOR%2080%20mg", // optional,
+    "images": [ "http://www.walmart.com.mx/LIPITOR%2080%20mg_LARGE.jpg", "http://www.walmart.com.mx/LIPITOR%2080%20mg_SMAL.jpg"
+    ], // optional
+    "attributes": [
+        {
+            "attr_name": "Medicamentos de Patente",
+            "clss_name": "Categoría",
+            "value": "94B1",
+            "attr_key": "medicamentos_de_patente",
+            "clss_key": "category"
+        },
+        // ...
+    ] // optional
+}
 ```
 
-### POST `/item/filtered`
-#### Get list of items given a set of filters
-**Request:**
-```javascript
-[		
-    { "category" : "9406" },
-    { "retailer" : "walmart" },
-    { "retailer" : "ims" },
-    { "item" : "67e8bc34-2e0d-460b-8ed0-72710b19f1b6" },
-    { "item" : "08cdcbaf-0101-440f-aab3-533e042afdc7" },
-    //...
-]
-```
-**Response**
-```javascript
-[
-    {
-        "gtin": "07501299300022",
-        "item_uuid": "67e8bc34-2e0d-460b-8ed0-72710b19f1b6",
-        "name": "ACLORAL 1 Caja,10 Tabletas,300 mg"
-    },
-    //...
-]
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Product correctly updated! (sf84sd-68f4sd6f8g4f86g4-sd8f644g)",
+    "product_uuid": "sf84sd-68f4sd6f8g4f86g4-sd8f644g"
+}
 ```
 
-## Ingredient related endpoints
+## Update Product Image
 
-### GET `/ingredient`
-#### Get item short info by retailer
-**Response**
-```javascript
-[
-    {
-        "id_ingredient": 609, 
-        "name": "acido ibandronico"
-    }, 
-    {
-        "id_ingredient": 744, 
-        "name": "acido mefenamico"
-    }
-    //...
-]
+**Method**:  POST
+
+**Endpoint**: `/product/image`
+
+**Params**:
+
+```json
+{
+    "product_uuid": "sf84sd-68f4sd6f8h4f86g4-sd8f644g", // required
+    "image": "walmart", // required
+    "descriptor": [[2,3,4],[3,4,5]], // optional
+}
 ```
 
-## Categories related endpoints
+**Response:**
 
-### GET `/category?retailer=<retailer_key:opt>`
-#### Get list of categories of given retailer
-**Response**
-```javascript
-[
-    {
-        "id_ingredient": 609, 
-        "name": "acido ibandronico"
-    }, 
-    {
-        "id_ingredient": 744, 
-        "name": "acido mefenamico"
-    }
-    //...
-]
+```json
+{
+    "status": "OK",
+    "message": "Product Image correctly updated!"
+}
 ```
 
-### GET `/category/ims?type=<atc|ch>&levels=<1 to 4 comma separated>&nested=<1|0>`
-#### Get list of IMS categories
-**Response**
-```javascript
-[
-    {
-        "code": "A", 
-        "id_category": 8533, 
-        "id_parent": 9655, 
-        "key": "aparato digesty metabol", 
-        "name": "APARATO DIGEST.Y METABOL", 
-        "nested": [
+## Get Products by Item UUIDs
+
+**Method**:  GET
+
+**Endpoint**: `/product/by/iuuid?keys=<item_uuids | required>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| keys  | Comma Separated Item UUIDS | required |
+| cols  | Product fields to retrieve | optional |
+| p | Page | optional, default=1 |
+| ipp | Items per page | optional, default=5 |
+
+*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `prod_images`, `prod_attrs` and `prod_categs`.
+
+<a name="get_resp"></a>  **Response:**
+
+```json
+{
+    "status": "OK",
+    "products": [{
+        "product_uuid": "sf84sd-68f4sd6f8h4f86g4-sd8f644g",
+        "source": "walmart",
+        "product_id": "0001245795",
+        "item_uuid": "sf84sd-68f44gsf86g4-sd8f644g",
+        "name": "LIPITOR 80 mg",
+        "last_modified": "2018-03-31",
+        "normalized": "lipitor 80 miligramos", // optional
+        "description": "2 Caja, 15 Tabletas", // optional
+        "gtin": "07501234569781", // optional
+        "raw_html": "<body>Lipitor <div>...</div></body>", // optional
+        "categories": "Farmacia, Medicina",  // optional
+        "ingredients": "Atorvastatina",  // optional
+        "brand": "Lipitor", //optional
+        "provider": "Pfizer", // optional
+        "url": "http://www.walmart.com.mx/LIPITOR%2080%20mg", // optional,
+        "images": [
+            "http://www.walmart.com.mx/LIPITOR%2080%20mg_LARGE.jpg", "http://www.walmart.com.mx/LIPITOR%2080%20mg_SMAL.jpg"
+        ], // optional
+        "prod_images": [
             {
-                "code": "A01", 
-                "id_category": 8534, 
-                "id_parent": 8533, 
-                "key": "estomatologicos", 
-                "name": "ESTOMATOLOGICOS", 
-                "nested": [
-                {
-                    "code": "A01A", 
-                    "id_category": 8535, 
-                    "id_parent": 8534, 
-                    "key": "estomatologicos", 
-                    "name": "ESTOMATOLOGICOS", 
-                    "nested": [
-                    {
-                        "code": "A01A0", 
-                        "id_category": 8536, 
-                        "id_parent": 8535, 
-                        "key": "estomatologicos", 
-                        "name": "ESTOMATOLOGICOS", 
-                        "nested": []
-                    }
-                    ]
-                }, 
-                {
-                    "code": "A01B", 
-                    "id_category": 8537, 
-                    "id_parent": 8534, 
-                    "key": "antifungicos bucales", 
-                    "name": "ANTIFUNGICOS BUCALES", 
-                    "nested": [
-                    {
-                        "code": "A01B0", 
-                        "id_category": 8538, 
-                        "id_parent": 8537, 
-                        "key": "antifungicos bucales", 
-                        "name": "ANTIFUNGICOS BUCALES", 
-                        "nested": []
-                    }
-                    ]
-                }
-                ]
-            },
-        ]
+                "id_p_image": 45596,
+                "image": "Medicamentos de Patente",
+                "descriptor": [[0,2,3,1,4,5], [3,4,6,7,7]],
+                "last_mod": "2018-01-03"
+            }, // ...
+        ], // optional
+        "prod_attrs": [
+            {
+                "id_p_attr": 485,
+                "value": 80,
+                "attr": "Miligramos",
+                "clss": "Presentación"
+            }, // ...
+        ], // optional
+        "prod_categs": [
+            {
+                "id_p_cat": 75,
+                "code": "SD20",
+                "cat": "Medicamentos"
+            }, // ...
+        ] // optional
     },
-    //...
-]
+    // {}, ...
+    ]
+}
 ```
 
-## Brands related endpoints
+## Get Products by Product UUIDs
 
-### GET `/brand?retailer=<key:opt>&p=<page:opt>&ipp=<num_items:opt>`
-#### Get list of brands
-**Response**
-```javascript
-[
-  {
-    "brand_uuid": "e147e40e-8a9d-47e0-90e8-456dceb00151", 
-    "name": "100% NATURAL"
-  }, 
-  //...
-]
+**Method**:  GET
+
+**Endpoint**: `/product/by/puuid?keys=<product_uuids | required>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| keys  | Comma Separated Product UUIDs | required |
+| cols  | Product fields to retrieve | optional |
+| p | Page | optional, default=1 |
+| ipp | Items per page | optional, default=5 |
+
+*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+
+**Response:**
+
+Same as previous [endpoint](#get_resp).
+
+## Get Products by Source
+
+**Method**:  GET
+
+**Endpoint**: `/product/by/source?keys=<source_key | required>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| keys  | Comma Separated Source Keys | required |
+| cols  | Product fields to retrieve | optional |
+| p | Page | optional, default=1 |
+| ipp | Items per page | optional, default=5 |
+
+*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+
+**Response:**
+
+Same as previous [endpoint](#get_resp).
+
+## Get Products by Attr
+
+**Method**:  GET
+
+**Endpoint**: `/product/by/attr?keys=<attr_key | required>&vals=<values | optional>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| keys  | Comma Separated Attr Keys | required |
+| vals  | Comma Separated Attr Values | optional, default=None |
+| cols  | Product fields to retrieve | optional |
+| p | Page | optional, default=1 |
+| ipp | Items per page | optional, default=5 |
+
+*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+
+**Response:**
+
+Same as previous [endpoint](#get_resp).
+
+## Delete Product
+
+**Method**:  GET
+
+**Endpoint**: `/product/delete?uuid=<item_uuid | required>`
+
+**Query Params:**
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| uuid  | Item UUID | required |
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Product correctly deleted! (sf84sd-68f44gsf86g4-sd8f644g)"
+}
 ```
 
-## Providers related endpoints
+## Delete Product Attr
 
-### GET `/provider?retailer=<key:opt>&p=<page:opt>&ipp=<num_items:opt>`
-#### Get list of brands
-**Response**
-```javascript
-[
-  {
-    "provider_uuid": "9d8123b3-d5f4-4400-91ec-0930ee7e60af", 
-    "name": "AEROMEDIC"
-  }, 
-  //...
-]
+**Method**:  GET
+
+**Endpoint**: `/product/delete?uuid=<product_uuid | required>&attr=<attr_key | required>`
+
+**Query Params:**
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| uuid  | Product UUID | required |
+| attr  | Attribute key | required |
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Product Attr correctly deleted!"
+}
 ```
+
+## Delete Product Image
+
+**Method**:  GET
+
+**Endpoint**: `/product/image/delete?uuid=<item_uuid | required>&img=<image_url | required>`
+
+**Query Params:**
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| uuid  | Product UUID | required |
+| img  | Image URL | required |
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Product Image correctly deleted!"
+}
+```
+
+------
+
+# Errors
+
+- **70001** : "Missing required key params"
+- **70002** : "Issues saving in DB!"
+- **70003** : "Issues fetching elements in DB"
+- **70004** : "Could not apply transaction in DB"
+- **70005** : "Wrong DataType to save {table}!"
+- **70006** : "Cannot update, {value} not in DB!"

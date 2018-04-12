@@ -13,4 +13,8 @@ run_local.sh
 Dockerfile.local
 schemaT.sql
 data/dumps/
+<<<<<<< HEAD
 bin/run.local
+=======
+data/dumps/*
+>>>>>>> dev
