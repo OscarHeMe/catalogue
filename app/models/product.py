@@ -461,6 +461,8 @@ class Product(object):
                             (kwargs['cols'].split(',') \
                             + Product.__base_q) \
                         if x in Product.__attrs__])
+        else:
+            _cols = ','.join([x for x in Product.__base_q ])
         if kwargs['keys']:
             _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
         else:
