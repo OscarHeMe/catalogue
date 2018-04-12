@@ -539,7 +539,7 @@ class Product(object):
         if 'prod_categs' in _cols:
             # Fetch Product Images
             logger.info('Retrieving Product Categories...')
-            #p_extrs['prod_categs'] = Product.query_categs()
+            p_extrs['prod_categs'] = Product.query_categs(p_uuids)
         # Add attrs, imgs and categs to complete dict
         for _p in _prod_ext:
             # Loop over available columns
@@ -640,3 +640,46 @@ class Product(object):
         logger.info('Found {} images'.format(len(p_imgs)))
         logger.debug(p_imgs)
         return p_imgs
+    
+    @staticmethod
+    def query_categs(p_uuids):
+        """ Fetch all catgories by Prod UUID
+
+            Params:
+            -----
+            p_uuids : list
+                List of Product UUIDs
+            
+            Returns:
+            -----
+            p_categs : dict
+                Product Categories hashed by Product UUID
+        """
+        p_categs = {}
+        _qry = """SELECT pca.product_uuid, 
+            pca.id_product_category as id_p_attr,            
+            to_char(pca.last_modified, 'YYYY-MM-DD HH24:00:00') as last_mod, 
+            ca.name as cat, ca.code
+            FROM product_category pca
+            LEFT OUTER JOIN category ca
+            ON (ca.id_category = pca.id_category)
+            WHERE product_uuid IN {}
+            ORDER BY product_uuid
+            """.format(tuplify(p_uuids))
+        logger.debug(_qry)
+        try:
+            resp_ca = g._db.query(_qry).fetch()
+            for _rca in resp_ca:
+                _pu = _rca['product_uuid']
+                del _rca['product_uuid']
+                if _pu in p_categs:
+                    p_categs[_pu].append(_rca)
+                else:
+                    p_categs[_pu] = [_rca]
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching Product Categs!")
+            return {}
+        logger.info('Found {} categories'.format(len(p_categs)))
+        logger.debug(p_categs)
+        return p_categs
