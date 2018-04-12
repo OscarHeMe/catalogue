@@ -1,12 +1,15 @@
 import datetime
 from flask import g
-from app import errors, logger
+from app import errors, applogger
 from config import *
 import requests
 import ast
 import json
 from app.models.clss import Clss
 from app.norm.normalize_text import key_format
+
+# Logger
+logger = applogger.get_logger()
 
 class Attr(object):
     """ Model for fetching attributes

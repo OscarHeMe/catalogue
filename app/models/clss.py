@@ -1,10 +1,13 @@
 import datetime
 from flask import g
-from app import errors, logger
+from app import errors, applogger
 from config import *
 import requests
 import ast
 import json
+
+# Logger
+logger = applogger.get_logger()
 
 class Clss(object):
     """ Model for fetching clsses
