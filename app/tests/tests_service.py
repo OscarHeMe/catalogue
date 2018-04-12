@@ -270,7 +270,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         """ Get Products by Attr (p=1, ipp=50)
         """ 
         print("Get Products by Attr (p=1, ipp=50)")
-        _p, _ipp, _vals, _rets = 1, 50, '', 'chedraui,ims,walmart'
+        _p, _ipp, _vals, _rets = 1, 50, '', ''
         global new_prod_test
         _r =  self.app\
             .get('/product/by/attr?keys={}&vals={}&rets={}&cols={}&p={}&ipp={}'\
@@ -287,7 +287,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         except:
             pass
         self.assertEqual(_r.status_code, 200)
-        #print('Found {} prods'.format(len(_jr['products'])))
+        print('Found {} prods'.format(len(_jr['products'])))
 
     #@unittest.skip('Already tested')
     def test_90_delete_product(self):
