@@ -1,6 +1,6 @@
 import datetime
 from flask import g
-from app import errors, logger
+from app import errors, applogger
 from config import *
 import requests
 from pprint import pprint, pformat as pf
@@ -8,6 +8,8 @@ import ast
 import json
 from app.norm.normalize_text import key_format
 
+# Logger
+logger = applogger.get_logger()
 
 class Category(object):
     """ Class perform Query methods on PSQL Catalogue.category
