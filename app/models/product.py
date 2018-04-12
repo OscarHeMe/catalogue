@@ -455,7 +455,7 @@ class Product(object):
         """
         logger.debug('Querying by: {}'.format(_by))
         logger.debug('fetching: {}'.format(kwargs))
-        # Format params
+        # Format columns
         if kwargs['cols']:
             _cols = ','.join([x for x in \
                             (kwargs['cols'].split(',') \
@@ -463,14 +463,18 @@ class Product(object):
                         if x in Product.__attrs__])
         else:
             _cols = ','.join([x for x in Product.__base_q ])
+        # Format querying keys
         if kwargs['keys']:
             _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
         else:
             _keys = 'WHERE {} IS NULL'.format(_by)
+        # Format paginators
         _p = int(kwargs['p'])
         if _p < 1 :
             _p = 1
         _ipp = int(kwargs['ipp'])
+        if _ipp > 100:
+            _ipp = 100
         # Build query
         _qry = """SELECT {} FROM product {} OFFSET {} LIMIT {} """\
             .format(_cols, _keys, (_p - 1)*_ipp, _ipp)

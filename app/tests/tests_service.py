@@ -199,7 +199,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
             pass
         self.assertEqual(_r.status_code, 200)
     
-    #@unittest.skip('Already tested')
+    @unittest.skip('Already tested')
     def test_07_get_prods_by_item(self):
         """ Get Products by Item UUID (p=1, ipp=50)
         """ 
@@ -221,6 +221,27 @@ class CatalogueServiceTestCase(unittest.TestCase):
         self.assertEqual(_r.status_code, 200)
         #self.assertGreater(len(_jr), 0)
         #self.assertTrue(set(cols_test).issubset(_jr[0].keys()))
+    
+    #@unittest.skip('Already tested')
+    def test_08_get_prods_by_product(self):
+        """ Get Products by Product UUID (p=1, ipp=50)
+        """ 
+        print("Get Products by Product UUID (p=1, ipp=50)")
+        _p, _ipp = 1, 50
+        global new_prod_test
+        _r =  self.app.get('/product/by/puuid?keys={}&cols={}&p={}&ipp={}'\
+                .format(new_prod_test['product_uuid'],
+                    ','.join(cols_test),
+                    _p, _ipp
+                    )
+                )
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            pprint(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
 
     #@unittest.skip('Already tested')
     def test_90_delete_product(self):
