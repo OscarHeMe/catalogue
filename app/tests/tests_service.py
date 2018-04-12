@@ -46,8 +46,8 @@ img_prod_test = {
 cols_test = [
     'description', 'normalized', 'gtin',
     'raw_product', 'raw_html', 'categories',
-    'ingredients', 'brand', 'provider', 'url', 'images'
-] #'prod_images', 'prod_attrs', 'prod_categs']
+    'ingredients', 'brand', 'provider', 'url', 'images',
+    'prod_images', 'prod_attrs', 'prod_categs']
 
 class CatalogueServiceTestCase(unittest.TestCase):
     """ Test Case for Catalogue Service

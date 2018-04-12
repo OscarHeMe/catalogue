@@ -420,6 +420,18 @@ class Product(object):
     @staticmethod
     def query(_by, **kwargs):
         """ Static method to query by defined column values
+
+            Params:
+            -----
+            _by : str
+                Key from which query is performed
+            kwargs : dict
+                Extra arguments, such as (p, ipp, cols, etc..)
+            
+            Returns:
+            -----
+            _resp : list
+                List of product objects
         """
         logger.debug('Querying by: {}'.format(_by))
         logger.debug('fetching: {}'.format(kwargs))
@@ -448,5 +460,56 @@ class Product(object):
             logger.warning("Issues fetching elements in DB")
             raise errors.ApiError(70003, "Issues fetching elements in DB")
         # Verify for additional cols
-        ## Product.fetch_extras()
+        extra_cols = [x for x in (set(kwargs['cols'].split(',')) \
+                        -  set(_cols)) if x in Product.__extras__]
+        if extra_cols and _resp:
+            p_uuids = [_u['product_uuid'] for _u in _resp]
+            _extras = Product.fetch_extras(p_uuids, extra_cols)
         return _resp
+    
+    @staticmethod
+    def fetch_extras(p_uuids, _cols):
+        """ Static method to retrieve foreign references
+
+            Params:
+            -----
+            p_uuids : list
+                List of Product UUIDs
+            _cols : list
+                Additional columns to retrieve
+            
+            Returns:
+            -----
+            _prod_ext : dict
+                Dict with product extras.
+            >>> {
+                "8z46-df4as6df4-af4asdf9": {
+                    "prod_images": [
+                        {
+                            "id_p_image": 45596,
+                            "image": "Medicamentos de Patente",
+                            "descriptor": [[0,2,3,1,4,5], [3,4,6,7,7]],
+                            "last_mod": "2018-01-03"
+                        }, # ...
+                    ], 
+                    "prod_attrs": [
+                        {
+                            "id_p_attr": 485,
+                            "value": 80,
+                            "attr": "Miligramos",
+                            "clss": "Presentación"
+                        }, # ...
+                    ],
+                    "prod_categs": [
+                        {
+                            "id_p_cat": 75,
+                            "code": "SD20",
+                            "cat": "Medicamentos"
+                        }, # ...
+                    ]
+                }
+            }
+                (key -> Prod UUID, values -> {'col': <list of attrs>})
+        """
+        if 'prod_attrs' in _cols:
+            
