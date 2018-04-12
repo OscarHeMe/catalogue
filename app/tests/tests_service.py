@@ -243,11 +243,32 @@ class CatalogueServiceTestCase(unittest.TestCase):
             pass
         self.assertEqual(_r.status_code, 200)
     
-    #@unittest.skip('Already tested')
+    @unittest.skip('Already tested')
     def test_09_get_prods_by_source(self):
         """ Get Products by Source (p=1, ipp=50)
         """ 
         print("Get Products by Source (p=1, ipp=50)")
+        _p, _ipp = 1, 50
+        global new_prod_test
+        _r =  self.app.get('/product/by/source?keys={}&cols={}&p={}&ipp={}'\
+                .format(new_prod_test['source'],
+                    ','.join(cols_test),
+                    _p, _ipp
+                    )
+                )
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            pprint(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
+        print('Found {} prods'.format(len(_jr['products'])))
+    
+    def test_10_get_prods_by_attr(self):
+        """ Get Products by Attr (p=1, ipp=50)
+        """ 
+        print("Get Products by Attr (p=1, ipp=50)")
         _p, _ipp = 1, 50
         global new_prod_test
         _r =  self.app.get('/product/by/source?keys={}&cols={}&p={}&ipp={}'\

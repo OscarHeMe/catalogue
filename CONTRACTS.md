@@ -59,6 +59,12 @@
 
 **Endpoint**: `/item/delete?uuid=<item_uuid | required>`
 
+**Query Params:**
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| uuid  | Item UUID | required |
+
 **Response:**
 
 ```json
@@ -207,7 +213,7 @@
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | keys  | Comma Separated Item UUIDS | required |
-| cols  | Product fields to retrieve | optional |
+| cols  | Comma separated Product fields | optional |
 | p | Page | optional, default=1 |
 | ipp | Items per page | optional, default=5 |
 
@@ -279,7 +285,7 @@
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | keys  | Comma Separated Product UUIDs | required |
-| cols  | Product fields to retrieve | optional |
+| cols  | Comma separated Product fields | optional |
 | p | Page | optional, default=1 |
 | ipp | Items per page | optional, default=5 |
 
@@ -300,7 +306,7 @@ Same as previous [endpoint](#get_resp).
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | keys  | Comma Separated Source Keys | required |
-| cols  | Product fields to retrieve | optional |
+| cols  | Comma separated Product fields | optional |
 | p | Page | optional, default=1 |
 | ipp | Items per page | optional, default=5 |
 
@@ -314,7 +320,7 @@ Same as previous [endpoint](#get_resp).
 
 **Method**:  GET
 
-**Endpoint**: `/product/by/attr?keys=<attr_key | required>&vals=<values | optional>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
+**Endpoint**: `/product/by/attr?keys=<attr_key | required>&vals=<values | optional>&rets=<retailer_keys | optional>&cols=<product_table_fields | optional>&p=<page | optional>&ipp=<items per page | optional>`
 
 **Query Params**:
 
@@ -322,6 +328,7 @@ Same as previous [endpoint](#get_resp).
 | ----- | ----------- | --------- |
 | keys  | Comma Separated Attr Keys | required |
 | vals  | Comma Separated Attr Values | optional, default=None |
+| rets  | Comma Separated Retailer keys | optional |
 | cols  | Product fields to retrieve | optional |
 | p | Page | optional, default=1 |
 | ipp | Items per page | optional, default=5 |
