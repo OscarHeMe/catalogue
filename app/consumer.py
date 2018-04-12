@@ -29,6 +29,7 @@ def callback(ch, method, properties, body):
         else:
             logger.debug('Valid product!!!')
             product = Product(new_item) 
+            logger.debug('{}'.format(product.as_dict))
         pass
     #except Exception as e:
     if False:

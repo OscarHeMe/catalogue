@@ -18,7 +18,9 @@ class Product(object):
     product_uuid = None
     item_uuid = None # REFERENCES "item" (item_uuid),
     source = None
+    retailer = None
     product_id = None
+    id = None
     name = None
     gtin = None
     description = None #text,
@@ -33,6 +35,7 @@ class Product(object):
     images = None #text,
     last_modified = None #timestamp
     attributes = None 
+    date = None
 
     def __init__(self, *initial_data,**kwargs):
         # In case of dictionary initialization
@@ -54,7 +57,7 @@ class Product(object):
     def validate(elem):
         ''' Quick fields validation
         '''
-        req_vars = ["source", "product_id", "name"]
+        req_vars = ["retailer", "id", "name"]
         keys = list(elem.keys())
         # Si no tiene todas las keys requeridas regresamos False
         if not set(req_vars).issubset(keys):
@@ -65,14 +68,14 @@ class Product(object):
     def as_dict(self):
         ''' Dictionary representation for saving to cassandra '''
         return {
-            'product_id' : str(self.product_id),
+            'product_id' : str(self.id),
             'name' : str(self.name),
             'gtin' : str(self.gtin) if self.gtin else None,
             'description' : str(self.description) if self.description else None,
             'raw_product' : str(self.raw_product) if self.raw_product else None,
             'raw_html' : str(self.raw_item) if self.raw_product else None,
             'categories' : ', '.join(self.categories), #string
-            'source' : str(self.source),
+            'source' : str(self.retailer),
             'last_modified' : self.time,
             'images' : ', '.join(self.images), 
             'url' : str(self.url) if self.url else None,
