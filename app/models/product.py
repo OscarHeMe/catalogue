@@ -530,8 +530,15 @@ class Product(object):
             _prod_ext[z]= {w:[] for w in _cols}
         if 'prod_attrs' in _cols:
             # Fetch Product Attrs
-            #Product.query_attrs()
             logger.info('Retrieving Product Attrs...')
+            p_attrs = Product.query_attrs(p_uuids)
+            # Add attrs to complete dict
+            for _p in _prod_ext:
+                if _p in p_attrs:
+                    if not _prod_ext[_p]['prod_attrs']:
+                        _prod_ext[_p]['prod_attrs'] = p_attrs[_p]
+                    else:
+                        _prod_ext[_p]['prod_attrs'].append(p_attrs[_p])
         if 'prod_images' in _cols:
             # Fetch Product Images
             #Product.query_imgs()
@@ -540,4 +547,53 @@ class Product(object):
             # Fetch Product Images
             #Product.query_categs()
             logger.info('Retrieving Product Categories...')
+        logger.debug(_prod_ext)
         return _prod_ext
+
+    @staticmethod
+    def query_attrs(p_uuids):
+        """ Fetch all attributes by Prod UUID
+
+            Params:
+            -----
+            p_uuids : list
+                List of Product UUIDs
+            _cols : list
+                Additional columns to retrieve
+            
+            Returns:
+            -----
+            p_attrs : dict
+                Product Attributes hashed by Product UUID
+        """
+        p_attrs = {}
+        _qry = """SELECT pat.product_uuid, 
+            pat.id_product_attr as id_p_attr, pat.value,
+            to_char(pat.last_modified, 'YYYY-MM-DD HH24:00:00') as last_modified, 
+            att.name as attr, att.name_es as clss 
+            FROM product_attr pat 
+            LEFT OUTER JOIN (
+                SELECT id_attr, attr.name, clss.name_es 
+                FROM attr INNER JOIN clss 
+                ON (clss.id_clss = attr.id_clss)) AS att 
+            ON (att.id_attr = pat.id_attr)
+            WHERE product_uuid IN {}
+            ORDER BY product_uuid
+            """.format(tuplify(p_uuids))
+        logger.debug(_qry)
+        try:
+            resp_at = g._db.query(_qry).fetch()
+            for _rat in resp_at:
+                _pu = _rat['product_uuid']
+                del _rat['product_uuid']
+                if _pu in p_attrs:
+                    p_attrs[_pu].append(_rat)
+                else:
+                    p_attrs[_pu] = [_rat]
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching Product Attrs!")
+            return {}
+        logger.info('Found {} attributes'.format(len(p_attrs)))
+        logger.debug(p_attrs)
+        return p_attrs
