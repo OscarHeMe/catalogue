@@ -24,6 +24,8 @@ class Product(object):
         "ingredients","raw_html", "raw_product"]
     
     __extras__ = ['prod_attrs', 'prod_images', 'prod_categs']
+
+    __base_q = ['product_uuid', 'product_id', 'name', 'source']
     
     def __init__(self, _args):
         """ Product constructor
@@ -438,7 +440,9 @@ class Product(object):
         logger.debug('fetching: {}'.format(kwargs))
         # Format params
         if kwargs['cols']:
-            _cols = ','.join([x for x in kwargs['cols'].split(',') \
+            _cols = ','.join([x for x in \
+                            (kwargs['cols'].split(',') \
+                            + Product.__base_q) \
                         if x in Product.__attrs__])
         if kwargs['keys']:
             _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
@@ -466,6 +470,14 @@ class Product(object):
         if extra_cols and _resp:
             p_uuids = [_u['product_uuid'] for _u in _resp]
             _extras = Product.fetch_extras(p_uuids, extra_cols)
+        # Aggregate extra columns
+        for _i, _r in enumerate(_resp):
+            _tmp_extras = {}
+            for _ex in extra_cols:
+                _tmp_extras.update({
+                    _ex : _extras[_r['product_uuid']][_ex]
+                })
+            _resp[_i].update(_tmp_extras)
         return _resp
     
     @staticmethod
@@ -512,6 +524,20 @@ class Product(object):
             }
                 (key -> Prod UUID, values -> {'col': <list of attrs>})
         """
+        # Initialize prod_ext dict
+        _prod_ext = {}
+        for z in p_uuids:
+            _prod_ext[z]= {w:[] for w in _cols}
         if 'prod_attrs' in _cols:
-            pass
-        return
+            # Fetch Product Attrs
+            #Product.query_attrs()
+            logger.info('Retrieving Product Attrs...')
+        if 'prod_images' in _cols:
+            # Fetch Product Images
+            #Product.query_imgs()
+            logger.info('Retrieving Product Images...')
+        if 'prod_categs' in _cols:
+            # Fetch Product Images
+            #Product.query_categs()
+            logger.info('Retrieving Product Categories...')
+        return _prod_ext

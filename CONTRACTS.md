@@ -211,7 +211,7 @@
 | p | Page | optional, default=1 |
 | ipp | Items per page | optional, default=5 |
 
-*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `prod_images`, `prod_attrs` and `prod_categs`.
+*Note*: Allowed **cols** are: `item_uuid`, `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `prod_images`, `prod_attrs` and `prod_categs`.
 
 <a name="get_resp"></a>  **Response:**
 
@@ -281,7 +281,7 @@
 | p | Page | optional, default=1 |
 | ipp | Items per page | optional, default=5 |
 
-*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+*Note*: Allowed **cols** are: `item_uuid`,`description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
 
 **Response:**
 
@@ -302,7 +302,7 @@ Same as previous [endpoint](#get_resp).
 | p | Page | optional, default=1 |
 | ipp | Items per page | optional, default=5 |
 
-*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+*Note*: Allowed **cols** are: `item_uuid`,`description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
 
 **Response:**
 
@@ -324,7 +324,7 @@ Same as previous [endpoint](#get_resp).
 | p | Page | optional, default=1 |
 | ipp | Items per page | optional, default=5 |
 
-*Note*: Allowed **cols** are: `description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+*Note*: Allowed **cols** are: `item_uuid`,`description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
 
 **Response:**
 
