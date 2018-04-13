@@ -1,7 +1,11 @@
 #!/bin/bash
 
+#cd $APP_DIR
 . env/bin/activate
 . .envvars
+
+# Init the database
+./env/bin/flask initdb
 
 # Evaluate the mode of execution and the 
 if [[ $MODE == "SERVICE" ]]
@@ -13,6 +17,6 @@ elif [[ $MODE == "CONSUMER" ]]
     then
     # Run as consumer
     echo "Starting $APP_NAME in CONSUMER testing..."
-    #./env/bin/python -m app.tests.tests_consumer
+    ./env/bin/python -m app.tests.tests_consumer
 fi
 

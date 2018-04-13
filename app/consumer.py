@@ -21,20 +21,15 @@ def callback(ch, method, properties, body):
     new_item = json.loads(body.decode('utf-8'))
     logger.debug("Debugging new item")
     logger.debug(new_item)
-    #try:
-    if True:
-
-        if not Product.validate(new_item):
-            logger.warning('Not a valid product!!!')
-        else:
-            logger.debug('Valid product!!!')
-            product = Product(new_item) 
-            logger.debug('{}'.format(product.as_dict))
-        pass
-    #except Exception as e:
-    if False:
-        logger.error(e)
-        logger.warning("Could not save product in DB!")
+    with app.app.app_context():
+        app.get_db()
+        try:
+            prod = Product(new_item)
+            logger.info('Saving...')
+            prod.save()
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Could not save product in DB!")
     try: 
         ch.basic_ack(delivery_tag = method.delivery_tag)
     except Exception as e:
