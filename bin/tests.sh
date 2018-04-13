@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd $APP_DIR
+#cd $APP_DIR
 . env/bin/activate
 . .envvars
 
