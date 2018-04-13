@@ -349,7 +349,7 @@ Same as previous [endpoint](#get_resp).
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
-| uuid  | Item UUID | required |
+| uuid  | Product UUID | required |
 
 **Response:**
 
@@ -364,14 +364,15 @@ Same as previous [endpoint](#get_resp).
 
 **Method**:  GET
 
-**Endpoint**: `/product/delete?uuid=<product_uuid | required>&attr=<attr_key | required>`
+**Endpoint**: `/product/delete/attr?uuid=<product_uuid | required>&id=<id_prod_attr | required>`
 
 **Query Params:**
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | uuid  | Product UUID | required |
-| attr  | Attribute key | required |
+| id  | Product Attr ID | required |
+
 
 **Response:**
 
@@ -386,14 +387,14 @@ Same as previous [endpoint](#get_resp).
 
 **Method**:  GET
 
-**Endpoint**: `/product/image/delete?uuid=<item_uuid | required>&img=<image_url | required>`
+**Endpoint**: `/product/image/delete/image?uuid=<product_uuid | required>&id=<id_prod_image | required>`
 
 **Query Params:**
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
 | uuid  | Product UUID | required |
-| img  | Image URL | required |
+| id  | Product Image ID | required |
 
 **Response:**
 

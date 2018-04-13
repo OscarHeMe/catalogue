@@ -131,7 +131,6 @@ def get_byprod():
 		'products': _prods
 		})
 
-
 @mod.route("/by/source", methods=['GET'])
 def get_bysource():
 	""" Endpoint to fetch `Product`s by source's.
@@ -203,15 +202,41 @@ def delete_prod():
 
 @mod.route("/delete/attr", methods=['GET'])
 def delete_prod_attr():
-	""" Endpoint to delete `Product`s attribute by product_uuid 
-		and  attribute key.
+	""" Endpoint to delete `Product`s attribute by Prod Attr ID
 	"""
-	return jsonify({'status': 'in_construction'})
+	logger.info("Delete Product Attr...")
+	params = request.args
+	logger.debug(params)
+	if not params:
+		raise errors.ApiError(70001, "Missing required key params")
+	# Verify needed key-values
+	_needed_params = {'uuid','id'}
+	if not _needed_params.issubset(params):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Call to delete Product extra
+	_resp = Product.delete_extra(params['uuid'], params['id'], 'product_attr')
+	return jsonify({
+		"status": "OK",
+		"message": _resp['message']
+		})
 
 
 @mod.route("/delete/image", methods=['GET'])
 def delete_prod_img():
-	""" Endpoint to delete `Product`s image by product_uuid 
-		and  image url.
+	""" Endpoint to delete `Product`s image by  Prod Image ID
 	"""
-	return jsonify({'status': 'in_construction'})
+	logger.info("Delete Product Image...")
+	params = request.args
+	logger.debug(params)
+	if not params:
+		raise errors.ApiError(70001, "Missing required key params")
+	# Verify needed key-values
+	_needed_params = {'uuid','id'}
+	if not _needed_params.issubset(params):
+		raise errors.ApiError(70001, "Missing required key params")
+	# Call to delete Product extra
+	_resp = Product.delete_extra(params['uuid'], params['id'], 'product_image')
+	return jsonify({
+		"status": "OK",
+		"message": _resp['message']
+		})

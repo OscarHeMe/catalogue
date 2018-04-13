@@ -49,6 +49,10 @@ cols_test = [
     'ingredients', 'brand', 'provider', 'url', 'images',
     'prod_attrs', 'prod_images',  'prod_categs']
 
+# Response test
+response_prod = None
+
+
 class CatalogueServiceTestCase(unittest.TestCase):
     """ Test Case for Catalogue Service
     """
@@ -222,13 +226,13 @@ class CatalogueServiceTestCase(unittest.TestCase):
         #self.assertGreater(len(_jr), 0)
         #self.assertTrue(set(cols_test).issubset(_jr[0].keys()))
     
-    @unittest.skip('Already tested')
+    #@unittest.skip('Already tested')
     def test_08_get_prods_by_product(self):
         """ Get Products by Product UUID (p=1, ipp=50)
         """ 
         print("Get Products by Product UUID (p=1, ipp=50)")
         _p, _ipp = 1, 50
-        global new_prod_test
+        global new_prod_test, response_prod
         _r =  self.app.get('/product/by/puuid?keys={}&cols={}&p={}&ipp={}'\
                 .format(new_prod_test['product_uuid'],
                     ','.join(cols_test),
@@ -239,6 +243,8 @@ class CatalogueServiceTestCase(unittest.TestCase):
         try:
             _jr = json.loads(_r.data.decode('utf-8'))
             pprint(_jr)
+            # Global assingment
+            response_prod = _jr['products'][0]
         except:
             pass
         self.assertEqual(_r.status_code, 200)
@@ -265,7 +271,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         self.assertEqual(_r.status_code, 200)
         print('Found {} prods'.format(len(_jr['products'])))
     
-    #@unittest.skip('Already tested')
+    @unittest.skip('Already tested')
     def test_10_get_prods_by_attr(self):
         """ Get Products by Attr (p=1, ipp=50)
         """ 
@@ -288,6 +294,40 @@ class CatalogueServiceTestCase(unittest.TestCase):
             pass
         self.assertEqual(_r.status_code, 200)
         print('Found {} prods'.format(len(_jr['products'])))
+
+    #@unittest.skip('Already tested')
+    def test_11_delete_product_image(self):
+        """ Delete existing Product Image
+        """ 
+        print("Delete existing Product Image")
+        global response_prod
+        _r =  self.app.get('/product/delete/image?uuid={}&id={}'\
+                        .format(response_prod['product_uuid'],
+                                response_prod['prod_images'][0]['id_p_image']))
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            print(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
+    
+    #@unittest.skip('Already tested')
+    def test_12_delete_product_attr(self):
+        """ Delete existing Product Attr
+        """ 
+        print("Delete existing Product Attr")
+        global response_prod
+        _r =  self.app.get('/product/delete/attr?uuid={}&id={}'\
+                        .format(response_prod['product_uuid'],
+                                response_prod['prod_attrs'][0]['id_p_attr']))
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            print(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
 
     #@unittest.skip('Already tested')
     def test_90_delete_product(self):

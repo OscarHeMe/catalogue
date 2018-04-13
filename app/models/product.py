@@ -397,45 +397,6 @@ class Product(object):
         for i in q:
             logger.info('Product UUID: ' + str(i['product_uuid']))
         return {'msg':'Postgres Items One Working!'}
-
-    @staticmethod
-    def delete(p_uuid):
-        """ Static method to delete Product
-
-            Params:
-            -----
-            p_uuid : str
-                Product UUID to delete
-
-            Returns:
-            -----
-            resp : bool
-                Transaction status
-        """
-        logger.debug("Deleting Product...")
-        if not Product.exists({'product_uuid': p_uuid}):
-            return {
-                'message': "Product UUID not in DB!"
-            }
-        try:
-            # Delete from Product image
-            g._db.query("DELETE FROM product_image WHERE product_uuid='{}'"\
-                        .format(p_uuid))
-            # Delete from Product Category
-            g._db.query("DELETE FROM product_category WHERE product_uuid='{}'"\
-                        .format(p_uuid))
-            # Delete from Product Attr
-            g._db.query("DELETE FROM product_attr WHERE product_uuid='{}'"\
-                        .format(p_uuid))
-            # Delete from Product
-            g._db.query("DELETE FROM product WHERE product_uuid='{}'"\
-                        .format(p_uuid))
-        except Exception as e:
-            logger.error(e)
-            raise errors.ApiError(70004, "Could not apply transaction in DB")
-        return {
-            'message': "Product ({}) correctly deleted!".format(p_uuid)
-        }
     
     @staticmethod
     def query(_by, **kwargs):
@@ -770,3 +731,87 @@ class Product(object):
             'keys': ','.join([_o['product_uuid'] for _o in _fres])
             })
         return Product.query('product_uuid', **kwargs)
+
+    @staticmethod
+    def delete_extra(_uuid, _id, _table):
+        """ Static method to delete Product reference table
+
+            Params:
+            -----
+            _uuid : str
+                Product UUID of respective Prod Image
+            _id : str
+                Product Extra ID to delete
+            _table : str
+                Table name to delete from
+
+            Returns:
+            -----
+            resp : bool
+                Transaction status
+        """
+        try:
+            _exists = g._db.query("""SELECT EXISTS (
+                    SELECT 1 FROM {table}
+                    WHERE product_uuid = '{uuid}' 
+                    AND id_{table} = {_id}
+                    )""".format(table=_table,
+                                uuid=_uuid,
+                                _id=_id))\
+                    .fetch()[0]['exists']
+            if not _exists:
+                return {
+                    'message': "Product Image ID not in DB!"
+                }
+            # Delete from Product extra record
+            g._db.query("""DELETE FROM {table}
+                WHERE product_uuid='{uuid}'
+                AND id_{table}={_id}"""\
+                        .format(table=_table,
+                                uuid=_uuid,
+                                _id=_id))
+        except Exception as e:
+            logger.error(e)
+            raise errors.ApiError(70004, "Could not apply transaction in DB")
+        return {
+            'message': "Product Extra ({}) correctly deleted!".format(_id)
+        }
+
+    @staticmethod
+    def delete(p_uuid):
+        """ Static method to delete Product
+
+            Params:
+            -----
+            p_uuid : str
+                Product UUID to delete
+
+            Returns:
+            -----
+            resp : bool
+                Transaction status
+        """
+        logger.debug("Deleting Product...")
+        if not Product.exists({'product_uuid': p_uuid}):
+            return {
+                'message': "Product UUID not in DB!"
+            }
+        try:
+            # Delete from Product image
+            g._db.query("DELETE FROM product_image WHERE product_uuid='{}'"\
+                        .format(p_uuid))
+            # Delete from Product Category
+            g._db.query("DELETE FROM product_category WHERE product_uuid='{}'"\
+                        .format(p_uuid))
+            # Delete from Product Attr
+            g._db.query("DELETE FROM product_attr WHERE product_uuid='{}'"\
+                        .format(p_uuid))
+            # Delete from Product
+            g._db.query("DELETE FROM product WHERE product_uuid='{}'"\
+                        .format(p_uuid))
+        except Exception as e:
+            logger.error(e)
+            raise errors.ApiError(70004, "Could not apply transaction in DB")
+        return {
+            'message': "Product ({}) correctly deleted!".format(p_uuid)
+        }
