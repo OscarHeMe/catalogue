@@ -46,7 +46,11 @@ class Product(object):
             self.raw_product = json.dumps(_args)
         except Exception as e:
             logger.error(e)
-            raise errors.ApiError(70005, "Wrong DataType to serialize for Product!")
+            if APP_MODE == "CONSUMER":
+                logger.warning("Wrong DataType to serialize for Product!")
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70005, "Wrong DataType to serialize for Product!")
         # Args validation
         try:
             assert isinstance(self.images, list) or isinstance(self.images, None)
@@ -55,7 +59,11 @@ class Product(object):
             assert isinstance(self.raw_html, str) or isinstance(self.raw_html, None)
         except Exception as e:
             logger.error(e)
-            raise errors.ApiError(70005, "Wrong DataType to save Product!")
+            if APP_MODE == "CONSUMER":
+                logger.warning("Wrong DataType to save Product!")
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70005, "Wrong DataType to save Product!")
 
     def save(self):
         """ Class method to save Product record in DB 
@@ -65,8 +73,12 @@ class Product(object):
         # Verify for update
         if self.product_uuid:
             if not Product.exists({'product_uuid': self.product_uuid}):
-                # If wants to update but wrong UUID, return Error                
-                raise errors.ApiError(70006, "Cannot update, UUID not in DB!")
+                # If wants to update but wrong UUID, return Error   
+                if APP_MODE == "CONSUMER":
+                    logger.error("Cannot update, UUID not in DB!")
+                    return False
+                if APP_MODE == "SERVICE":
+                    raise errors.ApiError(70006, "Cannot update, UUID not in DB!")
         # Verify for insert
         elif Product.exists({'product_id': self.product_id, 'source': self.source}):
             self.message = 'Product already exists!'
@@ -100,7 +112,11 @@ class Product(object):
             self.save_extras()
         except Exception as e:
             logger.error(e)
-            raise errors.ApiError(70002, "Issues saving in DB!")
+            if APP_MODE == "CONSUMER":
+                logger.error("Issues saving in DB!")
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70002, "Issues saving in DB!")
         return True
 
     def save_extras(self):
@@ -249,7 +265,10 @@ class Product(object):
                 .fetch()
             if not id_pimg:
                 logger.info("Cannot update, image not in DB!")
-                raise errors.ApiError(70006, "Cannot update, image not in DB!")
+                if APP_MODE == "CONSUMER":
+                    return False
+                if APP_MODE == "SERVICE":
+                    raise errors.ApiError(70006, "Cannot update, image not in DB!")
             id_pimg = id_pimg[0]['id_product_image']
             # Load model
             Product.save_pimage(p_obj['product_uuid'],
@@ -260,7 +279,10 @@ class Product(object):
         except Exception as e:
             logger.error(e)
             logger.warning("Could not save Product image!")
-            raise errors.ApiError(70004, "Could not apply transaction in DB")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70004, "Could not apply transaction in DB")
     
     def save_categories(self):
         """ Class method to save product categories
@@ -320,9 +342,10 @@ class Product(object):
         _where = ' AND '.join(["{}='{}'".format(*z) \
                             for z in list(k_param.items())])
         try:
-            exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM product WHERE {})"""\
-                            .format(_where))\
+            _q = """SELECT EXISTS (SELECT 1 FROM product WHERE {})"""\
+                    .format(_where)
+            logger.debug("Query: {}".format(_q))
+            exists = g._db.query(_q)\
                         .fetch()[0]['exists']
         except Exception as e:
             logger.error(e)
@@ -363,7 +386,11 @@ class Product(object):
             logger.debug("Got {} products".format(len(_items)))
         except Exception as e:
             logger.error(e)
-            raise errors.ApiError(70003, "Issues fetching elements in DB")
+            if APP_MODE == "CONSUMER":
+                logger.error("Issues fetching elements in DB!")
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
         return _items
 
     @staticmethod
@@ -413,7 +440,11 @@ class Product(object):
                         .format(p_uuid))
         except Exception as e:
             logger.error(e)
-            raise errors.ApiError(70004, "Could not apply transaction in DB")
+            if APP_MODE == "CONSUMER":
+                logger.error("Issues deleting elements in DB!")
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70004, "Could not apply transaction in DB")
         return {
             'message': "Product ({}) correctly deleted!".format(p_uuid)
         }
@@ -458,8 +489,11 @@ class Product(object):
             logger.info("Found {} products".format(len(_resp)))
         except Exception as e:
             logger.error(e)
-            logger.warning("Issues fetching elements in DB")
-            raise errors.ApiError(70003, "Issues fetching elements in DB")
+            logger.warning("Issues fetching elements in DB!")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
         # Verify for additional cols
         extra_cols = [x for x in (set(kwargs['cols'].split(',')) \
                         -  set(_cols)) if x in Product.__extras__]
