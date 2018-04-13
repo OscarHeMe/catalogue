@@ -15,7 +15,7 @@ new_item_test = {
 
 # Add Product Test
 new_prod_test = {
-    "product_id": "00000000000000124919",
+    "product_id": "00000000000000124913",
     "gtin": "00000001249002",
     "source": "chedraui",
     "name": "refresco pepsi cola sin cafeina 354 ml",
@@ -30,7 +30,14 @@ new_prod_test = {
         "attr_key": "despensa",
         "clss_name": "Categoría",
         "clss_key": "category",
-    }],
+    },
+    {
+        "attr_name": "Disponible",
+        "attr_key": "available",
+        "clss_name": "Estado",
+        "clss_key": "state",
+    }
+    ],
     "raw_html": "<body>product_html</body>"
     # "item_uuid": "" # Missing
 }
