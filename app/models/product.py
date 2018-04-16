@@ -45,7 +45,8 @@ class Product(object):
         self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
         self.product_id = str(self.product_id).zfill(20)[-255:] if self.product_id else None
         try:
-            self.raw_product = json.dumps(_args)
+            if not self.raw_product:
+                self.raw_product = json.dumps(_args)
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":

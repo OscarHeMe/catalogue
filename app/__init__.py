@@ -21,7 +21,10 @@ logger = applogger.get_logger()
    
 @app.cli.command('consumer')
 def consumer_cmd():
-    consumer.start()
+    with app.app_context():
+        # WIth App ctx, fetch DB connector
+        get_db()
+        consumer.start()
 
 @app.cli.command('initdb')
 def initdb_cmd():
