@@ -12,14 +12,14 @@ logger = applogger.get_logger()
 
 # Rabbit instances
 consumer = RabbitEngine({
-    'queue':QUEUE_ROUTING,
-    'routing_key': QUEUE_ROUTING},
+    'queue':QUEUE_CATALOGUE,
+    'routing_key': QUEUE_CATALOGUE},
     blocking=False)
 
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
     new_item = json.loads(body.decode('utf-8'))
-    logger.debug("Debugging new item")
+    logger.debug("Debugging new incoming product")
     logger.debug(new_item)
     with app.app.app_context():
         app.get_db()

@@ -814,7 +814,7 @@ class Product(object):
             Params:
             -----
             p_uuid : str
-                Product UUID to delete
+                Product UUID to deletedelete
 
             Returns:
             -----
@@ -841,7 +841,10 @@ class Product(object):
                         .format(p_uuid))
         except Exception as e:
             logger.error(e)
-            raise errors.ApiError(70004, "Could not apply transaction in DB")
+            if APP_MODE == 'SERVICE':
+                raise errors.ApiError(70004, "Could not apply transaction in DB")
+            else:
+                return False
         return {
             'message': "Product ({}) correctly deleted!".format(p_uuid)
         }
