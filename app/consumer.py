@@ -50,6 +50,9 @@ def process(new_item, reroute=True):
             logger.info('Updated ({}) product!'.format(p.product_uuid))
     else:
         logger.info('Could not find product, creating new one..')
+        _needed_params = {'source','product_id', 'name'}
+        if not _needed_params.issubset(p.__dict__.keys()):
+            raise Exception("Required columns to create are missing in product. (source, product_id, name)")
         if not p.save():
             raise Exception('Unable to create new Product!')
         logger.info('Created product ({})'.format(p.product_uuid))

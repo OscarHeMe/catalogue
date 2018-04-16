@@ -157,30 +157,28 @@ class CatalogueServiceTestCase(unittest.TestCase):
         except:
             self.assertFalse(True)
     
-    @unittest.skip('Already Tested')
+    #@unittest.skip('Already Tested')
     def test_04_process_item(self):
         """ Testing Item type processs
         """ 
         print("Testing Item type process")
-        _ptest = prods_test_item[1]
         from app.consumer import process
-        res_item = process(_ptest, False)
-        #pprint(res_item)
-        try:
-            self.assertTrue(res_item)
-        except:
-            self.assertFalse(True)
+        for _ptest in prods_test_item:
+            try:
+                res_item = process(_ptest, False)
+                self.assertTrue(res_item)
+            except:
+                self.assertFalse(True)
     
     #@unittest.skip('Already Tested')
     def test_04_process_price(self):
         """ Testing price type process
         """ 
         print("Testing price type process")
-        _ptest = prods_test_price[1]
         from app.consumer import process
-        res_price = process(_ptest, False)
-        pprint(res_price)        
-        self.assertTrue('product_uuid' in res_price)
+        for _ptest in prods_test_price:
+            res_price = process(_ptest, False)
+            self.assertTrue('product_uuid' in res_price)
 
 if __name__ == '__main__':
     unittest.main()

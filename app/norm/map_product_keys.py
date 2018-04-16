@@ -68,7 +68,7 @@ def item(data):
         fdata : dict
             Reformatted Product info
     """
-    logger.debug(pf(data))
+    #logger.debug(pf(data))
     if not isinstance(data, dict):
         return {}
     fdata = {}
@@ -139,7 +139,7 @@ def price(data):
         fdata : dict
             Reformatted Price info
     """
-    logger.debug(pf(data))
+    #logger.debug(pf(data))
     if not isinstance(data, dict):
         return {}
     fdata = {}
