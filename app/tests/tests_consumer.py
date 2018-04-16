@@ -144,7 +144,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         except:
             self.assertFalse(True)
 
-    #@unittest.skip('Already Tested')
+    @unittest.skip('Already Tested')
     def test_03_reformat_price(self):
         """ Testing Reformatting Price function
         """ 
@@ -154,6 +154,20 @@ class CatalogueServiceTestCase(unittest.TestCase):
         pprint(_frmted)
         try:
             self.assertIn('product_id', _frmted)
+        except:
+            self.assertFalse(True)
+    
+    @unittest.skip('Already Tested')
+    def test_04_process_item(self):
+        """ Testing Product existance
+        """ 
+        print("Testing Product existance")
+        _ptest = prods_test_item[1]
+        from app.consumer import process
+        res_item = process(_ptest, False)
+        #pprint(res_item)
+        try:
+            self.assertTrue(res_item)
         except:
             self.assertFalse(True)
 

@@ -51,20 +51,20 @@ class Product(object):
             logger.error(e)
             if APP_MODE == "CONSUMER":
                 logger.warning("Wrong DataType to serialize for Product!")
-                return False
+                raise Exception("Wrong DataType to serialize for Product!")
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70005, "Wrong DataType to serialize for Product!")
         # Args validation
         try:
-            assert isinstance(self.images, list) or isinstance(self.images, None)
-            assert isinstance(self.categories, str) or isinstance(self.categories, None)
-            assert isinstance(self.attributes, list) or isinstance(self.attributes, None)
-            assert isinstance(self.raw_html, str) or isinstance(self.raw_html, None)
+            assert isinstance(self.images, list) or (self.images is None)
+            assert isinstance(self.categories, str) or (self.categories is None)
+            assert isinstance(self.attributes, list) or (self.attributes is None)
+            assert isinstance(self.raw_html, str) or (self.raw_html is None)
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
                 logger.warning("Wrong DataType to save Product!")
-                return False
+                raise Exception("Wrong DataType to save Product!")
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70005, "Wrong DataType to save Product!")
 

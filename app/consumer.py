@@ -22,27 +22,53 @@ producer = RabbitEngine({
     'routing_key': QUEUE_ROUTING},
     blocking=True)
 
+
+def process(new_item, reroute=True):
+    """ Method that processes all elements with defined rules
+    """
+    # Fetch Route key
+    route_key = new_item['route_key']
+    logger.info('Evaluating: {}'.format(route_key))
+    # Reformat Prod Values
+    _frmted = mpk.product(route_key, new_item)
+    logger.info('Formatted product!')
+    p = Product(_frmted)
+    # Verify if product exists
+    prod_uuid = Product.get({
+        'product_id': p.product_id,
+        'source': p.source,
+        }, limit=1)
+    # if exists
+    if prod_uuid:
+        logger.info('Found product, updating...')
+        # Get product_uuid
+        prod_uuid = prod_uuid[0]['product_uuid']
+        # If `item` update item
+        if route_key == 'item':
+            p.product_uuid = prod_uuid
+            p.save()
+        logger.info('Updated ({}) product!'.format(p.product_uuid))
+    else:
+        logger.info('Could not find product, creating new one..')
+        if not p.save():
+            raise Exception('Unable to create new Product!')
+        logger.info('Created product ({})'.format(p.product_uuid))
+        if route_key == 'price':
+            # If price, update product_uuid and reroute
+            new_item.update({'product_uuid': p.product_uuid})
+            if reroute:
+                producer.send('routing', new_item)
+            logger.info("Rerouted back ({})".format(new_item['product_uuid']))
+    if not reroute:
+        return new_item
+
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
     new_item = json.loads(body.decode('utf-8'))
     logger.info("New incoming product..")
     logger.debug(new_item)
     try:
-        # Fetch Route key
-        route_key = new_item['route_key']
-        del new_item['route_key']
-        # Reformat Prod Values
-        _frmted = mpk.product(route_key, new_item)
-        # Verify if product exists
-        # if exists
-        ## get_prod_uuid
-        ## if `item`
-        ### update_prod
-        # else
-        ## save_new_prod
-        # if `price`
-        ## append_prod_uuid
-        ## reroute_prod
+        process(new_item)
     except Exception as e:
         logger.error(e)
         logger.warning("Could not save product in DB!")
