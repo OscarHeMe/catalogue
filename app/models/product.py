@@ -146,14 +146,15 @@ class Product(object):
                 'clss_key': 'provider',
                 'clss_desc': 'Proveedor, Laboratorio, Manufacturador, etc.'
             })
-        for _c in self.categories.split(','):
-            self.attributes.append({
-                'attr_name': _c,
-                'attr_key': key_format(_c),
-                'clss_name': 'Categoría',
-                'clss_key': 'category',
-                'clss_desc': 'Categoría'
-            })
+        if self.categories:
+            for _c in self.categories.split(','):
+                self.attributes.append({
+                    'attr_name': _c,
+                    'attr_key': key_format(_c),
+                    'clss_name': 'Categoría',
+                    'clss_key': 'category',
+                    'clss_desc': 'Categoría'
+                })
         self.save_attributes(update)
 
     def save_attributes(self, update=False):

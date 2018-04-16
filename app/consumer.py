@@ -40,25 +40,25 @@ def process(new_item, reroute=True):
         }, limit=1)
     # if exists
     if prod_uuid:
-        logger.info('Found product, updating...')
+        logger.info('Found product!')
         # Get product_uuid
-        prod_uuid = prod_uuid[0]['product_uuid']
+        p.product_uuid = prod_uuid[0]['product_uuid']
         # If `item` update item
         if route_key == 'item':
-            p.product_uuid = prod_uuid
+            logger.info('Found product, updating...')
             p.save()
-        logger.info('Updated ({}) product!'.format(p.product_uuid))
+            logger.info('Updated ({}) product!'.format(p.product_uuid))
     else:
         logger.info('Could not find product, creating new one..')
         if not p.save():
             raise Exception('Unable to create new Product!')
         logger.info('Created product ({})'.format(p.product_uuid))
-        if route_key == 'price':
-            # If price, update product_uuid and reroute
-            new_item.update({'product_uuid': p.product_uuid})
-            if reroute:
-                producer.send('routing', new_item)
-            logger.info("Rerouted back ({})".format(new_item['product_uuid']))
+    if route_key == 'price':
+        # If price, update product_uuid and reroute
+        new_item.update({'product_uuid': p.product_uuid})
+        if reroute:
+            producer.send('routing', new_item)
+        logger.info("Rerouted back ({})".format(new_item['product_uuid']))
     if not reroute:
         return new_item
 
