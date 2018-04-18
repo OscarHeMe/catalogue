@@ -256,7 +256,7 @@ def save_product(obj):
     if 'name' in obj:
         mpr.name = obj['name'] if obj['name'] else ''
     if 'gtin' in obj:
-        mpr.gtin = obj['gtin'] if obj['gtin'] else ''
+        mpr.gtin = str(obj['gtin']).zfill(14)[-14:]  else ''
     if 'description' in obj and obj['description']:
         mpr.description = obj['description']
     if 'raw_item' in obj:
