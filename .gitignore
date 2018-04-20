@@ -16,3 +16,5 @@ data/dumps/
 bin/run.local
 *.dump
 data/*.dump
+*.log
+metastore_db/
