@@ -10,6 +10,7 @@ import sys
 import os
 from pprint import pprint as pp
 from pygres import Pygres
+import pandas as pd
 
 # Spark ExtraClass vars
 SPARK_POSTGRESQL_JAR = os.getenv("SPARK_POSTGRESQL_JAR", "/srv/spark/jars/postgresql-42.1.1.jar")
@@ -264,6 +265,7 @@ class Catalogue(object):
             .select('id_category', 'id_parent')\
             .toPandas()
         cats.fillna('', inplace=True)
+        # Updates all records to add id_parent's
         for i, row in cats.iterrows():
             if not row.id_parent:
                 continue
@@ -274,6 +276,54 @@ class Catalogue(object):
             except Exception as e:
                 print(e)
         print('Finished updating `category` table!')
+    
+    @staticmethod    
+    def write_item(identity, items):
+        """ Migrate to category
+
+            Schema:
+            ```
+                item_uuid : str (uuid)
+                gtin : str (len(14))
+                checksum : int,
+                name : str
+                description str,
+                last_modified datetime
+            ```
+        """
+        print('Populating `item`\'s...')
+        # Extract and format tables
+        gtin14 = F.udf(lambda x: str(x).zfill(14)[-14:])
+        _gtin = identity.gtin\
+                .select('item_uuid',
+                        gtin14(identity.gtin.gtin).alias('gtin'),
+                        'checksum',
+                        'name')
+        _item = items.item\
+                .select('item_uuid',
+                        'description',
+                        'last_modified')
+        # Join Identity.gtin and Items.item tables
+        check_mod = F.udf(lambda x: x if x \
+                        else datetime.datetime.utcnow(), TimestampType())
+        cat_item = _gtin\
+                    .join(_item,
+                        on='item_uuid',
+                        how='left_outer')
+        df_item = cat_item\
+                    .withColumn('last_modified',
+                            check_mod(cat_item.last_modified)\
+                            .alias('last_modified'))\
+                    .toPandas()
+        print('Collected data, now writing in DB..')
+        from sqlalchemy import create_engine
+        _conn = create_engine("postgresql://{}:{}@{}:{}/{}"\
+            .format(SQL_USER, SQL_PASSWORD, SQL_HOST, SQL_PORT, SQL_DB))
+        df_item\
+            .set_index('item_uuid')\
+            .to_sql('item', _conn, if_exists='append')
+        print('Finished writing to `item` table')   
+    
 
 if __name__ == '__main__':
     # Call to create Spark context
@@ -289,14 +339,16 @@ if __name__ == '__main__':
     psql = connect_psql()
     print('Initialized Item and Identity tables!')
     # Populate Sources
-    Catalogue.write_source(identity, items)
+    #Catalogue.write_source(identity, items)
     # Populate Clss
-    Catalogue.write_clss(identity, items)
+    #Catalogue.write_clss(identity, items)
     # Populate Attr
-    Catalogue.write_attr(identity, items)
+    #Catalogue.write_attr(identity, items)
     # Populate Category
-    Catalogue.write_category(identity, items, psql)
+    #Catalogue.write_category(identity, items, psql)
+    # Populate Item
+    #Catalogue.write_item(identity, items)
 
     # Close connector
     psql.close()
-    print('Finished running execution!')
+    print('Finished migration execution!')
