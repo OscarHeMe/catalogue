@@ -429,6 +429,8 @@ class Catalogue(object):
             .withColumn('last_modified',
                         check_mod(_prod.last_modified)\
                         .alias('last_modified'))\
+            .withColumn('product_id',
+                F.coalesce(_prod.product_id, _prod.gtin))\
             .orderBy(_prod.name.desc())\
             .dropDuplicates(subset=['item_uuid', 'source'])\
             .toPandas()
