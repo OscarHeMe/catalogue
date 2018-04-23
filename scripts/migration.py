@@ -72,6 +72,29 @@ def connect_sqlalch():
                         SQL_PORT,
                         SQL_DB))
 
+
+def update_clss_seq(psql):
+    """ Update clss.id_clss PSQL sequence to avoid issues
+    """ 
+    _seq = psql.query("""SELECT id_clss FROM clss 
+        ORDER BY id_clss DESC LIMIT 1""").fetch()
+    if not _seq:
+        return False
+    psql.query("ALTER SEQUENCE clss_id_clss_seq RESTART WITH {}"\
+        .format(_seq[0]['id_clss'] + 1))
+    return True
+
+def update_attr_seq(psql):
+    """ Update attr.id_attr PSQL sequence to avoid issues
+    """ 
+    _seq = psql.query("""SELECT id_attr FROM attr 
+        ORDER BY id_attr DESC LIMIT 1""").fetch()
+    if not _seq:
+        return False
+    psql.query("ALTER SEQUENCE attr_id_attr_seq RESTART WITH {}"\
+        .format(_seq[0]['id_attr'] + 1))
+    return True
+
 class SQLTable(object):
     """ Pyspark SQL table
     """
@@ -132,7 +155,7 @@ class Catalogue(object):
     """ Catalogue PSQL database
     """
 
-    __tables__ = ['product']
+    __tables__ = ['product','attr','category']
 
     def __init__(self, spark, host, port):
         """ Constructor thats all SQL-spark connected tables
@@ -387,9 +410,7 @@ class Catalogue(object):
                         not_none(items.item_retailer.images).alias('images'),
                         F.coalesce(items.item_retailer.url,
                             F.lit('')).alias('url'),
-                        'last_modified')\
-                        .orderBy(items.item_retailer.name.desc())\
-                        .dropDuplicates(subset=['item_uuid', 'retailer'])
+                        'last_modified')
         print('ITEM RETAILER')        
         print(_item_r.count())  
         print('Formatted tables..')
@@ -397,7 +418,7 @@ class Catalogue(object):
         _prod = _gtin_r\
                 .join(_item_r, 
                     on=['item_uuid', 'retailer'],
-                    how='left_outer')
+                    how='outer')
         print('Joined tables')
         check_mod = F.udf(lambda x: x if x \
                         else datetime.datetime.utcnow(), TimestampType())
@@ -408,6 +429,8 @@ class Catalogue(object):
             .withColumn('last_modified',
                         check_mod(_prod.last_modified)\
                         .alias('last_modified'))\
+            .orderBy(_prod.name.desc())\
+            .dropDuplicates(subset=['item_uuid', 'source'])\
             .toPandas()
         print('Now writing into DB...')
         df_prod\
@@ -417,7 +440,50 @@ class Catalogue(object):
                     chunksize=2000)
         print('Products migrated: ', len(df_prod))        
         print('Finished writing to `product` table')
-        
+
+    @staticmethod    
+    def write_product_category(catalogue, items, _conn):
+        """ Migrate to product_attr
+
+            Schema:
+                id_category : int,
+                product_uuid : uuid,
+                last_modified : timestamp
+        """
+        print('Populating `product_category`\'s...')
+        # Fetch tables
+        _categs = catalogue.category.select('id_category', 'source')
+        print('Categories: ', _categs.count())
+        _item_categ = items.item_category\
+                .select('item_uuid', 'id_category', 'last_modified')
+        print('Item Categories: ', _item_categ.count())
+        _prods = catalogue.product\
+                .select('product_uuid', 'item_uuid', 'source')\
+                .orderBy(catalogue.product.name.desc())\
+                .dropDuplicates(subset=['item_uuid', 'source'])
+        # Join item_categs with categ
+        _prod_categs = _item_categ\
+                .join(_categs,
+                    on='id_category',
+                    how='left_outer')
+        print('Product Categories with id_categ:', _prod_categs.count())
+        # Join prod_categs with product
+        _prod_categs = _prod_categs\
+                .join(_prods,
+                    on=['item_uuid', 'source'],
+                    how='left_outer')
+        print('Product Categories with product_uuid:', _prod_categs.count())
+        _prod_categs\
+            .select('product_uuid', 'id_category', 'last_modified')\
+            .where(_prod_categs.product_uuid.isNotNull())\
+            .toPandas()\
+            .set_index(['product_uuid', 'id_category'])\
+            .to_sql('product_category', _conn,
+                    if_exists='append',
+                    chunksize=2000)
+        print('Finished writing to `product_category` table')
+
+
     @staticmethod    
     def write_product_attr(catalogue, identity, items, _conn):
         """ Migrate to product_attr
@@ -474,7 +540,7 @@ class Catalogue(object):
         print('Product Attrs migrated: ', len(df_pattr))  
         print('Finished writing to `product_attr` table')
     
-    @staticmethod    
+    @staticmethod
     def write_product_image(catalogue, _conn):
         """ Migrate to product_image
 
@@ -485,7 +551,7 @@ class Catalogue(object):
                 last_modified  : datetime
         """
         print('Populating `product_image`\'s...')
-        # Fetch Item Attributes
+        # Fetch Products
         _prods = catalogue.product\
                     .select('product_uuid', 'images',
                             'last_modified')\
@@ -529,6 +595,203 @@ class Catalogue(object):
                 chunksize=2000)
         print('Finished writing to `product_image` table')
 
+
+    @staticmethod
+    def write_product_attr_brand(spark, catalogue, psql, items, _conn):
+        """ Migrate to Brand product_attr
+
+            Schema:
+                id_attr : int,
+                product_uuid : str,
+                value : str,
+                precision : str,
+                last_modified : datetime
+        """
+        print('Populating Brand in `attr` and `product_attr`...')
+        # Upsert Brand Class
+        srcs = [x['key'] for x in psql.query("SELECT key FROM source").fetch()]
+        id_clsss = psql.query("""SELECT id_clss, source
+                FROM clss WHERE key = 'brand' 
+                AND source IN {} """.format(str(tuple(srcs)))).fetch()
+        if not id_clsss:
+            id_clsss = []
+            update_clss_seq(psql)
+            for sr in srcs:
+                m = psql.model("clss", "id_clss")
+                m.name, m.name_es, m.key = 'Brand', 'Marca', 'brand'
+                m.source = sr
+                m.save()
+                id_clsss.append({'id_clss': m.last_id, 'source': sr})
+            print('Created Brand clss')
+        id_clsss = spark.createDataFrame(pd.DataFrame(id_clsss))
+        _brand = items.brand\
+                    .drop('logo')\
+                    .withColumnRenamed('retailer', 'source')\
+                    .join(id_clsss,
+                        on='source',
+                        how='left_outer')\
+                    .withColumn('has_value', F.lit(0))
+        print('Item brands: ', _brand.count())
+        _brand_tmp_key = items.brand.select('key').take(1)[0].key
+        if not psql.query("""SELECT EXISTS (SELECT 1 FROM attr 
+                            WHERE key='{}' AND source IN {})"""\
+                            .format(_brand_tmp_key,
+                                    str(tuple(srcs)))).fetch()[0]['exists']:
+            # Save all Brands as Attr
+            update_attr_seq(psql) # Update sequences
+            _brand.drop('brand_uuid')\
+                    .write\
+                    .jdbc('jdbc:postgresql://{}:{}/{}'\
+                            .format(SQL_HOST, SQL_PORT, SQL_DB),
+                            table='attr',
+                            mode='append',
+                            properties={
+                                'user': SQL_USER,
+                                'password': SQL_PASSWORD
+                            })
+            print('Saved Brand as Attr')
+        else:
+            print('Brands already in Attr')
+        # Fetch All Brands with id_attr
+        _brand = _brand\
+                .join(catalogue\
+                        .attr\
+                        .select('key', 'source', 'id_attr')\
+                        .dropDuplicates(subset=['key', 'source']),
+                    on=['key', 'source'],
+                    how='left_outer')
+        print('Attr brands:', _brand.count())
+        # Fetch all Products 
+        _prods = catalogue.product\
+                .select('product_uuid', 'item_uuid', 'source')\
+                .orderBy(catalogue.product.name.desc())\
+                .dropDuplicates(subset=['item_uuid', 'source'])
+        # Fetch all Item_brands
+        _item_brand = items.item_brand\
+                        .select('item_uuid', 'brand_uuid',
+                                'retailer', 'last_modified')\
+                        .where(items.item_brand.retailer.isNotNull())\
+                        .withColumnRenamed('retailer', 'source')
+        print('Item Retailer Brands', _item_brand.count())
+        # Join Product, item_brand and attr(brand)
+        _prod_attr_brand = _item_brand\
+                    .join(_prods,
+                        on=['item_uuid', 'source'],
+                        how='left_outer')
+        print('Product Attr brands: ', _prod_attr_brand.count())
+        _prod_attr_brand = _prod_attr_brand\
+                    .join(_brand\
+                            .select('brand_uuid', 'id_attr'),
+                            on=['brand_uuid'],
+                            how='left_outer')
+        print('Product Attr brands with id_attr: ', _prod_attr_brand.count())
+        # Save all item_brands as product_attr
+        _prod_attr_brand\
+            .select('product_uuid', 'id_attr', 'last_modified')\
+            .toPandas()\
+            .set_index(['product_uuid', 'id_attr'])\
+            .to_sql('product_attr', _conn,
+                    if_exists='append',
+                    chunksize=2000)
+        print('Finished populating Brand as `product_attr`')
+    
+    @staticmethod
+    def write_product_attr_provider(spark, catalogue, psql, items, _conn):
+        """ Migrate to Provider product_attr
+
+            Schema:
+                id_attr : int,
+                product_uuid : str,
+                value : str,
+                precision : str,
+                last_modified : datetime
+        """
+        print('Populating Provider in `attr` and `product_attr`...')
+        # Upsert Provider Class
+        srcs = [x['key'] for x in psql.query("SELECT key FROM source").fetch()]
+        id_clsss = psql.query("""SELECT id_clss, source
+                FROM clss WHERE key = 'provider' 
+                AND source IN {} """.format(str(tuple(srcs)))).fetch()
+        if not id_clsss:
+            id_clsss = []
+            update_clss_seq(psql)
+            for sr in srcs:
+                m = psql.model("clss", "id_clss")
+                m.name, m.name_es, m.key = 'Provider', 'Proveedor', 'provider'
+                m.source = sr
+                m.save()
+                id_clsss.append({'id_clss': m.last_id, 'source': sr})
+            print('Created Provider clss')
+        id_clsss = spark.createDataFrame(pd.DataFrame(id_clsss))
+        _provider = items.provider\
+                    .drop('logo')\
+                    .withColumnRenamed('retailer', 'source')\
+                    .join(id_clsss,
+                        on='source',
+                        how='left_outer')\
+                    .withColumn('has_value', F.lit(0))        
+        print('Providers: ', _provider.count())
+        _prov_tmp_key = items.provider.select('key').take(1)[0].key
+        if not psql.query("""SELECT EXISTS (SELECT 1 FROM attr 
+                            WHERE key='{}' AND source IN {})"""\
+                            .format(_prov_tmp_key,
+                                    str(tuple(srcs)))).fetch()[0]['exists']:
+            # Save all Providers as Attr
+            update_attr_seq(psql) # Update sequences
+            _provider.drop('provider_uuid')\
+                    .write\
+                    .jdbc('jdbc:postgresql://{}:{}/{}'\
+                            .format(SQL_HOST, SQL_PORT, SQL_DB),
+                            table='attr',
+                            mode='append',
+                            properties={
+                                'user': SQL_USER,
+                                'password': SQL_PASSWORD
+                            })
+            print('Saved Provider as Attr')
+        else:
+            print('Providers already in Attr')
+        # Fetch All Brands with id_attr
+        _provider = _provider\
+                .join(catalogue\
+                        .attr\
+                        .select('key', 'source', 'id_attr')\
+                        .dropDuplicates(subset=['key', 'source']),
+                    on=['key', 'source'],
+                    how='left_outer')
+        print('Attr providers:', _provider.count())        
+        # Fetch all Products 
+        _prods = catalogue.product\
+                .select('product_uuid', 'item_uuid', 'source')\
+                .orderBy(catalogue.product.name.desc())\
+                .dropDuplicates(subset=['item_uuid', 'source'])
+        # Fetch all Item_brands
+        _item_provider = items.item_provider\
+                        .select('item_uuid', 'provider_uuid', 'last_modified')\
+                        .where(items.item_provider.item_uuid.isNotNull())
+        print('Item Retailer Providers', _item_provider.count())
+        _prod_attr_provider = _item_provider\
+                    .join(_provider\
+                            .select('provider_uuid', 'id_attr', 'source'),
+                            on=['provider_uuid'],
+                            how='left_outer')
+        print('Product Attr providers with id_attr: ', _prod_attr_provider.count())
+        # Join Product, item_provider and attr(provider)
+        _prod_attr_provider = _prod_attr_provider\
+                    .join(_prods,
+                        on=['item_uuid', 'source'],
+                        how='left_outer')
+        print('Product Attr providers with product_uuid: ', _prod_attr_provider.count())
+        # Save all item_providers as product_attr
+        _prod_attr_provider\
+            .select('product_uuid', 'id_attr', 'last_modified')\
+            .toPandas()\
+            .set_index(['product_uuid', 'id_attr'])\
+            .to_sql('product_attr', _conn,
+                    if_exists='append',
+                    chunksize=2000)
+        print('Finished populating Provider as `product_attr`')
+
 if __name__ == '__main__':
     # Call to create Spark context
     print('Generating PySpark Context ...')
@@ -544,23 +807,29 @@ if __name__ == '__main__':
     sqlalch = connect_sqlalch()
     print('Initialized Item and Identity tables!')
     # Populate Sources
-    #Catalogue.write_source(identity, items)
+    Catalogue.write_source(identity, items)
     # Populate Clss
-    #Catalogue.write_clss(identity, items)
+    Catalogue.write_clss(identity, items)
     # Populate Attr
-    #Catalogue.write_attr(identity, items)
+    Catalogue.write_attr(identity, items)
     # Populate Category
-    #Catalogue.write_category(identity, items, psql)
+    Catalogue.write_category(identity, items, psql)
     # Populate Item
-    #Catalogue.write_item(identity, items, sqlalch)
+    Catalogue.write_item(identity, items, sqlalch)
     # Populate Product
-    #Catalogue.write_product(identity, items, sqlalch)
+    Catalogue.write_product(identity, items, sqlalch)
     # Load Catalogue DB object
     catalogue = Catalogue(spark, SQL_HOST, SQL_PORT)
     # Populate Product Attr
-    #Catalogue.write_product_attr(catalogue, identity, items, sqlalch)
+    Catalogue.write_product_attr(catalogue, identity, items, sqlalch)
     # Populate Product Image
-    #Catalogue.write_product_image(catalogue, sqlalch)
+    Catalogue.write_product_image(catalogue, sqlalch)
+    # Populate Product Category (NOT IMPLEMENT FOR MISSING RETAILER)
+    Catalogue.write_product_category(catalogue, items, sqlalch)
+    # Populate Item Brand as Product Attr
+    Catalogue.write_product_attr_brand(spark, catalogue, psql, items, sqlalch)
+    # Populate Item Provider as Product Attr
+    Catalogue.write_product_attr_provider(spark, catalogue, psql, items, sqlalch)
     # Close connector
     psql.close()
     print('Finished migration execution!')
