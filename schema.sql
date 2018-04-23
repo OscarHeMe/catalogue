@@ -79,6 +79,7 @@ CREATE TABLE "product" (
     last_modified timestamp
 );
 
+/* productImage */
 CREATE TABLE "product_image" (
     id_product_image serial PRIMARY KEY,
     product_uuid uuid REFERENCES "product" (product_uuid),
@@ -87,7 +88,7 @@ CREATE TABLE "product_image" (
     last_modified timestamp
 );
 
-/* productRetailerAttribute */
+/* productAttribute */
 CREATE TABLE "product_attr" (
     id_product_attr serial PRIMARY KEY NOT NULL,
     id_attr integer REFERENCES attr(id_attr),
@@ -97,7 +98,7 @@ CREATE TABLE "product_attr" (
     last_modified timestamp
 );
 
-/* productRetailerCategory */
+/* productCategory */
 CREATE TABLE "product_category" (
     id_product_category serial PRIMARY KEY NOT NULL,
     id_category int REFERENCES category(id_category),

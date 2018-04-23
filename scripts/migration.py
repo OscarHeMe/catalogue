@@ -11,6 +11,7 @@ import os
 from pprint import pprint as pp
 from pygres import Pygres
 import pandas as pd
+from sqlalchemy import create_engine
 
 # Spark ExtraClass vars
 SPARK_POSTGRESQL_JAR = os.getenv("SPARK_POSTGRESQL_JAR", "/srv/spark/jars/postgresql-42.1.1.jar")
@@ -62,6 +63,14 @@ def connect_psql():
         SQL_PORT=SQL_PORT
     ))
 
+def connect_sqlalch():
+    return create_engine("postgresql://{}:{}@{}:{}/{}"\
+                .format(SQL_USER,
+                        SQL_PASSWORD,
+                        SQL_HOST,
+                        SQL_PORT,
+                        SQL_DB))
+
 class SQLTable(object):
     """ Pyspark SQL table
     """
@@ -106,7 +115,7 @@ class Items(object):
         'category', 'ingredient', 'provider',
         'item_provider', 'item_attribute',
         'item_brand', 'item_category', 'item_ingredient',
-        'item_retailer', 'item']
+        'item_retailer']
 
     def __init__(self, spark, host, port):
         """ Constructor thats all SQL-spark connected tables
@@ -122,9 +131,16 @@ class Catalogue(object):
     """ Catalogue PSQL database
     """
 
-    __tables__ = ['source', 'clss', 'attr', 'category',
-        'item', 'product', 'product_image', 'product_attr',
-        'product_category']
+    __tables__ = ['product']
+
+    def __init__(self, spark, host, port):
+        """ Constructor thats all SQL-spark connected tables
+        """
+        self.db = SQL_DB
+        for _t in self.__tables__:
+            print('Initiating Catalogue.{} .'.format(_t))
+            self.__dict__[_t] = SQLTable.read(spark,
+                                    host, port, self.db, _t)
 
     @staticmethod    
     def write_source(identity, items):
@@ -278,8 +294,8 @@ class Catalogue(object):
         print('Finished updating `category` table!')
     
     @staticmethod    
-    def write_item(identity, items):
-        """ Migrate to category
+    def write_item(identity, items, _conn):
+        """ Migrate to item
 
             Schema:
             ```
@@ -316,14 +332,147 @@ class Catalogue(object):
                             .alias('last_modified'))\
                     .toPandas()
         print('Collected data, now writing in DB..')
-        from sqlalchemy import create_engine
-        _conn = create_engine("postgresql://{}:{}@{}:{}/{}"\
-            .format(SQL_USER, SQL_PASSWORD, SQL_HOST, SQL_PORT, SQL_DB))
         df_item\
             .set_index('item_uuid')\
-            .to_sql('item', _conn, if_exists='append')
+            .to_sql('item', _conn,
+                    if_exists='append',
+                    chunksize=2000)
         print('Finished writing to `item` table')   
     
+    @staticmethod    
+    def write_product(identity, items, _conn):
+        """ Migrate to product
+
+            Schema:
+            product_uuid : uuid ,
+            item_uuid : uuid ,
+            source : str  ,
+            product_id : str,
+            name : str,
+            gtin : str (len(14)),
+            description : str,
+            normalized : str,
+            raw_product : str,
+            raw_html : str,
+            categories : str (comma-separated),
+            ingredients : str,
+            brand : str,
+            provider : str,
+            url : str,
+            images : str,
+            last_modified datetime
+        """
+        print('Populating `product`\'s...')
+        # Extract and format tables
+        gtin14 = F.udf(lambda x: str(x).zfill(14)[-14:])
+        not_none = F.udf(lambda x: x if x and (str(x)!='None') else '[]')
+        empty_to_none = F.udf(lambda x: x if x else None)
+        _gtin_r = identity.gtin_retailer\
+                    .select('item_uuid', 'item_id', 'retailer')\
+                    .withColumnRenamed('item_id', 'product_id')\
+                    .dropDuplicates(subset=['item_uuid', 'retailer'])
+        print('GTIN RETAILER')
+        print(_gtin_r.count())
+        _item_r = items.item_retailer\
+                .select('item_uuid', 'retailer', 'description', 
+                        gtin14(items.item_retailer.gtin).alias('gtin'),
+                        empty_to_none(items.item_retailer.name).alias('name'),
+                        F.coalesce(items.item_retailer.brand,
+                            F.lit('')).alias('brand'),
+                        F.coalesce(items.item_retailer.provider,
+                            F.lit('')).alias('provider'),
+                        not_none(items.item_retailer.categories).alias('categories'),
+                        not_none(items.item_retailer.ingredients).alias('ingredients'),
+                        not_none(items.item_retailer.images).alias('images'),
+                        F.coalesce(items.item_retailer.url,
+                            F.lit('')).alias('url'),
+                        'last_modified')\
+                        .orderBy(items.item_retailer.name.desc())\
+                        .dropDuplicates(subset=['item_uuid', 'retailer'])
+        print('ITEM RETAILER')        
+        print(_item_r.count())  
+        print('Formatted tables..')
+        # Join DFs
+        _prod = _gtin_r\
+                .join(_item_r, 
+                    on=['item_uuid', 'retailer'],
+                    how='left_outer')
+        print('Joined tables')
+        check_mod = F.udf(lambda x: x if x \
+                        else datetime.datetime.utcnow(), TimestampType())
+        df_prod = _prod\
+            .withColumnRenamed('retailer', 'source')\
+            .withColumn('name',
+                F.coalesce(_prod.name, _prod.description))\
+            .withColumn('last_modified',
+                        check_mod(_prod.last_modified)\
+                        .alias('last_modified'))\
+            .toPandas()
+        print('Now writing into DB...')
+        df_prod\
+            .set_index(['item_uuid', 'source'])\
+            .to_sql('product', _conn,
+                    if_exists='append',
+                    chunksize=2000)
+        print('Products migrated: ', len(df_prod))        
+        print('Finished writing to `product` table')
+        
+    @staticmethod    
+    def write_product_attr(catalogue, identity, items, _conn):
+        """ Migrate to product_attr
+
+            Schema:
+                id_attr : int,
+                product_uuid : str,
+                value : str,
+                precision : str,
+                last_modified : datetime
+        """
+        print('Populating `product_attr`\'s...')
+        # Fetch Item Attributes
+        _item_at = items.item_attribute\
+                .select('item_uuid', 'id_attribute',
+                        'retailer', 'value', 'precision',
+                        'last_modified')\
+                .where(items.item_attribute.item_uuid.isNotNull())\
+                .withColumnRenamed('id_attribute', 'id_attr')\
+                .withColumnRenamed('retailer', 'source')
+        print('ITEM ATTRIBUTES')
+        print(_item_at.count())
+        # Fetch Product UUIDs
+        _prods = catalogue.product\
+                    .select('product_uuid', 'item_uuid', 'source')\
+                    .dropDuplicates(subset=['item_uuid', 'source'])
+        # Join to complete table
+        _prod_attr = _item_at\
+                .join(_prods,
+                    on=['item_uuid', 'source'],
+                    how='left_outer')
+        print('Joined DFs: ', _prod_attr.count())
+        check_mod = F.udf(lambda x: x if x \
+                        else datetime.datetime.utcnow(), TimestampType())
+        df_pattr = _prod_attr\
+                .drop('item_uuid')\
+                .drop('source')\
+                .withColumn('precision',
+                    F.coalesce(_prod_attr.precision, F.lit(''))\
+                            .alias('precision'))\
+                .withColumn('value',
+                    F.coalesce(_prod_attr.value, F.lit(''))\
+                            .alias('value'))\
+                .withColumn('last_modified',
+                        check_mod(_prod_attr.last_modified)\
+                            .alias('last_modified'))\
+                .dropDuplicates(subset=['product_uuid', 'id_attr'])\
+                .toPandas()\
+                .set_index(['product_uuid', 'id_attr'])
+        print('Created pandas DF, loading to DB...')
+        df_pattr.to_sql('product_attr', _conn,
+                        if_exists='append',
+                        chunksize=2000)
+        print('Product Attrs migrated: ', len(df_pattr))  
+        print('Finished writing to `product_attr` table')
+            
 
 if __name__ == '__main__':
     # Call to create Spark context
@@ -335,8 +484,9 @@ if __name__ == '__main__':
     # Load all tables from both DBs
     items = Items(spark, SQL_ITEMS, 5432)
     identity = Identity(spark, SQL_IDENTITY, 5432)
-    # Addition Pygres connector
+    # Addition Pygres & SQLAlchemy connector
     psql = connect_psql()
+    sqlalch = connect_sqlalch()
     print('Initialized Item and Identity tables!')
     # Populate Sources
     #Catalogue.write_source(identity, items)
@@ -347,8 +497,15 @@ if __name__ == '__main__':
     # Populate Category
     #Catalogue.write_category(identity, items, psql)
     # Populate Item
-    #Catalogue.write_item(identity, items)
-
+    #Catalogue.write_item(identity, items, sqlalch)
+    # Populate Product
+    #Catalogue.write_product(identity, items, sqlalch)
+    # Load Catalogue DB object
+    catalogue = Catalogue(spark, SQL_HOST, SQL_PORT)
+    # Populate Product Attr
+    #Catalogue.write_product_attr(catalogue, identity, items, sqlalch)
+    # Populate Product Image
+    Catalogue.write_product_image(catalogue, identity, items, sqlalch)
     # Close connector
     psql.close()
     print('Finished migration execution!')
