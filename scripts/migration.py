@@ -12,6 +12,7 @@ from pprint import pprint as pp
 from pygres import Pygres
 import pandas as pd
 from sqlalchemy import create_engine
+import ast
 
 # Spark ExtraClass vars
 SPARK_POSTGRESQL_JAR = os.getenv("SPARK_POSTGRESQL_JAR", "/srv/spark/jars/postgresql-42.1.1.jar")
@@ -472,7 +473,61 @@ class Catalogue(object):
                         chunksize=2000)
         print('Product Attrs migrated: ', len(df_pattr))  
         print('Finished writing to `product_attr` table')
-            
+    
+    @staticmethod    
+    def write_product_image(catalogue, _conn):
+        """ Migrate to product_image
+
+            Schema:
+                product_uuid : str,
+                image : str,
+                descriptor : str,
+                last_modified  : datetime
+        """
+        print('Populating `product_image`\'s...')
+        # Fetch Item Attributes
+        _prods = catalogue.product\
+                    .select('product_uuid', 'images',
+                            'last_modified')\
+                    .where((catalogue.product.images.isNotNull()) & \
+                            (catalogue.product.images != '[]'))\
+                    .orderBy(catalogue.product.name.desc())\
+                    .dropDuplicates(subset=['product_uuid'])\
+                    .toPandas()\
+                    .set_index('product_uuid')
+        print('Found products with images:', len(_prods))
+        # Find all images per product
+        def explode_img(df_images):
+            try:
+                try:
+                    _images = ast.literal_eval(df_images)
+                except:
+                    _images = df_images
+                if not isinstance(_images, list):
+                    assert isinstance(df_images, str)
+                    if df.images and str(df_images) != 'None':
+                        _images = [df.images]
+                    else:
+                        raise Exception('Wrong format')
+                assert isinstance(_images, list)
+            except Exception as e:
+                return []
+            return _images
+        # Stack all images in the list
+        s = _prods['images'].apply(lambda x: explode_img(x))\
+                            .apply(pd.Series, 1)\
+                            .stack()
+        s.index = s.index.droplevel(-1)
+        s.name = 'image'
+        # Join with DF
+        df = _prods.join(s)
+        df.drop('images', axis=1, inplace=True)
+        print('Storing product images in DB, found:', len(df))
+        # Store product images in DB
+        df.to_sql('product_image', _conn,
+                if_exists='append',
+                chunksize=2000)
+        print('Finished writing to `product_image` table')
 
 if __name__ == '__main__':
     # Call to create Spark context
@@ -505,7 +560,7 @@ if __name__ == '__main__':
     # Populate Product Attr
     #Catalogue.write_product_attr(catalogue, identity, items, sqlalch)
     # Populate Product Image
-    Catalogue.write_product_image(catalogue, identity, items, sqlalch)
+    #Catalogue.write_product_image(catalogue, sqlalch)
     # Close connector
     psql.close()
     print('Finished migration execution!')
