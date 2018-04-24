@@ -95,6 +95,17 @@ def update_attr_seq(psql):
         .format(_seq[0]['id_attr'] + 1))
     return True
 
+def update_cat_seq(psql):
+    """ Update category.id_category PSQL sequence to avoid issues
+    """ 
+    _seq = psql.query("""SELECT id_category FROM category 
+        ORDER BY id_category DESC LIMIT 1""").fetch()
+    if not _seq:
+        return False
+    psql.query("ALTER SEQUENCE category_id_category_seq RESTART WITH {}"\
+        .format(_seq[0]['id_category'] + 1))
+    return True
+
 class SQLTable(object):
     """ Pyspark SQL table
     """
@@ -617,7 +628,6 @@ class Catalogue(object):
                 AND source IN {} """.format(str(tuple(srcs)))).fetch()
         if not id_clsss:
             id_clsss = []
-            update_clss_seq(psql)
             for sr in srcs:
                 m = psql.model("clss", "id_clss")
                 m.name, m.name_es, m.key = 'Brand', 'Marca', 'brand'
@@ -640,7 +650,6 @@ class Catalogue(object):
                             .format(_brand_tmp_key,
                                     str(tuple(srcs)))).fetch()[0]['exists']:
             # Save all Brands as Attr
-            update_attr_seq(psql) # Update sequences
             _brand.drop('brand_uuid')\
                     .write\
                     .jdbc('jdbc:postgresql://{}:{}/{}'\
@@ -716,7 +725,6 @@ class Catalogue(object):
                 AND source IN {} """.format(str(tuple(srcs)))).fetch()
         if not id_clsss:
             id_clsss = []
-            update_clss_seq(psql)
             for sr in srcs:
                 m = psql.model("clss", "id_clss")
                 m.name, m.name_es, m.key = 'Provider', 'Proveedor', 'provider'
@@ -739,7 +747,6 @@ class Catalogue(object):
                             .format(_prov_tmp_key,
                                     str(tuple(srcs)))).fetch()[0]['exists']:
             # Save all Providers as Attr
-            update_attr_seq(psql) # Update sequences
             _provider.drop('provider_uuid')\
                     .write\
                     .jdbc('jdbc:postgresql://{}:{}/{}'\
@@ -812,10 +819,13 @@ if __name__ == '__main__':
     Catalogue.write_source(identity, items)
     # Populate Clss
     Catalogue.write_clss(identity, items)
+    update_clss_seq(psql)
     # Populate Attr
     Catalogue.write_attr(identity, items)
+    update_attr_seq(psql)
     # Populate Category
     Catalogue.write_category(identity, items, psql)
+    update_cat_seq(psql)
     # Populate Item
     Catalogue.write_item(identity, items, sqlalch)
     # Populate Product
