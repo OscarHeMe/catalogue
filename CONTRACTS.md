@@ -289,7 +289,7 @@
 | p | Page | optional, default=1 |
 | ipp | Items per page | optional, default=5 |
 
-*Note*: Allowed **cols** are: `item_uuid`,`description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+*Note*: Optional **cols** are: `item_uuid`,`description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`. If keys is set to `''` it will loop over all **catalogue.product** table.
 
 **Response:**
 

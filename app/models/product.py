@@ -466,8 +466,8 @@ class Product(object):
         if _p < 1 :
             _p = 1
         _ipp = int(kwargs['ipp'])
-        if _ipp > 100:
-            _ipp = 100
+        if _ipp > 1000:
+            _ipp = 1000
         # Build query
         _qry = """SELECT {} FROM product {} OFFSET {} LIMIT {} """\
             .format(_cols, _keys, (_p - 1)*_ipp, _ipp)
