@@ -407,6 +407,44 @@ Same as previous [endpoint](#get_resp).
 
 ------
 
+# Source
+
+## Get All Sources
+
+**Method**:  GET
+
+**Endpoint**: `/source/?cols=<source_table_fields | optional>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| cols  | Comma Separated Source fields | optional |
+
+*Note*: Optional **cols** are: `logo`,`type`, `hierarchy` and `retailer`.
+
+**Response:**
+
+```json
+[
+    {
+        "key": "farmasmart",
+        "name": "Farmasmart",
+        "logo":  "farmasmart.png", // optional
+        "type": "retailer", // optional
+        "retailer": 1 // optional
+    },
+    {
+        "key": "farmacias_similares",
+        "name": "Farmacias Similares",
+        // ...
+    },
+    //...
+]
+```
+
+------
+
 # Errors
 
 - **70001** : "Missing required key params"

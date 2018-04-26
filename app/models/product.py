@@ -457,7 +457,10 @@ class Product(object):
         if kwargs['keys']:
             _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
         else:
-            _keys = 'WHERE {} IS NULL'.format(_by)
+            if _by != 'product_uuid':
+                _keys = 'WHERE {} IS NULL'.format(_by)
+            else:
+                _keys = ''
         # Format paginators
         _p = int(kwargs['p'])
         if _p < 1 :
