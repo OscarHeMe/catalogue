@@ -3,7 +3,7 @@ import os
 import sys
 
 # General
-APP_MODE = os.getenv('APP_MODE','CONSUMER')
+APP_MODE = os.getenv('MODE','CONSUMER')
 APP_NAME='catalogue-'+APP_MODE.lower()
 APP_SECRET = os.getenv('APP_SECRET', '#catalogue')
 

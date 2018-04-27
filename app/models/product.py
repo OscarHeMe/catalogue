@@ -281,7 +281,7 @@ class Product(object):
                 .fetch()
             if not id_pimg:
                 if not or_create:
-                    logger.info("Cannot update, image not in DB!")
+                    logger.warning("Cannot update, image not in DB!")
                     if APP_MODE == "CONSUMER":
                         return False
                     if APP_MODE == "SERVICE":
@@ -301,6 +301,7 @@ class Product(object):
                 return False
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70004, "Could not apply transaction in DB")
+                return {'status': "ERROR", "message":"Could not apply transaction in DB"}
     
     def save_categories(self, update=False):
         """ Class method to save product categories

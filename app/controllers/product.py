@@ -114,7 +114,7 @@ def get_byprod():
 	""" Endpoint to fetch `Product`s by product_uuid's.
 	"""
 	logger.info("Query Product by Product UUID...")
-	params = request.args
+	params = request.args.to_dict()
 	logger.debug(params)
 	# Validate required params
 	_needed_params = {'keys'}
@@ -125,7 +125,7 @@ def get_byprod():
 	for _o, _dft  in _opt_params.items():
 		if _o not in params:
 			params[_o] = _dft
-	_prods = Product.query('product_uuid', **params.to_dict())
+	_prods = Product.query('product_uuid', **params)
 	return jsonify({
 		'status': 'OK',
 		'products': _prods
