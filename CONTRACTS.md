@@ -188,7 +188,7 @@
 ```json
 {
     "product_uuid": "sf84sd-68f4sd6f8h4f86g4-sd8f644g", // required
-    "image": "walmart", // required
+    "image": "super.walmart.com.mx/imagen-fs8dfsag687687g.jpg", // required
     "descriptor": [[2,3,4],[3,4,5]], // optional
 }
 ```

@@ -113,7 +113,7 @@ class Product(object):
             # Save product attrs
             if self.attributes:
                 self.save_attributes(_is_update)
-            # Save category, brand and provider as attributes            
+            # Save category, brand and provider as attributes
             self.save_extras(_is_update)
         except Exception as e:
             logger.error(e)
