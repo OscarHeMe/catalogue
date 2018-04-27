@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pyspark import SparkContext, SparkConf
-from pyspark.sql import SQLContext, Row, SparkSession, DataFrameReader
+from pyspark.sql import SQLContext, Row, SparkSession
 from pyspark.sql.types import  *
 from pyspark.sql import functions as F
 import datetime
@@ -398,14 +398,28 @@ class Catalogue(object):
             last_modified datetime
         """
         print('Populating `product`\'s...')
-        # Extract and format tables
+        # User defined functions
         gtin14 = F.udf(lambda x: str(x).zfill(14)[-14:])
         not_none = F.udf(lambda x: x if x and (str(x)!='None') else '[]')
         empty_to_none = F.udf(lambda x: x if x else None)
+        valid_name = F.udf(lambda x: str(x) if x and len(str(x)) > 2 else None, StringType())
+        # Extract and format tables
         _gtin_r = identity.gtin_retailer\
-                    .select('item_uuid', 'item_id', 'retailer')\
-                    .withColumnRenamed('item_id', 'product_id')\
-                    .dropDuplicates(subset=['item_uuid', 'retailer'])
+                    .select('item_uuid', 'item_id', 'retailer', 'id_gtin_retailer')\
+                    .join(identity.gtin_retailer_attribute\
+                                .select('id_gtin_retailer','attribute')\
+                                .where(identity.gtin_retailer_attribute.attribute_type == 'name'),
+                        on='id_gtin_retailer',
+                        how='inner'
+                        )
+        _gtin_r = _gtin_r\
+            .select('item_uuid', 'item_id', 'retailer',
+                    valid_name(_gtin_r.attribute).alias('attribute'))\
+            .withColumnRenamed('item_id', 'product_id')
+        _gtin_r = _gtin_r\
+            .where(_gtin_r.attribute.isNotNull() &
+                    ~_gtin_r.retailer.isin('nielsen', 'mara'))\
+            .dropDuplicates(subset=['item_uuid', 'retailer'])
         print('GTIN RETAILER')
         print(_gtin_r.count())
         _item_r = items.item_retailer\
@@ -436,12 +450,13 @@ class Catalogue(object):
         df_prod = _prod\
             .withColumnRenamed('retailer', 'source')\
             .withColumn('name',
-                F.coalesce(_prod.name, _prod.description))\
+                F.coalesce(_prod.name, _prod.attribute))\
             .withColumn('last_modified',
                         check_mod(_prod.last_modified)\
                         .alias('last_modified'))\
             .withColumn('product_id',
                 F.coalesce(_prod.product_id, _prod.gtin))\
+            .drop('attribute')\
             .orderBy(_prod.name.desc())\
             .dropDuplicates(subset=['item_uuid', 'source'])\
             .toPandas()
