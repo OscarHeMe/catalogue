@@ -387,7 +387,7 @@ Same as previous [endpoint](#get_resp).
 
 **Method**:  GET
 
-**Endpoint**: `/product/image/delete/image?uuid=<product_uuid | required>&id=<id_prod_image | required>`
+**Endpoint**: `/product/delete/image?uuid=<product_uuid | required>&id=<id_prod_image | required>`
 
 **Query Params:**
 
