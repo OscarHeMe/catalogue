@@ -1,32 +1,34 @@
-import datetime
-from flask import g
-from app.utils import errors, applogger
-from config import *
-import requests
-from pprint import pformat as pf
-import ast
-import json
 from app.models.category import Category
 from app.models.attr import Attr
 from app.norm.normalize_text import key_format, tuplify
+from app.utils import errors, applogger
+from config import *
+from flask import g
+import pandas as pd
+from sqlalchemy import create_engine
+import datetime
+import requests
+import ast
+import json
 
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
 logger = applogger.get_logger()
 
+
 class Product(object):
-    """ Class perform insert, update and query methods 
-        on PSQL Catalogue.product 
+    """ Class perform insert, update and query methods
+        on PSQL Catalogue.product
     """
 
-    __attrs__ = ['product_uuid', "product_id", "gtin", "item_uuid",
+    __attrs__ = [
+        'product_uuid', "product_id", "gtin", "item_uuid",
         "source", "name", "description", "images", "normalized",
         "categories", "url", "brand", "provider", "attributes",
-        "ingredients","raw_html", "raw_product"]
-    
+        "ingredients", "raw_html", "raw_product"
+        ]
     __extras__ = ['prod_attrs', 'prod_images', 'prod_categs']
-
     __base_q = ['product_uuid', 'product_id', 'name', 'source']
-    
+
     def __init__(self, _args):
         """ Product constructor
 
@@ -43,7 +45,8 @@ class Product(object):
             self.__dict__[_k] = None
         # Args Aggregation
         self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
-        self.product_id = str(self.product_id).zfill(20)[-255:] if self.product_id else None
+        self.product_id = str(self.product_id).zfill(20)[-255:] \
+            if self.product_id else None
         try:
             if not self.raw_product:
                 self.raw_product = json.dumps(_args)
@@ -53,12 +56,15 @@ class Product(object):
                 logger.warning("Wrong DataType to serialize for Product!")
                 raise Exception("Wrong DataType to serialize for Product!")
             if APP_MODE == "SERVICE":
-                raise errors.ApiError(70005, "Wrong DataType to serialize for Product!")
+                raise errors.ApiError(70005,
+                    "Wrong DataType to serialize for Product!")
         # Args validation
         try:
             assert isinstance(self.images, list) or (self.images is None)
-            assert isinstance(self.categories, str) or (self.categories is None)
-            assert isinstance(self.attributes, list) or (self.attributes is None)
+            assert isinstance(self.categories, str) \
+                or (self.categories is None)
+            assert isinstance(self.attributes, list) \
+                or (self.attributes is None)
             assert isinstance(self.raw_html, str) or (self.raw_html is None)
         except Exception as e:
             logger.error(e)
@@ -69,7 +75,7 @@ class Product(object):
                 raise errors.ApiError(70005, "Wrong DataType to save Product!")
 
     def save(self):
-        """ Class method to save Product record in DB 
+        """ Class method to save Product record in DB
             with product_image, product_attr and product_category
         """
         logger.info("Saving Product...")
@@ -77,19 +83,21 @@ class Product(object):
         # Verify for update
         if self.product_uuid:
             if not Product.exists({'product_uuid': self.product_uuid}):
-                # If wants to update but wrong UUID, return Error   
+                # If wants to update but wrong UUID, return Error
                 if APP_MODE == "CONSUMER":
                     logger.error("Cannot update, UUID not in DB!")
                     return False
                 if APP_MODE == "SERVICE":
-                    raise errors.ApiError(70006, "Cannot update, UUID not in DB!")
+                    raise errors.ApiError(70006,
+                                          "Cannot update, UUID not in DB!")
             _is_update = True
         # Verify for insert
-        elif Product.exists({'product_id': self.product_id, 'source': self.source}):
+        elif Product.exists({'product_id': self.product_id,
+                             'source': self.source}):
             self.message = 'Product already exists!'
-            self.product_uuid = Product.get({'product_id': self.product_id,
-                                            'source': self.source})\
-                                        [0]['product_uuid']
+            self.product_uuid = Product\
+                .get({'product_id': self.product_id,
+                      'source': self.source})[0]['product_uuid']
             return True
         # Load model
         m_prod = g._db.model('product', 'product_uuid')
@@ -99,8 +107,8 @@ class Product(object):
         # Add date
         m_prod.last_modified = str(datetime.datetime.utcnow())
         try:
-            self.message = "Correctly {} Product!".format('updated' \
-                if self.product_uuid else 'stored')
+            self.message = "Correctly {} Product!"\
+                .format('updated' if self.product_uuid else 'stored')
             m_prod.save()
             self.product_uuid = m_prod.last_id
             logger.info(self.message)
@@ -125,7 +133,7 @@ class Product(object):
         return True
 
     def save_extras(self, update=False):
-        """ Class method to save brand, provider and categs 
+        """ Class method to save brand, provider and categs
             as attributes
         """
         self.attributes = []
@@ -178,18 +186,18 @@ class Product(object):
                     "clss": {
                         "name_es": _attr["clss_name"],
                         "key": _attr["clss_key"],
-                        "description": _attr["clss_desc"] if "clss_desc" in _attr else None,
-                        "source": self.source
-                    }
+                        "description": _attr["clss_desc"]
+                            if "clss_desc" in _attr else None,
+                        "source": self.source}
                 })
                 id_attr = attr.save()
             # Verify if product_attr exists
             id_prod_attr = g._db.query("""SELECT id_product_attr
-                        FROM product_attr
-                        WHERE product_uuid = '{}'
-                        AND id_attr = {} LIMIT 1"""\
-                        .format(self.product_uuid, id_attr))\
-                    .fetch()
+                                        FROM product_attr
+                                        WHERE product_uuid = '{}'
+                                        AND id_attr = {} LIMIT 1"""
+                                .format(self.product_uuid, id_attr))\
+                            .fetch()
             # If not create product_attr
             if id_prod_attr:
                 if not update:
@@ -209,8 +217,8 @@ class Product(object):
                     m_prod_at.precision = _attr['precision']
                 m_prod_at.last_modified = str(datetime.datetime.utcnow())
                 m_prod_at.save()
-                logger.info("Product Attr correctly saved! ({})"\
-                    .format(m_prod_at.last_id))
+                logger.info("Product Attr correctly saved! ({})"
+                            .format(m_prod_at.last_id))
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product attr!")
@@ -223,11 +231,11 @@ class Product(object):
             try:
                 # Verify if prod image exists
                 _exist = g._db.query("""SELECT EXISTS (
-                        SELECT 1 FROM product_image
-                        WHERE product_uuid = '{}'
-                        AND image = '{}')"""\
-                        .format(self.product_uuid, _img))\
-                    .fetch()[0]['exists']
+                                        SELECT 1 FROM product_image
+                                        WHERE product_uuid = '{}'
+                                        AND image = '{}')"""
+                                     .format(self.product_uuid, _img))\
+                                .fetch()[0]['exists']
                 if _exist:
                     if update:
                         Product.update_image({
@@ -243,7 +251,7 @@ class Product(object):
                 logger.error(e)
                 logger.warning("Could not save Product image!")
         return True
-    
+
     @staticmethod
     def save_pimage(p_uuid, _img, id_pim=None, descs=[]):
         """ Static method to store in `product image`
@@ -257,8 +265,8 @@ class Product(object):
             m_prod_im.descriptor = json.dumps(descs)
         m_prod_im.last_modified = str(datetime.datetime.utcnow())
         m_prod_im.save()
-        logger.info("Product Image correctly saved! ({})"\
-            .format(m_prod_im.last_id))
+        logger.info("Product Image correctly saved! ({})"
+                    .format(m_prod_im.last_id))
         return True
     
     @staticmethod
@@ -285,14 +293,16 @@ class Product(object):
                     if APP_MODE == "CONSUMER":
                         return False
                     if APP_MODE == "SERVICE":
-                        raise errors.ApiError(70006, "Cannot update, image not in DB!")
+                        raise errors\
+                            .ApiError(70006, "Cannot update, image not in DB!")
                 id_pimg = None
             id_pimg = id_pimg[0]['id_product_image']
             # Load model
             Product.save_pimage(p_obj['product_uuid'],
                                 p_obj['image'], id_pimg,
-                                p_obj['descriptor'] if 'descriptor' in p_obj \
-                                                else [])
+                                p_obj['descriptor']
+                                if 'descriptor' in p_obj
+                                else [])
             return {'message': 'Product Image correctly updated!'}
         except Exception as e:
             logger.error(e)
@@ -300,8 +310,12 @@ class Product(object):
             if APP_MODE == "CONSUMER":
                 return False
             if APP_MODE == "SERVICE":
-                raise errors.ApiError(70004, "Could not apply transaction in DB")
-                return {'status': "ERROR", "message":"Could not apply transaction in DB"}
+                raise errors\
+                    .ApiError(70004, "Could not apply transaction in DB")
+                return {
+                    'status': "ERROR",
+                    "message": "Could not apply transaction in DB"
+                    }
     
     def save_categories(self, update=False):
         """ Class method to save product categories
@@ -309,38 +323,43 @@ class Product(object):
         _parent = None
         for _cat in self.categories.split(','):
             try:
-                # Get ID if exists, otherwise create category                
+                # Get ID if exists, otherwise create category
                 id_cat = Category.get_id(_cat, self.source)
                 if not id_cat:
                     categ = Category({
-                                'source': self.source,
-                                'id_parent' : Category.get_id(_cat, self.source, 'id_parent'),
-                                'name': _cat
-                            })
+                        'source': self.source,
+                        'id_parent': Category.get_id(_cat,
+                                                     self.source,
+                                                     'id_parent'),
+                        'name': _cat
+                        })
                     id_cat = categ.save()
                     # Emergency skip
                     if not id_cat:
                         continue
                 # Verify product category does not exist
-                id_prod_categ = g._db.query("""SELECT id_product_category FROM product_category
-                        WHERE id_category = {}
-                        AND product_uuid = '{}' LIMIT 1"""\
-                        .format(id_cat, self.product_uuid))\
-                        .fetch()
+                id_prod_categ = g._db.query("""SELECT id_product_category
+                                            FROM product_category
+                                            WHERE id_category = {}
+                                            AND product_uuid = '{}' LIMIT 1"""
+                                            .format(id_cat,
+                                                    self.product_uuid))\
+                                    .fetch()
                 if id_prod_categ:
                     if not update:
                         logger.info("Category already assigned to Product!")
                         continue
                     id_prod_categ = id_prod_categ[0]['id_product_category']
-                m_prod_cat = g._db.model('product_category', 'id_product_category')
+                m_prod_cat = g._db.model('product_category',
+                                         'id_product_category')
                 if id_prod_categ:
                     m_prod_cat.id_product_category = id_prod_categ
                 m_prod_cat.product_uuid = self.product_uuid
                 m_prod_cat.id_category = id_cat
                 m_prod_cat.last_modified = str(datetime.datetime.utcnow())
                 m_prod_cat.save()
-                logger.info("Product Category correctly saved! ({})"\
-                    .format(m_prod_cat.last_id))
+                logger.info("Product Category correctly saved! ({})"
+                            .format(m_prod_cat.last_id))
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product category!")
@@ -361,14 +380,14 @@ class Product(object):
                 Existance flag
         """
         logger.debug("Verifying Product existance...")
-        _where = ' AND '.join(["{}='{}'".format(*z) \
-                            for z in list(k_param.items())])
+        _where = ' AND '.join(["{}='{}'".format(*z)
+                               for z in list(k_param.items())])
         try:
             _q = """SELECT EXISTS (SELECT 1 FROM product WHERE {})"""\
-                    .format(_where)
+                 .format(_where)
             logger.debug("Query: {}".format(_q))
             exists = g._db.query(_q)\
-                        .fetch()[0]['exists']
+                .fetch()[0]['exists']
         except Exception as e:
             logger.error(e)
             return False
@@ -393,10 +412,9 @@ class Product(object):
                 List of elements
         """
         _cols = ','.join(_cols) if _cols else 'product_uuid'
-        _where = ' AND '.join(["{} IN {}"\
-                                .format(z[0], tuplify(z[1])) \
-                            for z in _by.items()]
-                        )
+        _where = ' AND '.join(["{} IN {}"
+                              .format(z[0], tuplify(z[1]))
+                              for z in _by.items()])
         logger.info("Fetching products...")
         _query = "SELECT {} FROM product WHERE {}"\
             .format(_cols, _where)
@@ -426,7 +444,7 @@ class Product(object):
             return False
         for i in q:
             logger.info('Product UUID: ' + str(i['product_uuid']))
-        return {'msg':'Postgres Items One Working!'}
+        return {'msg': 'Postgres Items One Working!'}
     
     @staticmethod
     def query(_by, **kwargs):
@@ -593,9 +611,9 @@ class Product(object):
             att.name as attr, att.name_es as clss 
             FROM product_attr pat 
             LEFT OUTER JOIN (
-                SELECT id_attr, attr.name, clss.name_es 
-                FROM attr INNER JOIN clss 
-                ON (clss.id_clss = attr.id_clss)) AS att 
+                SELECT id_attr, attr.name, clss.name_es
+                FROM attr INNER JOIN clss
+                ON (clss.id_clss = attr.id_clss)) AS att
             ON (att.id_attr = pat.id_attr)
             WHERE product_uuid IN {}
             ORDER BY product_uuid
@@ -639,7 +657,7 @@ class Product(object):
             id_product_image as id_p_image,
             image, descriptor,
             to_char(last_modified, 'YYYY-MM-DD HH24:00:00') as last_modified
-            FROM product_image  
+            FROM product_image
             WHERE product_uuid IN {}
             ORDER BY product_uuid
             """.format(tuplify(p_uuids))
@@ -676,9 +694,9 @@ class Product(object):
                 Product Categories hashed by Product UUID
         """
         p_categs = {}
-        _qry = """SELECT pca.product_uuid, 
-            pca.id_product_category as id_p_attr,            
-            to_char(pca.last_modified, 'YYYY-MM-DD HH24:00:00') as last_mod, 
+        _qry = """SELECT pca.product_uuid,
+            pca.id_product_category as id_p_attr,
+            to_char(pca.last_modified, 'YYYY-MM-DD HH24:00:00') as last_mod,
             ca.name as cat, ca.code
             FROM product_category pca
             LEFT OUTER JOIN category ca
@@ -703,7 +721,7 @@ class Product(object):
         logger.info('Found {} categories'.format(len(p_categs)))
         logger.debug(p_categs)
         return p_categs
-    
+
     @staticmethod
     def filter(field, valu, **kwargs):
         """ Retrieve by defined filter
@@ -725,7 +743,8 @@ class Product(object):
         # Format querying keys
         if kwargs['keys']:
             _keys = ' WHERE ' + field + ' IN ' \
-                + str(tuplify([key_format(z) for z in kwargs['keys'].split(',')]))
+                + str(tuplify([key_format(z)
+                               for z in kwargs['keys'].split(',')]))
         else:
             _keys = ' WHERE {} IS NULL'.format(_by)
         # Format values if available
@@ -742,13 +761,13 @@ class Product(object):
         else:
             _rets = ''
         # Build filter query
-        f_query = """SELECT {ref_table}.product_uuid FROM {table} 
-            INNER JOIN {ref_table} 
-            ON ({table}.id_{table} = {ref_table}.id_{table}) 
+        f_query = """SELECT {ref_table}.product_uuid FROM {table}
+            INNER JOIN {ref_table}
+            ON ({table}.id_{table} = {ref_table}.id_{table})
             {keys} {vals} {rets} """\
             .format(table=field.split('.')[0],
                     ref_table=valu.split('.')[0],
-                    keys=_keys, 
+                    keys=_keys,
                     vals=_vals,
                     rets=_rets)
         logger.debug(f_query)
@@ -756,11 +775,11 @@ class Product(object):
             _fres = g._db.query(f_query).fetch()
             if not _fres:
                 return []
-            logger.info("Found {} prods by filters"\
-                .format(len(_fres)))
+            logger.info("Found {} prods by filters"
+                        .format(len(_fres)))
         except Exception as e:
             logger.error(e)
-            logger.warning ("Could not fetch Filters!")
+            logger.warning("Could not fetch Filters!")
             return []
         # Return Product query response
         kwargs.update({
@@ -788,21 +807,22 @@ class Product(object):
         """
         try:
             _exists = g._db.query("""SELECT EXISTS (
-                    SELECT 1 FROM {table}
-                    WHERE product_uuid = '{uuid}' 
-                    AND id_{table} = {_id}
-                    )""".format(table=_table,
-                                uuid=_uuid,
-                                _id=_id))\
-                    .fetch()[0]['exists']
+                                    SELECT 1 FROM {table}
+                                    WHERE product_uuid = '{uuid}'
+                                    AND id_{table} = {_id}
+                                    )"""
+                                  .format(table=_table,
+                                          uuid=_uuid,
+                                          _id=_id))\
+                                .fetch()[0]['exists']
             if not _exists:
                 return {
                     'message': "Product Image ID not in DB!"
                 }
             # Delete from Product extra record
             g._db.query("""DELETE FROM {table}
-                WHERE product_uuid='{uuid}'
-                AND id_{table}={_id}"""\
+                        WHERE product_uuid='{uuid}'
+                        AND id_{table}={_id}"""
                         .format(table=_table,
                                 uuid=_uuid,
                                 _id=_id))
@@ -834,23 +854,72 @@ class Product(object):
             }
         try:
             # Delete from Product image
-            g._db.query("DELETE FROM product_image WHERE product_uuid='{}'"\
+            g._db.query("DELETE FROM product_image WHERE product_uuid='{}'"
                         .format(p_uuid))
             # Delete from Product Category
-            g._db.query("DELETE FROM product_category WHERE product_uuid='{}'"\
+            g._db.query("DELETE FROM product_category WHERE product_uuid='{}'"
                         .format(p_uuid))
             # Delete from Product Attr
-            g._db.query("DELETE FROM product_attr WHERE product_uuid='{}'"\
+            g._db.query("DELETE FROM product_attr WHERE product_uuid='{}'"
                         .format(p_uuid))
             # Delete from Product
-            g._db.query("DELETE FROM product WHERE product_uuid='{}'"\
+            g._db.query("DELETE FROM product WHERE product_uuid='{}'"
                         .format(p_uuid))
         except Exception as e:
             logger.error(e)
             if APP_MODE == 'SERVICE':
-                raise errors.ApiError(70004, "Could not apply transaction in DB")
+                raise errors\
+                    .ApiError(70004, "Could not apply transaction in DB")
             else:
                 return False
         return {
             'message': "Product ({}) correctly deleted!".format(p_uuid)
         }
+
+
+    @staticmethod
+    def upload_normalized(csvfile):
+        """ Static method to batch load into
+            product normalized table.
+
+            Params:
+            -----
+            csvfile : werkzeug.datastructures.FileStorage
+                CSV File with product UUID and normed text
+
+            Returns:
+            -----
+            flag : dict
+                Feedback of saving status
+        """
+        # Verify file
+        try:
+            df = pd.read_csv(csvfile)
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Could not read CSV file")
+            raise errors.ApiError(70008, "Could not read attached file")
+        # Validate columns
+        if not set({'product_uuid', 'normalized'})\
+                .issubset(set(df.columns.tolist())):
+            logger.debug(df.columns.tolist())
+            logger.warning("Missing columns!")
+            raise errors.ApiError(70009, "Wrong file format!")
+        try:
+            _eng = create_engine("postgresql://{}:{}@{}:{}/{}"
+                                 .format(SQL_USER,
+                                         SQL_PASSWORD,
+                                         SQL_HOST,
+                                         SQL_PORT,
+                                         SQL_DB))
+            df[['product_uuid', 'normalized']]\
+                .set_index('product_uuid')\
+                .to_sql('product_normalized', _eng,
+                        if_exists="replace", chunksize=5000)
+        except Exception as e:
+            logger.error(e)
+            return {'status': 'ERROR',
+                    'message': 'Issues upserting normalized names'}
+        logger.info("Finished upserting table")
+        return {'status': 'OK',
+                'message': 'Correctly upserted normalized names!'}

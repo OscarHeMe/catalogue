@@ -405,6 +405,26 @@ Same as previous [endpoint](#get_resp).
 }
 ```
 
+## Upload Product normalized
+
+**Method**: POST
+
+**Endpoint**: `/product/normalized`
+
+**Request Headers**:
+
+```json
+{
+    "content-type": "multipart/form-data;"
+}
+```
+
+**Request Params**:
+
+```
+filename=normalized.csv
+```
+
 ------
 
 # Source
@@ -453,3 +473,4 @@ Same as previous [endpoint](#get_resp).
 - **70004** : "Could not apply transaction in DB"
 - **70005** : "Wrong DataType to save {table}!"
 - **70006** : "Cannot update, {value} not in DB!"
+- **70007** : "Missing file, add attachement!"
