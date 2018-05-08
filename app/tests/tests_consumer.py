@@ -55,6 +55,7 @@ class TestStreamer(threading.Thread):
 
     def run(self):
         print('Async Streaming Test Product!')
+        ## Run consumer
         i = 0
         for i in range(1000000):
             print(i)
@@ -123,7 +124,8 @@ class CatalogueServiceTestCase(unittest.TestCase):
         ts = TestStreamer()
         ts.daemon = True
         ts.start()
-        time.sleep(0.1)
+        # Publish items..
+        time.sleep(0.1) # Grace period
         print('Exiting..........')
         try:
             ts._stop()

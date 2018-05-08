@@ -4,6 +4,8 @@ import config
 import unittest
 import json
 from pprint import pprint
+import io
+import pandas as pd
 
 # Add Item Test
 new_item_test = {
@@ -133,7 +135,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
             pass
         self.assertEqual(_r.status_code, 200)
     
-    #@unittest.skip('Already tested')
+    @unittest.skip('Already tested')
     def test_03_delete_item(self):
         """ Delete existing Item
         """ 
@@ -186,7 +188,29 @@ class CatalogueServiceTestCase(unittest.TestCase):
         self.assertEqual(_r.status_code, 200)
     
     #@unittest.skip('Already tested')
-    def test_06_update_prod_img(self):
+    def test_06_upload_product_normalized(self):
+        """ Batch Upload normalized
+        """ 
+        global new_prod_test
+        print("Batch Upload normalized")
+        _buffer = io.StringIO()
+        pd.DataFrame([
+            {'product_uuid': new_prod_test['product_uuid'],
+            'normalized': new_prod_test['name'].lower()}])\
+            .to_csv(_buffer)
+        _r =  self.app.post('/product/normalized',
+                content_type='multipart/form-data',
+                data={'normalized.csv': (io.BytesIO(_buffer.getvalue().encode('utf-8')), 'text.csv')})
+        print(_r.status_code)
+        try:
+            _jr = json.loads(_r.data.decode('utf-8'))
+            print(_jr)
+        except:
+            pass
+        self.assertEqual(_r.status_code, 200)
+    
+    #@unittest.skip('Already tested')
+    def test_07_update_prod_img(self):
         """ Update Product Image
         """ 
         global new_prod_test
@@ -204,7 +228,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         self.assertEqual(_r.status_code, 200)
     
     @unittest.skip('Already tested')
-    def test_07_get_prods_by_item(self):
+    def test_08_get_prods_by_item(self):
         """ Get Products by Item UUID (p=1, ipp=50)
         """ 
         print("Get Products by Item UUID (p=1, ipp=50)")
@@ -227,7 +251,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         #self.assertTrue(set(cols_test).issubset(_jr[0].keys()))
     
     #@unittest.skip('Already tested')
-    def test_08_get_prods_by_product(self):
+    def test_09_get_prods_by_product(self):
         """ Get Products by Product UUID (p=1, ipp=50)
         """ 
         print("Get Products by Product UUID (p=1, ipp=50)")
@@ -250,7 +274,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         self.assertEqual(_r.status_code, 200)
     
     @unittest.skip('Already tested')
-    def test_09_get_prods_by_source(self):
+    def test_10_get_prods_by_source(self):
         """ Get Products by Source (p=1, ipp=50)
         """ 
         print("Get Products by Source (p=1, ipp=50)")
@@ -272,7 +296,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         print('Found {} prods'.format(len(_jr['products'])))
     
     @unittest.skip('Already tested')
-    def test_10_get_prods_by_attr(self):
+    def test_11_get_prods_by_attr(self):
         """ Get Products by Attr (p=1, ipp=50)
         """ 
         print("Get Products by Attr (p=1, ipp=50)")
@@ -296,7 +320,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         print('Found {} prods'.format(len(_jr['products'])))
 
     #@unittest.skip('Already tested')
-    def test_11_delete_product_image(self):
+    def test_12_delete_product_image(self):
         """ Delete existing Product Image
         """ 
         print("Delete existing Product Image")
@@ -313,7 +337,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         self.assertEqual(_r.status_code, 200)
     
     #@unittest.skip('Already tested')
-    def test_12_delete_product_attr(self):
+    def test_13_delete_product_attr(self):
         """ Delete existing Product Attr
         """ 
         print("Delete existing Product Attr")

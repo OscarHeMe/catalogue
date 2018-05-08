@@ -22,11 +22,11 @@ class Product(object):
 
     __attrs__ = [
         'product_uuid', "product_id", "gtin", "item_uuid",
-        "source", "name", "description", "images", "normalized",
+        "source", "name", "description", "images",
         "categories", "url", "brand", "provider", "attributes",
         "ingredients", "raw_html", "raw_product"
         ]
-    __extras__ = ['prod_attrs', 'prod_images', 'prod_categs']
+    __extras__ = ['prod_attrs', 'prod_images', 'prod_categs', 'normalized']
     __base_q = ['product_uuid', 'product_id', 'name', 'source']
 
     def __init__(self, _args):
@@ -578,7 +578,11 @@ class Product(object):
             # Fetch Product Images
             logger.info('Retrieving Product Categories...')
             p_extrs['prod_categs'] = Product.query_categs(p_uuids)
-        # Add attrs, imgs and categs to complete dict
+        if 'normalized' in _cols:
+            # Fetch Product Normalized text
+            logger.info('Retrieving Product Normalized...')
+            p_extrs['normalized'] = Product.query_normed(p_uuids)
+        # Add attrs, imgs, normed and categs to complete dict
         for _p in _prod_ext:
             # Loop over available columns
             for _cl in _cols:
@@ -637,6 +641,40 @@ class Product(object):
         return p_attrs
     
     @staticmethod
+    def query_normed(p_uuids):
+        """ Fetch all normalized text by Prod UUID
+
+            Params:
+            -----
+            p_uuids : list
+                List of Product UUIDs
+            
+            Returns:
+            -----
+            p_norm : dict
+                Product Normalized text hashed by Product UUID
+        """
+        p_norm = {}
+        for i in range(0,len(p_uuids), 1000):
+            _qry = """SELECT product_uuid, normalized
+                FROM product_normalized
+                WHERE product_uuid IN {}
+                """.format(tuplify(p_uuids[i: i+1000]))
+            logger.debug(_qry)
+            try:
+                resp_norm = g._db.query(_qry).fetch()
+                for _rnom in resp_norm:
+                    _pu = _rnom['product_uuid']
+                    del _rnom['product_uuid']
+                    p_norm[_pu] = _rnom['normalized']
+            except Exception as e:
+                logger.error(e)
+                logger.warning("Issues fetching Product Normalized!")
+                continue
+        logger.info("Found {} normed texts".format(len(p_norm)))
+        return p_norm
+
+    @staticmethod
     def query_imgs(p_uuids):
         """ Fetch all images by Prod UUID
 
@@ -644,8 +682,6 @@ class Product(object):
             -----
             p_uuids : list
                 List of Product UUIDs
-            _cols : list
-                Additional columns to retrieve
             
             Returns:
             -----
