@@ -91,7 +91,7 @@ def get_byitem():
     """ Endpoint to fetch `Product`s by item_uuid's.
     """
     logger.info("Query Product by Item UUID...")
-    params = request.args
+    params = request.args.to_dict()
     logger.debug(params)
     # Validate required params
     _needed_params = {'keys'}
@@ -102,7 +102,7 @@ def get_byitem():
     for _o, _dft  in _opt_params.items():
         if _o not in params:
             params[_o] = _dft
-    _prods = Product.query('item_uuid', **params.to_dict())
+    _prods = Product.query('item_uuid', **params)
     return jsonify({
         'status': 'OK',
         'products': _prods

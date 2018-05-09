@@ -5,7 +5,8 @@ from app.utils import errors, applogger
 from config import *
 from flask import g
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Text
+from sqlalchemy.dialects.postgresql import UUID
 import datetime
 import requests
 import ast
@@ -950,8 +951,9 @@ class Product(object):
                                          SQL_DB))
             df[['product_uuid', 'normalized']]\
                 .set_index('product_uuid')\
-                .to_sql('product_normalized', _eng,
-                        if_exists="replace", chunksize=5000)
+                .to_sql('product_normalized', _eng, 
+                    dtype={'product_uuid': UUID, 'normalized': Text},
+                    if_exists="replace", chunksize=5000)
         except Exception as e:
             logger.error(e)
             return {'status': 'ERROR',
