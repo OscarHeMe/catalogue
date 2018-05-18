@@ -121,7 +121,7 @@ def get_byprod():
     if not _needed_params.issubset(params):
         raise errors.ApiError(70001, "Missing required key params")
     # Complement optional params, and set default if needed
-    _opt_params = {'cols': '', 'p':1, 'ipp': 50}
+    _opt_params = {'cols': '', 'p':1, 'ipp': 50, 'orderby': None}
     for _o, _dft  in _opt_params.items():
         if _o not in params:
             params[_o] = _dft

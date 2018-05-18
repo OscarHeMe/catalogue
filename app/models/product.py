@@ -488,9 +488,16 @@ class Product(object):
         _ipp = int(kwargs['ipp'])
         if _ipp > 10000:
             _ipp = 10000
+        # Order by statement
+        if 'orderby' in kwargs:
+            _orderby = kwargs['orderby'] if kwargs['orderby'] else 'product_uuid'
+        else:
+            _orderby = 'product_uuid'
+        if _orderby not in Product.__base_q:
+            _orderby = 'product_uuid'
         # Build query
-        _qry = """SELECT {} FROM product {} OFFSET {} LIMIT {} """\
-            .format(_cols, _keys, (_p - 1)*_ipp, _ipp)
+        _qry = """SELECT {} FROM product {} ORDER BY {} OFFSET {} LIMIT {} """\
+            .format(_cols, _keys, _orderby, (_p - 1)*_ipp, _ipp)
         logger.debug(_qry)
         # Query DB
         try:
