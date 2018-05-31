@@ -968,3 +968,42 @@ class Product(object):
         logger.info("Finished upserting table")
         return {'status': 'OK',
                 'message': 'Correctly upserted normalized names!'}
+
+
+    @staticmethod
+    def intersection(**kwargs):
+        """ Query products by intersection of one
+            or various cols
+        """
+        p = kwargs['p']
+        ipp = kwargs['ipp']
+        del kwargs['p'], kwargs['ipp']
+
+        # Columns
+        cols = ["*"] if ('cols' not in kwargs or not kwargs['cols']) else kwargs['cols']
+        if 'cols' not in kwargs or not kwargs['cols']:
+            cols = ["*"]
+        else:
+            cols = kargs['cols']
+        del kwargs['cols']
+
+        where = []
+        for k, vals in kwargs.items():
+            where.append(" {} IN ({}) ".format(k, vals) )
+
+        # Query
+        qry = """
+            select {} from product
+            where {}
+        """.format(
+            cols,
+            " and ".join(where)
+        )
+
+        try:
+            rows = g._db.execute(qry).fetch()
+        except Exception as e:
+            logger.error("Could not execute intersect query: {}".format(qry))
+            raise errors.ApiError(70007, "Could not execute query: ")
+
+        return prods

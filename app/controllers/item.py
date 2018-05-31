@@ -83,3 +83,42 @@ def delete_item():
 		"status": "OK",
 		"message": _resp['message']
 		})
+
+
+
+@mod.route('/details', methods=['GET'])
+def details_item(items_str):
+	""" Endpoint to get details of given items
+		
+		@Params: 
+			- values: <str> list of item_uuids comma separated
+			- by: <str> field which the values are queried against
+				(WHERE <by> = <value>)
+			- cols: <str> can be item_uuid, gtin, name, description 
+
+		@Response:
+			- resp: items list
+	"""
+	logger.info("Items details")
+	params = request.args
+	# Validation
+	if not params:
+		raise errors.ApiError(70001, "Missing required key params")
+
+	# Verify needed key-values
+	_needed_params = {'values','by'}
+	if not _needed_params.issubset(params.keys()):
+		raise errors.ApiError(70001, "Missing required key params")
+
+	if 'cols' not in params:
+		cols = ['item_uuid','gtin','name','description']
+	
+	# Call to delete Item
+	values = params['values'].split(",")
+	by = params['by']
+	_resp = Item.get(values, by=by, _cols=cols)
+	return jsonify({
+		"status": "OK",
+		"message": _resp['message'],
+		"items" : _resp
+		})
