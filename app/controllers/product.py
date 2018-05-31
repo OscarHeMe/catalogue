@@ -280,7 +280,7 @@ def get_intersection():
 
     # The keys of the params are the fields
     if not params:
-        logger.error(70007, "No params to query with")
+        logger.error(70001, "No params to query with")
 
     # Pagination default
     if not 'p' in params:
@@ -295,3 +295,16 @@ def get_intersection():
         'status': 'OK',
         'products': _prods
         })
+
+@mod.route("/reset", methods=["POST"])
+def reset_match():
+    """ Reset match by setting Item UUID to NULL
+    """
+    logger.info("Reseting product...")
+    params = request.get_json()
+    if not params:
+        raise errors.ApiError(70001, "Missing required key params")
+    if 'puuid' not in params:
+        raise errors.ApiError(70001, "Missing required key params")
+    # Call to update Product
+    return jsonify(Product.undo_match(params['puuid']))

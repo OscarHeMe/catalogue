@@ -53,6 +53,7 @@
 }
 ```
 
+
 ## Delete Item
 
 **Method**:  GET
@@ -174,6 +175,29 @@
     "status": "OK",
     "message": "Product correctly updated! (sf84sd-68f4sd6f8g4f86g4-sd8f644g)",
     "product_uuid": "sf84sd-68f4sd6f8g4f86g4-sd8f644g"
+}
+```
+
+## Reset Product Match
+
+**Method**:  POST
+
+**Endpoint**: `/product/reset`
+
+**Params**:
+
+```json
+{
+    "puuid": "sf84sd-68f44gsf86g4-sd8f644g", // required
+}
+```
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Product (sf84sd-68f44gsf86g4-sd8f644g) correctly reset!"
 }
 ```
 

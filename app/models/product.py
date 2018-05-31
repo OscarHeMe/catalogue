@@ -107,6 +107,8 @@ class Product(object):
                 m_prod.__dict__[_k] = self.__dict__[_k]
         # Add date
         m_prod.last_modified = str(datetime.datetime.utcnow())
+        # Always add what Item UUID is set
+        m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
         try:
             self.message = "Correctly {} Product!"\
                 .format('updated' if self.product_uuid else 'stored')
@@ -269,6 +271,24 @@ class Product(object):
         logger.info("Product Image correctly saved! ({})"
                     .format(m_prod_im.last_id))
         return True
+
+    @staticmethod
+    def undo_match(puuid):
+        """ Method to undo matching, by setting Item UUID
+            of a given product to NULL
+        """
+        try:
+            g._db.query("""UPDATE product
+                SET item_uuid = NULL
+                WHERE product_uuid = '{}'
+                """.format(puuid))
+            return {
+                'status': 'OK',
+                'msg': 'Product ({}) correctly reset!'.format(puuid)
+            }
+        except Exception as e:
+            logger.error(e)
+            raise errors.ApiError(70003, "Issues updating elements in DB")
     
     @staticmethod
     def update_image(p_obj, or_create=False):
