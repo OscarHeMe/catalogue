@@ -19,3 +19,4 @@ data/*.dump
 *.log
 metastore_db/
 matching_results.md
+spark-warehouse/

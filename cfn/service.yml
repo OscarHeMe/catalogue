@@ -21,7 +21,7 @@ Resources:
       Role: !Ref Role
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
-        - ContainerName: geolocation
+        - ContainerName: catalogue
           ContainerPort: 80
           TargetGroupArn: !Ref TargetGroupArn
 
