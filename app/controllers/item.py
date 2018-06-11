@@ -173,6 +173,6 @@ def elastic_item():
     _resp = Item.get_catalogue_uuids()
     return jsonify({
         "status": "OK",
-        "message": _resp['message'],
+        "message": "Those are the item and product uuids stored in our DB!",
         "items": _resp
     })
