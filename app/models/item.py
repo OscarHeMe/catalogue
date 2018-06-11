@@ -173,3 +173,34 @@ class Item(object):
         return {'msg':'Postgres Catalogue One Working!'}
 
 
+    # @staticmethod
+    # def get_items_index():
+    #     """ Static Method to verify correct connection
+    #         with Catalogue Postgres DB
+    #     """
+    #     try:
+    #         q = g._db.query("SELECT * FROM item LIMIT 1").fetch()
+    #     except:
+    #         logger.error("Postgres Catalogue Connection error")
+    #         return False
+    #     for i in q:
+    #         logger.info('Item UUID: ' + str(i['item_uuid']))
+    #     return {'msg':'Postgres Catalogue One Working!'}
+
+    @staticmethod
+    def get_catalogue_uuids():
+        """ Static Method to get the item_uuids and product_uuids from database
+        """
+        try:
+            catalogue = g._db.query("""
+                SELECT item_uuid as uuid, 'item_uuid' as type  
+                    FROM item 
+                UNION 
+                SELECT product_uuid as uuid, 'product_uuid' as type 
+                    FROM product 
+                    WHERE item_uuid IS NULL
+                """).fetch()
+        except:
+            logger.error("Postgres Catalogue Connection error")
+            return False
+        return catalogue
