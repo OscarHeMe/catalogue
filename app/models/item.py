@@ -212,20 +212,20 @@ class Item(object):
                     row['names'] = list(df2[df2.item_uuid == row.item_uuid]["name2"].drop_duplicates())
                     row['retailers'] = list(df2[df2.item_uuid == row.item_uuid]["source"].drop_duplicates())
                     row['product_uuids'] = list(df2[df2.item_uuid == row.item_uuid]["product_uuid"].drop_duplicates())
-                    row['attributes'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull())][
+                    row['attributes'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & (~df2.attr_key.str.contains('(null|none)'))][
                                                  ['class_name', 'class_key', 'attr_key', 'attr_name',
                                                   'value']].T.to_dict().values())
                     row['brands'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('brand') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
                         'attr_key').attr_name)
                     row['categories'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('category') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
                         'attr_key').attr_name)
                     row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
                         'attr_key').attr_name)
                     row['providers'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('provider') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
                         'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
@@ -259,20 +259,20 @@ class Item(object):
                     row['names'] = [row.best_name]
                     row['retailers'] = [row.source]
                     row['product_uuids'] = [row.product_uuid]
-                    row['attributes'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull())][
+                    row['attributes'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & (~df2.attr_key.str.contains('(null|none)'))][
                                                  ['class_name', 'class_key', 'attr_key', 'attr_name',
                                                   'value']].T.to_dict().values())
                     row['brands'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('brand') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
                         'attr_key').attr_name)
                     row['categories'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('category') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
                         'attr_key').attr_name)
                     row['ingredients'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
                         'attr_key').attr_name)
                     row['providers'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('provider') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
                         'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
