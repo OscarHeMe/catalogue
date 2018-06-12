@@ -22,7 +22,6 @@ class Item(object):
 
     def __init__(self, params):
         """ Item constructor
-
             Params:
             -----
             params : dict
@@ -38,13 +37,13 @@ class Item(object):
             if 'gtin' in params else None
 
     def save(self):
-        """ Class method to save Item record in DB 
+        """ Class method to save Item record in DB
         """
         logger.info("Saving Item...")
         # Verify for update
         if self.item_uuid:
             if not Item.exists({'item_uuid': self.item_uuid}):
-                # If wants to update but wrong UUID, return Error                
+                # If wants to update but wrong UUID, return Error
                 raise errors.ApiError(70006, "Cannot update, UUID not in DB!")
         # Verify for insert
         elif Item.exists({'gtin': self.gtin}):
@@ -73,12 +72,10 @@ class Item(object):
     @staticmethod
     def exists(k_param):
         """ Static method to verify Item existance
-
             Params:
             -----
             k_param : dict
                 Key-value element to query in Item table
-
             Returns:
             -----
             exists : bool
@@ -99,7 +96,6 @@ class Item(object):
     @staticmethod
     def get(_val, by='gtin', _cols=['item_uuid'], limit=None):
         """ Static method to get Item info
-
             Params:
             -----
             _val : str
@@ -110,7 +106,6 @@ class Item(object):
                 Columns to retrieve
             limit : int
                 Elements to limit query
-
             Returns:
             -----
             _items : list
@@ -132,13 +127,11 @@ class Item(object):
 
     @staticmethod
     def delete(i_uuid):
-        """ Static method to delete Item 
-
+        """ Static method to delete Item
             Params:
             -----
             i_uuid : str
                 Item UUID to delete
-
             Returns:
             -----
             resp : bool
@@ -161,7 +154,7 @@ class Item(object):
 
     @staticmethod
     def get_one():
-        """ Static Method to verify correct connection 
+        """ Static Method to verify correct connection
             with Catalogue Postgres DB
         """
         try:
@@ -212,51 +205,21 @@ class Item(object):
                     row['names'] = list(df2[df2.item_uuid == row.item_uuid]["name2"].drop_duplicates())
                     row['retailers'] = list(df2[df2.item_uuid == row.item_uuid]["source"].drop_duplicates())
                     row['product_uuids'] = list(df2[df2.item_uuid == row.item_uuid]["product_uuid"].drop_duplicates())
-                    attrs = df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
+                    row['attributes'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
                                                  ['class_name', 'class_key', 'attr_key', 'attr_name',
-                                                  'value']].T.to_dict().values()
-                    if attrs:
-                        attrs = list(attrs)
-                    else:
-                        attrs = []
-                    row['attributes'] = []
-
-                    brands =  df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
-                        'attr_key').attr_name
-                    if brands:
-                        brands = list(brands)
-                    else:
-                        brands = []
-                    row['brands'] = brands
-
-                    categories = df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
-                        'attr_key').attr_name
-                    if categories:
-                        categories = list(categories)
-                    else:
-                        categories = []
-                    row['categories'] = categories
-
-                    ingredients = df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
-                        'attr_key').attr_name
-
-                    if ingredients:
-                        ingredients = list(ingredients)
-                    else:
-                        ingredients = []
-                    row['ingredients'] = ingredients
-
-                    providers = df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
-                        'attr_key').attr_name
-                    if providers:
-                        providers = list(providers)
-                    else:
-                        providers = []
-                    row['providers'] = providers
+                                                  'value']].T.to_dict().values())
+                    row['brands'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
+                        'attr_key').attr_name)
+                    row['categories'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
+                        'attr_key').attr_name)
+                    row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
+                        'attr_key').attr_name)
+                    row['providers'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
+                        'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
             except Exception as e:
@@ -289,50 +252,21 @@ class Item(object):
                     row['names'] = [row.best_name]
                     row['retailers'] = [row.source]
                     row['product_uuids'] = [row.product_uuid]
-                    attrs = df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
+                    row['attributes'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
                                                  ['class_name', 'class_key', 'attr_key', 'attr_name',
-                                                  'value']].T.to_dict().values()
-                    if attrs:
-                        attrs = list(attrs)
-                    else:
-                        atts = []
-                    row['attributes'] = attrs
-
-                    brands = df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
-                        'attr_key').attr_name
-                    if brands:
-                        brands = list(brands)
-                    else:
-                        brands = []
-                    row['brands'] = brands
-
-                    categories = df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
-                        'attr_key').attr_name
-                    if categories:
-                        categories = list(categories)
-                    else:
-                        categories = []
-                    row['categories'] = categories
-
-                    ingredients = df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
-                        'attr_key').attr_name
-                    if ingredients:
-                        ingredients = list(ingredients)
-                    else:
-                        ingredients = []
-                    row['ingredients'] = ingredients
-
-                    providers = df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
-                        'attr_key').attr_name
-                    if providers:
-                        providers = list(providers)
-                    else:
-                        providers = []
-                    row['providers'] = providers
+                                                  'value']].T.to_dict().values())
+                    row['brands'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
+                        'attr_key').attr_name)
+                    row['categories'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
+                        'attr_key').attr_name)
+                    row['ingredients'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
+                        'attr_key').attr_name)
+                    row['providers'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
+                        'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
             except Exception as e:
