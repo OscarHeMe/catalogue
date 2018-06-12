@@ -139,7 +139,7 @@ def elastic_items():
     if not params:
         raise errors.ApiError(70001, "Missing required key params")
     # Verify needed key-values
-    _needed_params = {'uuids', 'type'}
+    _needed_params = {'items', 'type'}
     if not _needed_params.issubset(params.keys()):
         raise errors.ApiError(70001, "Missing required key params")
     # Call to save Item
