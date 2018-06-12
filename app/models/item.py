@@ -201,6 +201,10 @@ class Item(object):
                     WHERE item_uuid IN {}
                     """.format(tuplify(items))
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
+            except:
+                logger.error("Postgres Catalogue Connection error")
+                return False
+            try:
                 df['names'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
                 df['ingredients'], df['providers'] = None, None, None, None, None, None, None, None
                 for index, row in df.iterrows():
@@ -224,9 +228,9 @@ class Item(object):
                         'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
-            except:
-                logger.error("Postgres Catalogue Connection error")
-                return False
+            except Exception as e:
+                logger.error("Error parsing the item")
+                logger.error(e)
         elif type_ == "product_uuid":
             try:
                 qry_product_uuids = """
@@ -242,6 +246,10 @@ class Item(object):
                     WHERE product_uuid IN {}
                     """.format(tuplify(items))
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
+            except:
+                logger.error("Postgres Catalogue Connection error")
+                return False
+            try:
                 df = df2.drop_duplicates('product_uuid')[['product_uuid', 'best_name', 'source', 'description', 'gtin']]
                 df['names'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
                 df['ingredients'], df['providers'] = None, None, None, None, None, None, None, None
@@ -266,8 +274,9 @@ class Item(object):
                         'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
-            except:
-                logger.error("Postgres Catalogue Connection error")
+            except Exception as e:
+                logger.error("Error parsing the item")
+                logger.error(e)
                 return False
         return items
 
