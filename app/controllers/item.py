@@ -147,7 +147,7 @@ def elastic_items():
     return jsonify({
         "status": "OK",
         "message": "Those are the item details :D",
-        "item_uuid": _items
+        "items": _items
     })
 
 @mod.route('/catalogue_uuids', methods=['GET'])
