@@ -212,7 +212,7 @@ class Item(object):
                     row['names'] = list(df2[df2.item_uuid == row.item_uuid]["name2"].drop_duplicates())
                     row['retailers'] = list(df2[df2.item_uuid == row.item_uuid]["source"].drop_duplicates())
                     row['product_uuids'] = list(df2[df2.item_uuid == row.item_uuid]["product_uuid"].drop_duplicates())
-                    attrs = df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & (~df2.attr_key.str.contains('(null|none)'))][
+                    attrs = df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
                                                  ['class_name', 'class_key', 'attr_key', 'attr_name',
                                                   'value']].T.to_dict().values()
                     if attrs:
@@ -222,7 +222,7 @@ class Item(object):
                     row['attributes'] = []
 
                     brands =  df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('brand') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
                         'attr_key').attr_name
                     if brands:
                         brands = list(brands)
@@ -231,7 +231,7 @@ class Item(object):
                     row['brands'] = brands
 
                     categories = df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('category') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
                         'attr_key').attr_name
                     if categories:
                         categories = list(categories)
@@ -240,7 +240,7 @@ class Item(object):
                     row['categories'] = categories
 
                     ingredients = df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name
 
                     if ingredients:
@@ -250,7 +250,7 @@ class Item(object):
                     row['ingredients'] = ingredients
 
                     providers = df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('provider') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
                         'attr_key').attr_name
                     if providers:
                         providers = list(providers)
@@ -289,7 +289,7 @@ class Item(object):
                     row['names'] = [row.best_name]
                     row['retailers'] = [row.source]
                     row['product_uuids'] = [row.product_uuid]
-                    attrs = df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & (~df2.attr_key.str.contains('(null|none)'))][
+                    attrs = df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
                                                  ['class_name', 'class_key', 'attr_key', 'attr_name',
                                                   'value']].T.to_dict().values()
                     if attrs:
@@ -299,7 +299,7 @@ class Item(object):
                     row['attributes'] = attrs
 
                     brands = df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('brand') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
                         'attr_key').attr_name
                     if brands:
                         brands = list(brands)
@@ -308,7 +308,7 @@ class Item(object):
                     row['brands'] = brands
 
                     categories = df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('category') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
                         'attr_key').attr_name
                     if categories:
                         categories = list(categories)
@@ -317,7 +317,7 @@ class Item(object):
                     row['categories'] = categories
 
                     ingredients = df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name
                     if ingredients:
                         ingredients = list(ingredients)
@@ -326,7 +326,7 @@ class Item(object):
                     row['ingredients'] = ingredients
 
                     providers = df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('provider') & (~df2.attr_key.str.contains('(null|none)'))].drop_duplicates(
+                        ~df2.attr_key.isnull()) & (~df2.attr_key.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
                         'attr_key').attr_name
                     if providers:
                         providers = list(providers)
