@@ -124,47 +124,34 @@ def details_item(items_str):
     })
 
 
-# @mod.route('/elastic', methods=['GET'])
-# def elastic_item():
-#     """ Endpoint to get items needed for elasticsearch index
-#     @Params:
-#         - p: <str> page
-#         - ipp: <str> items per page
-#
-#     @Response:
-#         - resp: items list
-#     """
-#     logger.info("Items details")
-#     params = request.args
-#     # Validation
-#     if not params:
-#         raise errors.ApiError(70001, "Missing required key params")
-#
-#     # Verify needed key-values
-#     _needed_params = {'p'}
-#     if not _needed_params.issubset(params.keys()):
-#         raise errors.ApiError(70001, "Missing required key params")
-#
-#     p = params.get("p")
-#     ipp = params.get("ipp", "100")
-#     if p.isdigit() and ipp.isdigit():
-#         p = int(p)
-#         ipp = int(ipp)
-#         if p >= 0 and ipp > 0:
-#             _resp = Item.get_items_index(p, ipp)
-#         else:
-#             raise errors.ApiError(70001, "Wrong params")
-#     else:
-#         raise errors.ApiError(70001, "Wrong params")
-#     return jsonify({
-#         "status": "OK",
-#         "message": _resp['message'],
-#         "items": _resp
-#     })
+@mod.route('/elastic_items', methods=['POST'])
+def elastic_items():
+    """ Endpoint to get item details to fill the elasticsearch index
+    @Params:
+        - uuids: <str> uuids separated by comma
+        - type: <str> item_uuid or product_uuid
 
+    @Response:
+        - resp: items list
+    """
+    logger.info("Getting details ES...")
+    params = request.get_json()
+    if not params:
+        raise errors.ApiError(70001, "Missing required key params")
+    # Verify needed key-values
+    _needed_params = {'uuids', 'type'}
+    if not _needed_params.issubset(params.keys()):
+        raise errors.ApiError(70001, "Missing required key params")
+    # Call to save Item
+    _items = Item.get_elastic_items(params)
+    return jsonify({
+        "status": "OK",
+        "message": "Those are the item details :D",
+        "item_uuid": _items
+    })
 
 @mod.route('/catalogue_uuids', methods=['GET'])
-def elastic_item():
+def catalogue_uuids():
     """ Endpoint to get items needed for elasticsearch index
     @Response:
         - resp: items list
