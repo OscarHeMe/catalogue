@@ -269,11 +269,7 @@ class Item(object):
             except:
                 logger.error("Postgres Catalogue Connection error")
                 return False
-        return {
-            'msg': 'Postgres Catalogue One Working!',
-            'status': 'OK!',
-            'items': items
-        }
+        return items
 
     @staticmethod
     def get_catalogue_uuids():
