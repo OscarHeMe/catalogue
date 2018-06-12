@@ -244,7 +244,7 @@ class Item(object):
                             ON a.id_attr = pa.id_attr
                         LEFT JOIN clss c
                             ON a.id_clss = c.id_clss
-                    WHERE product_uuid IN {}
+                    WHERE p.product_uuid IN {}
                     """.format(tuplify(items))
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
             except Exception as e:
