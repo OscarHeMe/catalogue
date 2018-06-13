@@ -37,7 +37,7 @@ print('Item Retailers:', len(i_retailer))
 
 # Load Tables from  Catalogue DB
 item = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-    'catalogue', 'item', 'item_uuid,product_id,name,gtin')
+    'catalogue', 'item', 'item_uuid,name,gtin')
 product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
     'catalogue', 'product', 'product_uuid,item_uuid,product_id,name,source,gtin')
 print('Current Products:', len(product))
