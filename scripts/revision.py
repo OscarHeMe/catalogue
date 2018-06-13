@@ -36,6 +36,8 @@ i_retailer = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
 print('Item Retailers:', len(i_retailer))
 
 # Load Tables from  Catalogue DB
+item = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
+    'catalogue', 'item', 'item_uuid,product_id,name,gtin')
 product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
     'catalogue', 'product', 'product_uuid,item_uuid,product_id,name,source,gtin')
 print('Current Products:', len(product))
@@ -136,6 +138,8 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
             _gt = gtin[(gtin.item_uuid == pin.item_uuid)]
             if not _gt.empty:
                 print(_gt)
+                print('-')
+                print(item[(item.item_uuid == pin.item_uuid)])
                 input('This is recognized!')
             print('GTIN RETAILER')
             print(g_retailer[(g_retailer.item_uuid == pin.item_uuid) & (g_retailer.retailer == pin.source)])
