@@ -141,7 +141,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
             # There is a GTIN but no Catalogue ITEM, then create Catalogue Item records
             if not _gt.empty and _cit.empty:
                 print('GTIN')
-                tmp_gt = _gt.to_dict(orient='records')
+                tmp_gt = _gt.to_dict(orient='records')[0]
                 tmp_gt.update({
                     'description': tmp_gt['name'],
                     'checksum' : int(tmp_gt['checksum']),
@@ -154,7 +154,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                 print('Added GTIN to generate..')
             # If there is info in Gtin retailer and Item retailer, take it to reproduce it
             if not _itr.empty or not _gtr.empty:
-                _tmppr = _gtr.to_dict(orient='records')
+                _tmppr = _gtr.to_dict(orient='records')[0]
                 _tmppr.update({
                     'product_id': _tmppr['item_id'],
                     'source': _tmppr['retailer']})
