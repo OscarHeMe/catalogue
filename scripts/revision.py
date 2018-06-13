@@ -149,7 +149,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                 })
                 del tmp_gt['gtin_14'], tmp_gt['gtin_13'], tmp_gt['gtin_12']
                 del tmp_gt['gtin_8'], tmp_gt['date']
-                print(tmp_gt)
                 generated_items.append(tmp_gt)
                 print('Added GTIN to generate..')
             # If there is info in Gtin retailer and Item retailer, take it to reproduce it
@@ -160,11 +159,9 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                     'source': _tmppr['retailer']})
                 del _tmppr['item_id'], _tmppr['retailer']
                 print('ITEM RET')
+                tmp_itr = _itr.to_dict(orient='records')[0]
                 print(tmp_itr)
                 """
-                item_uuid
-                source 
-                product_id 
                 name 
                 gtin
                 description
@@ -176,6 +173,15 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                 images 
                 last_modified
                 """
+                _tmppr.update({
+                    'name': tmp_itr['name'],
+                    'description': tmp_itr['description'],
+                    'categories': tmp_itr['categories'],
+                    'url': tmp_itr['url'],
+                    'brand': tmp_itr['brand'],
+                    'provider': tmp_itr['provider'],
+                    'ingredients': tmp_itr['ingredients']
+                })
                 print('Product')
                 print(_tmppr)
                 generated_prods.append(_tmppr)
