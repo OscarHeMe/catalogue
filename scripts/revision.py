@@ -32,7 +32,7 @@ print('Gtin Retailers:', len(g_retailer))
 
 # Load Tables from  Items DB
 i_retailer = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
-    'items', 'item_retailer', 'item_uuid,item_id,name,retailer,gtin', SQL_ITEMS_PORT)
+    'items', 'item_retailer', '*', SQL_ITEMS_PORT)
 print('Item Retailers:', len(i_retailer))
 
 # Load Tables from  Catalogue DB
@@ -141,17 +141,47 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
             # There is a GTIN but no Catalogue ITEM, then create Catalogue Item records
             if not _gt.empty and _cit.empty:
                 print('GTIN')
-                print(_gt)
-                generated_items.append(_gt.to_dict(orient='records'))
+                tmp_gt = _gt.to_dict(orient='records')
+                tmp_gt.update({
+                    'description': tmp_gt['name'],
+                    'checksum' : int(tmp_gt['checksum'])
+                    'last_modified': tmp_gt['date']
+                })
+                del tmp_gt['gtin_14'], tmp_gt['gtin_13'], tmp_gt['gtin_12']
+                del tmp_gt['gtin_8'], tmp_gt['date']
+                print(tmp_gt)
+                generated_items.append(tmp_gt)
+                print('Added GTIN to generate..')
             # If there is info in Gtin retailer and Item retailer, take it to reproduce it
             if not _itr.empty or not _gtr.empty:
+                _tmppr = _gtr.to_dict(orient='records')
+                _tmppr.update({
+                    'product_id': _tmppr['item_id'],
+                    'source': _tmppr['retailer']})
+                del _tmppr['item_id'], _tmppr['retailer']
                 print('ITEM RET')
-                print(_itr)
-                print('GTIN RET')
-                print(_gtr)
-                generated_prods.append(_gtr.to_dict(orient='records'))
+                print(tmp_itr)
+                """
+                item_uuid
+                source 
+                product_id 
+                name 
+                gtin
+                description
+                categories
+                ingredients
+                brand
+                provider 
+                url 
+                images 
+                last_modified
+                """
+                print('Product')
+                print(_tmppr)
+                generated_prods.append(_tmppr)
+                print('Added Product with Prev info')
             else:
-                generated_prods.append(_gt.to_dict(orient='records'))
+                print('Not enough info to create product!')
             input("Review....")
     print("Found {} items that were missing".format(len(generated_items)))
     print("Found {} products that were missing".format(len(generated_prods)))
