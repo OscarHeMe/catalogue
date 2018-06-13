@@ -25,7 +25,7 @@ def load_db(host, user, psswd, db, table, cols, port=5432):
 
 # Load Tables from  Identity DB
 gtin = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
-    'identity', 'gtin', 'item_uuid,name,gtin', SQL_IDENTITY_PORT)
+    'identity', 'gtin', '*', SQL_IDENTITY_PORT)
 g_retailer = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
     'identity', 'gtin_retailer', 'item_uuid,item_id,retailer', SQL_IDENTITY_PORT)
 print('Gtin Retailers:', len(g_retailer))
@@ -129,23 +129,30 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
     p_inmigr = pd.read_csv("data/dumps/missing_items.csv")
     p_inmigr.drop_duplicates(inplace=True)
     print('Verifying Missing products in Items and Identity DB')
-    really_missing_cnt = 0
+    generated_items, generated_prods = [], []
     for i, pin in p_inmigr.iterrows():
         _checked = product[(product.item_uuid==pin.item_uuid) &  (product.source==pin.source)]
         if _checked.empty:
             print('Looking for', pin)
-            print('GTIN')
             _gt = gtin[(gtin.item_uuid == pin.item_uuid)]
             _gtr = g_retailer[(g_retailer.item_uuid == pin.item_uuid) & (g_retailer.retailer == pin.source)]
             _itr = i_retailer[(i_retailer.item_uuid==pin.item_uuid) & (i_retailer.retailer==pin.source)]
-            if not _gt.empty:
+            _cit = item[(item.item_uuid == pin.item_uuid)]
+            # There is a GTIN but no Catalogue ITEM, then create Catalogue Item records
+            if not _gt.empty and _cit.empty:
                 print('GTIN')
                 print(_gt)
+                generated_items.append(_gt.to_dict(orient='records'))
+            # If there is info in Gtin retailer and Item retailer, take it to reproduce it
+            if not _itr.empty or not _gtr.empty:
                 print('ITEM RET')
                 print(_itr)
                 print('GTIN RET')
                 print(_gtr)
-                print(item[(item.item_uuid == pin.item_uuid)])
-                input('This is recognized!')
-            really_missing_cnt += 1
-    print("Found {} products that are missing".format(really_missing_cnt))
+                generated_prods.append(_gtr.to_dict(orient='records'))
+            else:
+                generated_prods.append(_gt.to_dict(orient='records'))
+            input("Review....")
+    print("Found {} items that were missing".format(len(generated_items)))
+    print("Found {} products that were missing".format(len(generated_prods)))
+    
