@@ -144,7 +144,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                 tmp_gt = _gt.to_dict(orient='records')
                 tmp_gt.update({
                     'description': tmp_gt['name'],
-                    'checksum' : int(tmp_gt['checksum'])
+                    'checksum' : int(tmp_gt['checksum']),
                     'last_modified': tmp_gt['date']
                 })
                 del tmp_gt['gtin_14'], tmp_gt['gtin_13'], tmp_gt['gtin_12']
