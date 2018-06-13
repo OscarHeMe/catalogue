@@ -1,9 +1,10 @@
 import os
+import datetime
+import sys
 import pandas as pd
 from pygres import Pygres
 from sqlalchemy import create_engine
 from config import *
-import sys
 
 # DB Credentials
 SQL_IDENTITY = os.getenv("SQL_IDENTITY", "identity.byprice.db") #"192.168.99.100")
@@ -153,26 +154,14 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                 print('Added GTIN to generate..')
             # If there is info in Gtin retailer and Item retailer, take it to reproduce it
             if not _itr.empty or not _gtr.empty:
+                # Use Gtin retailer info
                 _tmppr = _gtr.to_dict(orient='records')[0]
                 _tmppr.update({
                     'product_id': _tmppr['item_id'],
                     'source': _tmppr['retailer']})
                 del _tmppr['item_id'], _tmppr['retailer']
-                print('ITEM RET')
+                # Use item retailer info
                 tmp_itr = _itr.to_dict(orient='records')[0]
-                print(tmp_itr)
-                """
-                name 
-                gtin
-                description
-                categories
-                ingredients
-                brand
-                provider 
-                url 
-                images 
-                last_modified
-                """
                 _tmppr.update({
                     'name': tmp_itr['name'],
                     'description': tmp_itr['description'],
@@ -180,7 +169,8 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                     'url': tmp_itr['url'],
                     'brand': tmp_itr['brand'],
                     'provider': tmp_itr['provider'],
-                    'ingredients': tmp_itr['ingredients']
+                    'ingredients': tmp_itr['ingredients'],
+                    'last_modified': str(datetime.datetime.utcnow())
                 })
                 print('Product')
                 print(_tmppr)
@@ -188,7 +178,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                 print('Added Product with Prev info')
             else:
                 print('Not enough info to create product!')
-            input("Review....")
+                input("Issues....")
     print("Found {} items that were missing".format(len(generated_items)))
     print("Found {} products that were missing".format(len(generated_prods)))
     
