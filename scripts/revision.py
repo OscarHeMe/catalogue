@@ -172,8 +172,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                     'ingredients': tmp_itr['ingredients'],
                     'last_modified': str(datetime.datetime.utcnow())
                 })
-                print('Product')
-                print(_tmppr)
                 generated_prods.append(_tmppr)
                 print('Added Product with Prev info')
             else:
@@ -181,4 +179,21 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                 input("Issues....")
     print("Found {} items that were missing".format(len(generated_items)))
     print("Found {} products that were missing".format(len(generated_prods)))
-    
+    # Insert into Catalogue DB
+    _conn =  create_engine("postgresql://{}:{}@{}:{}/{}"
+                                .format(SQL_USER, SQL_PASSWORD,
+                                        SQL_HOST, SQL_PORT,
+                                        SQL_DB))
+    df_gen_items = pd.DataFrame(generated_items)
+    df_gen_items.set_index(['item_uuid'])\
+            .to_sql('item', _conn,
+                    if_exists='append',
+                    chunksize=2000)
+    print('Inserted Items!!')
+    df_gen_prods = pd.DataFrame(generated_prods)
+    df_gen_prods.set_index(['item_uuid', 'source'])\
+            .to_sql('product', _conn,
+                    if_exists='append',
+                    chunksize=2000)
+    print('Inserted Products!!')
+    print('Finished updating products missing from file!')
