@@ -136,14 +136,16 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
             print('Looking for', pin)
             print('GTIN')
             _gt = gtin[(gtin.item_uuid == pin.item_uuid)]
+            _gtr = g_retailer[(g_retailer.item_uuid == pin.item_uuid) & (g_retailer.retailer == pin.source)]
+            _itr = i_retailer[(i_retailer.item_uuid==pin.item_uuid) & (i_retailer.retailer==pin.source)]
             if not _gt.empty:
+                print('GTIN')
                 print(_gt)
-                print('-')
+                print('ITEM RET')
+                print(_itr)
+                print('GTIN RET')
+                print(_gtr)
                 print(item[(item.item_uuid == pin.item_uuid)])
                 input('This is recognized!')
-            print('GTIN RETAILER')
-            print(g_retailer[(g_retailer.item_uuid == pin.item_uuid) & (g_retailer.retailer == pin.source)])
-            print('ITEM RETAILER')
-            print(i_retailer[(i_retailer.item_uuid==pin.item_uuid) & (i_retailer.retailer==pin.source)])
             really_missing_cnt += 1
     print("Found {} products that are missing".format(really_missing_cnt))
