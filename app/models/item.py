@@ -176,7 +176,7 @@ class Item(object):
         if type_ == "item_uuid":
             try:
                 qry_item_uuids = """
-                    SELECT item_uuid, gtin, name as best_name, description as description_iu
+                    SELECT item_uuid, gtin, name as best_name, description
                         FROM item 
                         WHERE item_uuid IN {}
                     """.format(tuplify(items))
