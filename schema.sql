@@ -55,6 +55,7 @@ CREATE TABLE "item" (
     checksum integer,
     name varchar(255),
     description text,
+    page_views integer,
     last_modified timestamp
  );
 
