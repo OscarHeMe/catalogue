@@ -220,6 +220,9 @@ class Item(object):
                     row['providers'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
                         'attr_key').attr_name)
+                    row['tags'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('tag')].drop_duplicates(
+                        'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
             except Exception as e:
@@ -266,6 +269,9 @@ class Item(object):
                         'attr_key').attr_name)
                     row['providers'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
+                        'attr_key').attr_name)
+                    row['tags'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('tag')].drop_duplicates(
                         'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
