@@ -275,7 +275,7 @@ def get_intersection():
 
     """
     logger.info("Query Product by attr...")
-    params = request.args
+    params = dict(request.args)
     logger.debug(params)
 
     # The keys of the params are the fields
