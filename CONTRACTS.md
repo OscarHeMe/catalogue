@@ -75,6 +75,32 @@
 }
 ```
 
+## Elastic Items
+
+**Method**:  POST
+
+**Endpoint**: `/elastic_items`
+
+**Query Params:**
+
+```json
+ {
+            "items": "11770ac5-f59d-4362-9a96-ba1595d424f3,1004cc72-7c98-4ac9-9666-a9fd74b26031",
+            "type": 'item_uuid'}
+```
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Those are the item details :D",
+    "items": "<items>"
+}
+```
+
+
+
 ------
 
 # Product Contracts
