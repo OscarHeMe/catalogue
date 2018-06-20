@@ -99,8 +99,27 @@
 }
 ```
 
+## GET CATALOGUE UUIDS
 
+**Method**:  GET
 
+**Endpoint**: `/catalogue_uuids&type=product_uuid`
+
+**Query Params:**
+
+| Param | Description |  Condition   |
+| ----- | ----------- | ------------ |
+| type  | Item UUID | not required |
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Those are the item and product uuids stored in our DB!",
+    "items": "<items>"
+}
+```
 ------
 
 # Product Contracts

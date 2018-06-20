@@ -282,19 +282,41 @@ class Item(object):
         return items
 
     @staticmethod
-    def get_catalogue_uuids():
+    def get_catalogue_uuids(type_):
         """ Static Method to get the item_uuids and product_uuids from database
         """
-        try:
-            catalogue = g._db.query("""
-                SELECT item_uuid as uuid, 'item_uuid' as type  
-                    FROM item 
-                UNION 
-                SELECT product_uuid as uuid, 'product_uuid' as type 
-                    FROM product 
-                    WHERE item_uuid IS NULL
-                """).fetch()
-        except:
-            logger.error("Postgres Catalogue Connection error")
-            return False
+        if not type_:
+            try:
+                catalogue = g._db.query("""
+                    SELECT item_uuid as uuid, 'item_uuid' as type  
+                        FROM item 
+                    UNION 
+                    SELECT product_uuid as uuid, 'product_uuid' as type 
+                        FROM product 
+                        WHERE item_uuid IS NULL
+                    """).fetch()
+            except:
+                logger.error("Postgres Catalogue Connection error")
+                return False
+        elif type_=='product_uuid':
+            if not type_:
+                try:
+                    catalogue = g._db.query("""
+                        SELECT product_uuid
+                            FROM product 
+                            WHERE item_uuid IS NULL
+                        """).fetch()
+                except:
+                    logger.error("Postgres Catalogue Connection error")
+                    return False
+        elif type_=='item_uuid':
+            if not type_:
+                try:
+                    catalogue = g._db.query("""
+                        SELECT item_uuid  
+                        FROM item 
+                        """).fetch()
+                except:
+                    logger.error("Postgres Catalogue Connection error")
+                    return False
         return catalogue
