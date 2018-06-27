@@ -176,7 +176,7 @@ class Item(object):
         if type_ == "item_uuid":
             try:
                 qry_item_uuids = """
-                    SELECT item_uuid, gtin, name as best_name, description as description_iu
+                    SELECT item_uuid, gtin, name as best_name, description, page_views
                         FROM item 
                         WHERE item_uuid IN {}
                     """.format(tuplify(items))
@@ -219,6 +219,9 @@ class Item(object):
                         'attr_key').attr_name)
                     row['providers'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
+                        'attr_key').attr_name)
+                    row['tags'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('tag')].drop_duplicates(
                         'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
@@ -267,6 +270,9 @@ class Item(object):
                     row['providers'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
                         'attr_key').attr_name)
+                    row['tags'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
+                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('tag')].drop_duplicates(
+                        'attr_key').attr_name)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
             except Exception as e:
@@ -276,19 +282,41 @@ class Item(object):
         return items
 
     @staticmethod
-    def get_catalogue_uuids():
+    def get_catalogue_uuids(type_):
         """ Static Method to get the item_uuids and product_uuids from database
         """
-        try:
-            catalogue = g._db.query("""
-                SELECT item_uuid as uuid, 'item_uuid' as type  
-                    FROM item 
-                UNION 
-                SELECT product_uuid as uuid, 'product_uuid' as type 
-                    FROM product 
-                    WHERE item_uuid IS NULL
-                """).fetch()
-        except:
-            logger.error("Postgres Catalogue Connection error")
-            return False
+        if not type_:
+            try:
+                catalogue = g._db.query("""
+                    SELECT item_uuid as uuid, 'item_uuid' as type  
+                        FROM item 
+                    UNION 
+                    SELECT product_uuid as uuid, 'product_uuid' as type 
+                        FROM product 
+                        WHERE item_uuid IS NULL
+                    """).fetch()
+            except:
+                logger.error("Postgres Catalogue Connection error")
+                return False
+        elif type_=='product_uuid':
+            if not type_:
+                try:
+                    catalogue = g._db.query("""
+                        SELECT product_uuid
+                            FROM product 
+                            WHERE item_uuid IS NULL
+                        """).fetch()
+                except:
+                    logger.error("Postgres Catalogue Connection error")
+                    return False
+        elif type_=='item_uuid':
+            if not type_:
+                try:
+                    catalogue = g._db.query("""
+                        SELECT item_uuid  
+                        FROM item 
+                        """).fetch()
+                except:
+                    logger.error("Postgres Catalogue Connection error")
+                    return False
         return catalogue

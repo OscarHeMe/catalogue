@@ -157,7 +157,12 @@ def catalogue_uuids():
         - resp: items list
     """
     logger.info("Items catalogue")
-    _resp = Item.get_catalogue_uuids()
+    params = request.args
+    type_ = params.get("type")
+    # Validation
+    if not params:
+        raise errors.ApiError(70001, "Missing required key params")
+    _resp = Item.get_catalogue_uuids(type_)
     return jsonify({
         "status": "OK",
         "message": "Those are the item and product uuids stored in our DB!",

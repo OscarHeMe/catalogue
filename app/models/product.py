@@ -995,33 +995,39 @@ class Product(object):
         """ Query products by intersection of one
             or various cols
         """
-        p = kwargs['p']
-        ipp = kwargs['ipp']
+        p = int(kwargs['p'])
+        ipp = int(kwargs['ipp'])
         del kwargs['p'], kwargs['ipp']
 
         # Columns
-        cols = ["*"] if ('cols' not in kwargs or not kwargs['cols']) else kwargs['cols']
         if 'cols' not in kwargs or not kwargs['cols']:
             cols = ["*"]
         else:
             cols = kargs['cols']
-        del kwargs['cols']
+            del kwargs['cols']
 
         where = []
+        where_qry = """ """
         for k, vals in kwargs.items():
             where.append(" {} IN ({}) ".format(k, vals) )
 
+        if where:
+            where_qry = """ where {}""".format(""" and """.join(where))
+
         # Query
         qry = """
-            select {} from product
-            where {}
+            select {} from product {}
+            limit {}
+            offset {}
         """.format(
-            cols,
-            " and ".join(where)
+            """, """.join(cols),
+            where_qry,
+            ipp,
+            (p - 1) * ipp
         )
 
         try:
-            rows = g._db.execute(qry).fetch()
+            rows = g._db.query(qry).fetch()
         except Exception as e:
             logger.error("Could not execute intersect query: {}".format(qry))
             raise errors.ApiError(70007, "Could not execute query: ")

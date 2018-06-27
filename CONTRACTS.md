@@ -75,6 +75,51 @@
 }
 ```
 
+## Elastic Items
+
+**Method**:  POST
+
+**Endpoint**: `/elastic_items`
+
+**Query Params:**
+
+```json
+ {
+            "items": "11770ac5-f59d-4362-9a96-ba1595d424f3,1004cc72-7c98-4ac9-9666-a9fd74b26031",
+            "type": 'item_uuid'}
+```
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Those are the item details :D",
+    "items": "<items>"
+}
+```
+
+## GET CATALOGUE UUIDS
+
+**Method**:  GET
+
+**Endpoint**: `/catalogue_uuids&type=product_uuid`
+
+**Query Params:**
+
+| Param | Description |  Condition   |
+| ----- | ----------- | ------------ |
+| type  | Item UUID | not required |
+
+**Response:**
+
+```json
+{
+    "status": "OK",
+    "message": "Those are the item and product uuids stored in our DB!",
+    "items": "<items>"
+}
+```
 ------
 
 # Product Contracts
