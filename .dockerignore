@@ -15,3 +15,5 @@ app/controllers/__pycache__
 app/tests/__pycache__
 .git
 schemaT.sql
+spark-warehouse
+data/

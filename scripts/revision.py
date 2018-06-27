@@ -141,7 +141,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
             _cit = item[(item.item_uuid == pin.item_uuid)]
             # There is a GTIN but no Catalogue ITEM, then create Catalogue Item records
             if not _gt.empty and _cit.empty:
-                print('GTIN')
                 tmp_gt = _gt.to_dict(orient='records')[0]
                 tmp_gt.update({
                     'description': tmp_gt['name'],

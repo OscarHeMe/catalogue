@@ -35,7 +35,7 @@ RUN apt-get install -y  nginx \
     gunicorn \
     flask
 
-# Clone all scrapers repositoriesexport
+# Copy Repo content
 COPY ./ /catalogue/
 RUN mkdir /catalogue/logs
 

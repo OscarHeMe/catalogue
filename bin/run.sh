@@ -19,4 +19,3 @@ elif [[ $MODE == "CONSUMER" ]]
     echo "Starting $APP_NAME in CONSUMER mode"
     ./env/bin/flask consumer
 fi
-
