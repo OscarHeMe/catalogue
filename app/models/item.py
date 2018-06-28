@@ -444,6 +444,7 @@ class Item(object):
             'name': sorted(df_rets['name'].tolist(),
                 key=lambda x: len(x) if x else 0,
                 reverse=True)[0].strip().capitalize(),
+            u_type: _uuid,
             'names': df_rets['name'].tolist(),
             'description': sorted(df_rets['description'].dropna().tolist(),
                 key=lambda x: len(x) if x else 0, reverse=True),
