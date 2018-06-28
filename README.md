@@ -105,3 +105,8 @@ source bin/tests.sh
 ## License
 
 ByPrice Copyright (c) 2018
+
+## To Do
+
+- Populate Ingredients from Past DB of ByPrice
+- Populate Brands from Past DB of ByPrice

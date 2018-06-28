@@ -320,3 +320,141 @@ class Item(object):
                     logger.error("Postgres Catalogue Connection error")
                     return False
         return catalogue
+
+    @staticmethod
+    def fetch_attrs(puuids):
+        """ Fetch all Attributes from given products
+
+            Params:
+            -----
+            puuids : list
+                List of Product UUIDs
+            
+            Returns:
+            -----
+            _respattrs : list
+                List of attributes
+            >>> [{
+                    'class_name' : str,
+                    'attr_name' : str,
+                    'attr_key' : str,
+                    'value': str
+                }
+            ]
+        """
+        # Query
+        _qry = """SELECT
+            pa.value, a.key as attr_key, 
+            a.name as attr,
+            c.name_es as class,
+            c.key as class_key,
+            p.source
+            FROM product_attr pa
+            LEFT OUTER JOIN attr a 
+            ON (pa.id_attr = a.id_attr)
+            LEFT OUTER JOIN clss c
+            ON (a.id_clss = c.id_clss)
+            INNER JOIN product p
+            ON (p.product_uuid = pa.product_uuid)
+            WHERE pa.product_uuid IN {}
+            ORDER BY class
+        """.format(tuplify(puuids))
+        try:
+            logger.debug(_qry)
+            _respattrs = g._db.query(_qry).fetch()
+            logger.debug(pformat(_respattrs))
+        except Exception as e:
+            logger.error(e)
+            return []
+        return _respattrs
+
+    @staticmethod
+    def details(u_type, _uuid):
+        """ Method to query details from related Product or Item
+
+            Params:
+            -----
+            u_type : str
+                `item_uuid` or `product_uuid`
+            _uuid :  str
+                UUID to query info
+
+            Returns:
+            -----
+            _details : dict
+                Product/Item Details
+        """
+        # Fetch info from all retailers
+        try:
+            _qry = """SELECT p.name, p.gtin, p.description,
+                p.product_uuid,
+                p.images, p.ingredients, p.source,
+                s.hierarchy, s.name as r_name
+                FROM product p 
+                INNER JOIN source s 
+                ON (p.source = s.key)
+                WHERE p.{} = '{}'
+            """.format(u_type, _uuid)
+            logger.debug(_qry)
+            info_rets = g._db.query(_qry).fetch()
+            logger.debug(info_rets)
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching retailers info: {}".format(_uuid))
+            info_rets = []
+        # Fetch Attributes
+        if info_rets:
+            info_attrs = Item.fetch_attrs([str(z['product_uuid']) for z in info_rets ])
+        else:
+            info_attrs = []
+        # Aux vars
+        prov, brand = {'name':'', 'key':''}, {'name':'', 'key':''}
+        ingreds, attrs, categs = [], [], []
+        ingred_options, categ_options = [], []
+        # Fetch Provider, Brand, Categories
+        for k in info_attrs:
+            if k['class_key'] == 'provider':
+                if len(k['attr']) > len(prov['name']):
+                    prov = {
+                        'name': k['attr'],
+                        'key' : k['attr_key']
+                    }
+            elif k['class_key'] == 'brand':
+                if k['source'] == 'byprice':
+                    brand = {
+                        'name': k['attr'],
+                        'key' : k['attr_key']
+                    }
+            elif k['class_key'] == 'ingredient':
+                if k['source'] == 'byprice':
+                    ingreds.append(k['attr'])
+                else:
+                    ingred_options.append(k['attr'])
+            elif k['class_key'] == 'category':
+                if k['source'] == 'byprice':
+                    categs.append(k['attr'])
+                else:
+                    categ_options.append(k['attr'])
+            else:
+                attrs.append(k)
+        # Filter info from no valid retailers
+        df_rets = pd.DataFrame(info_rets)
+        df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
+        return {
+            'name': sorted(df_rets['name'].tolist(),
+                key=lambda x: len(x) if x else 0,
+                reverse=True)[0].strip().capitalize(),
+            'names': df_rets['name'].tolist(),
+            'description': sorted(df_rets['description'].dropna().tolist(),
+                key=lambda x: len(x) if x else 0, reverse=True),
+            'gtin': sorted(df_rets['gtin'].dropna().tolist(),
+                key=lambda x: len(x) if x else 0)[0],
+            'retailers': df_rets['r_name'].tolist(),
+            'attributes': attrs,
+            'ingredients': ingreds,
+            'ingredients_options': ingred_options,
+            'brand': brand,
+            'provider': prov,
+            'categories': categs,
+            'categories_options': categ_options
+        }

@@ -87,7 +87,28 @@ def delete_item():
 
 
 @mod.route('/details', methods=['GET'])
-def details_item(items_str):
+def details_item():
+    """ Endpoint to get details for FrontEnd info
+    """
+    logger.info("Item details endpoint...")
+    params = request.args
+    # Validation
+    if not params:
+        raise errors.ApiError(70001, "Missing required key params")
+    _needed_params = {'uuid'}
+    if not _needed_params.issubset(params.keys()):
+        raise errors.ApiError(70001, "Missing required key params")
+    # Verify if item or product
+    uuid_type = 'item_uuid'
+    if not Item.exists({'item_uuid': params['uuid']}):
+        uuid_type = 'product_uuid'
+    _resp = Item.details(uuid_type, params['uuid'])
+    logger.debug(_resp)
+    return jsonify(_resp)
+        
+
+@mod.route('/details/info', methods=['GET'])
+def details_info():
     """ Endpoint to get details of given items
 
         @Params:
@@ -99,7 +120,7 @@ def details_item(items_str):
         @Response:
             - resp: items list
     """
-    logger.info("Items details")
+    logger.info("Info details")
     params = request.args
     # Validation
     if not params:
