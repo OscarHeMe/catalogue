@@ -362,7 +362,7 @@ class Item(object):
         try:
             logger.debug(_qry)
             _respattrs = g._db.query(_qry).fetch()
-            logger.debug(pformat(_respattrs))
+            logger.debug(_respattrs)
         except Exception as e:
             logger.error(e)
             return []
