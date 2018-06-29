@@ -252,7 +252,11 @@ def upload_normalized():
         raise errors.ApiError(70007, "Missing file, add attachement!")
     if 'normalized.csv' not in request.files:
         raise errors.ApiError(70007, "Missing file name, add attachement!")
-    resp = Product.upload_normalized(request.files['normalized.csv'])
+    if 'append' in request.get_json():
+        _mode = 'append'
+    else:
+        _mode = 'replace'
+    resp = Product.upload_normalized(request.files['normalized.csv'], _mode)
     return jsonify(resp)
 
 

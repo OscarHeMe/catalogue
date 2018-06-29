@@ -942,7 +942,7 @@ class Product(object):
 
 
     @staticmethod
-    def upload_normalized(csvfile):
+    def upload_normalized(csvfile, _ifexists='replace'):
         """ Static method to batch load into
             product normalized table.
 
@@ -950,6 +950,8 @@ class Product(object):
             -----
             csvfile : werkzeug.datastructures.FileStorage
                 CSV File with product UUID and normed text
+            _ifexists : str
+                Method to apply if exists (append | replace)
 
             Returns:
             -----
@@ -980,7 +982,7 @@ class Product(object):
                 .set_index('product_uuid')\
                 .to_sql('product_normalized', _eng, 
                     dtype={'product_uuid': UUID, 'normalized': Text},
-                    if_exists="replace", chunksize=5000)
+                    if_exists=_ifexists, chunksize=5000)
         except Exception as e:
             logger.error(e)
             return {'status': 'ERROR',
