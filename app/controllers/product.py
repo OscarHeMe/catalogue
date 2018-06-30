@@ -252,7 +252,7 @@ def upload_normalized():
         raise errors.ApiError(70007, "Missing file, add attachement!")
     if 'normalized.csv' not in request.files:
         raise errors.ApiError(70007, "Missing file name, add attachement!")
-    if 'append' in request.get_json():
+    if 'append' in request.args:
         _mode = 'append'
     else:
         _mode = 'replace'
