@@ -179,10 +179,8 @@ def catalogue_uuids():
     """
     logger.info("Items catalogue")
     params = request.args
-    type_ = params.get("type")
+    type_ = params.get("type", None)
     # Validation
-    if not params:
-        raise errors.ApiError(70001, "Missing required key params")
     _resp = Item.get_catalogue_uuids(type_)
     return jsonify({
         "status": "OK",
