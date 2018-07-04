@@ -264,18 +264,18 @@ def upload_normalized():
 def get_intersection():
     """ Endpoint to fetch `Product`s by attr's.
 
-            /intersect?<field1>=<values>&<field2>=<values>
-            translates to:
-            where <field1> in (<vals>) and <field2> in (<vals>)
+        /intersect?<field1>=<values>&<field2>=<values>
+        translates to:
+        where <field1> in (<vals>) and <field2> in (<vals>)
 
-            @Request:
-            - <field>=<values> : n number of fields and values to make the qry
-            - cols : columns
-            - p : page
-            - ipp : items per page
+        @Request:
+        - <field>=<values> : n number of fields and values to make the qry
+        - cols : columns
+        - p : page
+        - ipp : items per page
 
-            @Response:
-            - products
+        @Response:
+        - products
 
     """
     logger.info("Query Product by attr...")

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-cd $APP_DIR
 /bin/bash ./env/bin/activate
 
 # Init the database

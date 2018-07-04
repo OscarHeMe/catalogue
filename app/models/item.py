@@ -367,6 +367,41 @@ class Item(object):
             logger.error(e)
             return []
         return _respattrs
+    
+    @staticmethod
+    def fetch_categs(puuids):
+        """ Fetch all ByPrice Categories from given products
+
+            Params:
+            -----
+            puuids : list
+                List of Product UUIDs
+            
+            Returns:
+            -----
+            bp_categs : list
+                List of categories
+            >>> ['Salud', 'Bebés']
+        """
+        # Query
+        _qry = """SELECT name
+            FROM category 
+            WHERE id_category
+            IN (
+                SELECT DISTINCT(id_category)
+                FROM product_category
+                WHERE product_uuid IN {}
+            )
+            AND source = 'byprice'
+        """.format(tuplify(puuids))
+        try:
+            logger.debug(_qry)
+            bp_categs = g._db.query(_qry).fetch()
+            logger.debug(bp_categs)
+        except Exception as e:
+            logger.error(e)
+            return []
+        return [b['name'] for b in bp_categs]
 
     @staticmethod
     def details(u_type, _uuid):
@@ -437,6 +472,10 @@ class Item(object):
                     categ_options.append(k['attr'])
             else:
                 attrs.append(k)
+        # Fetch from categories table
+        # Fetch Attributes
+        if info_rets:
+            categs += Item.fetch_categs([str(z['product_uuid']) for z in info_rets ])
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
         df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
