@@ -200,7 +200,7 @@ class Item(object):
                 return False
             try:
                 df['names'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
-                df['ingredients'], df['providers'] = None, None, None, None, None, None, None, None
+                df['ingredients'], df['providers'], df['categories_raw'] = None, None, None, None, None, None, None, None, None
                 for index, row in df.iterrows():
                     row['names'] = list(df2[df2.item_uuid == row.item_uuid]["name2"].drop_duplicates())
                     row['retailers'] = list(df2[df2.item_uuid == row.item_uuid]["source"].drop_duplicates())
@@ -259,7 +259,7 @@ class Item(object):
             try:
                 df = df2.drop_duplicates('product_uuid')[['product_uuid', 'best_name', 'source', 'description', 'gtin']]
                 df['names'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
-                df['ingredients'], df['providers'] = None, None, None, None, None, None, None, None
+                df['ingredients'], df['providers'], df['categories_raw'] = None, None, None, None, None, None, None, None, None
                 for index, row in df.iterrows():
                     row['names'] = [row.best_name]
                     row['retailers'] = [row.source]
