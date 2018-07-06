@@ -216,8 +216,13 @@ class Item(object):
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
                         'attr_key').attr_name)
                     # All Categories
-                    row['categories'] = Item.fetch_categs(df2[df2.item_uuid.isin([row.item_uuid])]\
-                                                        .product_uuid.astype(str).drop_duplicates().tolist())
+                    row['categories'] = Item.fetch_categs(
+                        df2[
+                            df2.item_uuid.isin(
+                                [row.item_uuid]
+                            )
+                        ].product_uuid.astype(str).drop_duplicates().tolist()
+                    )
                     row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
@@ -270,8 +275,12 @@ class Item(object):
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
                         'attr_key').attr_name)
                     # Categories ByPrice
-                    row['categories'] = Item.fetch_categs(df2[df2.item_uuid.isin([row.item_uuid])]\
-                                                        .product_uuid.astype(str).drop_duplicates().tolist())
+                    row['categories'] = Item.fetch_categs(
+                        df2[
+                            df2.product_uuid.isin(
+                                [row.product_uuid]
+                            )].product_uuid.astype(str).drop_duplicates().tolist()
+                    )
                     row['ingredients'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
