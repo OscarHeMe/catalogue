@@ -48,6 +48,17 @@ class Product(object):
         self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
         self.product_id = str(self.product_id).zfill(20)[-255:] \
             if self.product_id else None
+        # Categories parsing
+        if not isinstance(self.categories, str):
+            if not (self.categories is None):
+                try:
+                    self.categories = ','.join(self.categories)
+                except Exception:
+                    logger.error(e)
+                    logger.warning("Categories with unvalid format!")
+                    logger.debug(self.categories)
+                    self.categories = None
+        # Raw Product construction
         try:
             if not self.raw_product:
                 self.raw_product = json.dumps(_args)
