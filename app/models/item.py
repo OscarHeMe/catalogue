@@ -200,7 +200,7 @@ class Item(object):
                 return False
             try:
                 df['names'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
-                df['ingredients'], df['providers'] = None, None, None, None, None, None, None, None
+                df['ingredients'], df['providers'], df['categories_raw'] = None, None, None, None, None, None, None, None, None
                 for index, row in df.iterrows():
                     row['names'] = list(df2[df2.item_uuid == row.item_uuid]["name2"].drop_duplicates())
                     row['retailers'] = list(df2[df2.item_uuid == row.item_uuid]["source"].drop_duplicates())
@@ -216,8 +216,13 @@ class Item(object):
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
                         'attr_key').attr_name)
                     # All Categories
-                    row['categories'] = Item.fetch_categs(df2[df2.item_uuid.isin([row.item_uuid])]\
-                                                        .product_uuid.astype(str).drop_duplicates().tolist())
+                    row['categories'] = Item.fetch_categs(
+                        df2[
+                            df2.item_uuid.isin(
+                                [row.item_uuid]
+                            )
+                        ].product_uuid.astype(str).drop_duplicates().tolist()
+                    )
                     row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
@@ -254,7 +259,7 @@ class Item(object):
             try:
                 df = df2.drop_duplicates('product_uuid')[['product_uuid', 'best_name', 'source', 'description', 'gtin']]
                 df['names'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
-                df['ingredients'], df['providers'] = None, None, None, None, None, None, None, None
+                df['ingredients'], df['providers'], df['categories_raw'] = None, None, None, None, None, None, None, None, None
                 for index, row in df.iterrows():
                     row['names'] = [row.best_name]
                     row['retailers'] = [row.source]
@@ -270,8 +275,12 @@ class Item(object):
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
                         'attr_key').attr_name)
                     # Categories ByPrice
-                    row['categories'] = Item.fetch_categs(df2[df2.item_uuid.isin([row.item_uuid])]\
-                                                        .product_uuid.astype(str).drop_duplicates().tolist())
+                    row['categories'] = Item.fetch_categs(
+                        df2[
+                            df2.product_uuid.isin(
+                                [row.product_uuid]
+                            )].product_uuid.astype(str).drop_duplicates().tolist()
+                    )
                     row['ingredients'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
