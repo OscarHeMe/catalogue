@@ -9,7 +9,8 @@ import datetime
 import app.utils.applogger as applogger
 import app.utils.errors as errors
 import app.utils.db as db
-from app import consumer
+if APP_MODE == 'CONSUMER':
+    from app import consumer
 
 app = Flask(__name__)
 app.config.from_object('config')
