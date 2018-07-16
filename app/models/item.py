@@ -19,6 +19,8 @@ class Item(object):
 
     __attrs__ = ['item_uuid', 'gtin', 'checksum', 'name',
                  'description', 'last_modified']
+    __base_q = ['item_uuid', 'gtin', 'name']
+    __extras__ = []
 
     def __init__(self, params):
         """ Item constructor
@@ -68,6 +70,72 @@ class Item(object):
         except Exception as e:
             logger.error(e)
             raise errors.ApiError(70002, "Issues saving in DB!")
+
+    @staticmethod
+    def query(_by, **kwargs):
+        """ Static method to query by defined column values
+
+            Params:
+            -----
+            _by : str
+                Key from which query is performed
+            kwargs : dict
+                Extra arguments, such as (p, ipp, cols, etc..)
+            
+            Returns:
+            -----
+            _resp : list
+                List of product objects
+        """
+        logger.debug('Querying by: {}'.format(_by))
+        logger.debug('fetching: {}'.format(kwargs))
+        # Format columns
+        if kwargs['cols']:
+            _cols = ','.join([x for x in \
+                            (kwargs['cols'].split(',') \
+                            + Item.__base_q) \
+                        if x in Item.__attrs__])
+        else:
+            _cols = ','.join([x for x in Item.__base_q ])
+        # Format querying keys
+        if kwargs['keys']:
+            _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
+        else:
+            if _by != 'item_uuid':
+                _keys = 'WHERE {} IS NULL'.format(_by)
+            else:
+                _keys = ''
+        # Format paginators
+        _p = int(kwargs['p'])
+        if _p < 1 :
+            _p = 1
+        _ipp = int(kwargs['ipp'])
+        if _ipp > 10000:
+            _ipp = 10000
+        # Order by statement
+        if 'orderby' in kwargs:
+            _orderby = kwargs['orderby'] if kwargs['orderby'] else 'item_uuid'
+        else:
+            _orderby = 'item_uuid'
+        if _orderby not in Item.__base_q:
+            _orderby = 'item_uuid'
+        # Build query
+        _qry = """SELECT {} FROM item {} ORDER BY {} OFFSET {} LIMIT {} """\
+            .format(_cols, _keys, _orderby, (_p - 1)*_ipp, _ipp)
+        logger.debug(_qry)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()
+            logger.info("Found {} items".format(len(_resp)))
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB!")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
+
+        return _resp
 
     @staticmethod
     def exists(k_param):
