@@ -506,13 +506,15 @@ class Item(object):
         """
         # Fetch info from all retailers
         try:
-            _qry = """SELECT p.name, p.gtin, p.description,
+            _qry = """SELECT p.name, i.gtin, p.description,
                 p.product_uuid,
                 p.images, p.ingredients, p.source,
                 s.hierarchy, s.name as r_name
                 FROM product p 
                 INNER JOIN source s 
                 ON (p.source = s.key)
+                INNER JOIN item i
+                ON (i.item_uuid = p.item_uuid)
                 WHERE p.{} = '{}'
             """.format(u_type, _uuid)
             logger.debug(_qry)
