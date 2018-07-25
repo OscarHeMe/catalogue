@@ -442,7 +442,7 @@ class Product(object):
         """
         if _p.source in cached_ps.keys():
             if _p.product_id in cached_ps[_p.source]:
-                return cached_ps[_p.source][_p.product_id]
+                return [{'product_uuid': cached_ps[_p.source][_p.product_id]}]
         return None
     
     @staticmethod
