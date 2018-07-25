@@ -22,6 +22,9 @@ producer = RabbitEngine({
     'routing_key': QUEUE_ROUTING},
     blocking=True)
 
+# Cache variable
+cached_ps = Product.create_cache_ids()
+
 
 def process(new_item, reroute=True):
     """ Method that processes all elements with defined rules
@@ -33,11 +36,16 @@ def process(new_item, reroute=True):
     _frmted = mpk.product(route_key, new_item)
     logger.info('Formatted product!')
     p = Product(_frmted)
-    # Verify if product exists
-    prod_uuid = Product.get({
-        'product_id': p.product_id,
-        'source': p.source,
-        }, limit=1)
+    # Verify if product in Cache
+    prod_uuid = Product.puuid_from_cache(cached_ps, p)
+    if not prod_uuid:
+        # Verify if product exists
+        prod_uuid = Product.get({
+            'product_id': p.product_id,
+            'source': p.source,
+            }, limit=1)
+    else:
+        logger.info("Got UUID from cache!")
     # if exists
     if prod_uuid:
         logger.info('Found product!')

@@ -426,6 +426,48 @@ class Product(object):
         return exists
 
     @staticmethod
+    def puuid_from_cache(cached_ps, _p):
+        """ Static method to verify elements from cached products
+
+            Params:
+            -----
+            cached_ps: dict
+                Nested elements with keys of retailers and its ids
+            _p : Product
+
+            Returns:
+            -----
+            puuid : str
+                Product UUID or None
+        """
+        if _p.source in cached_ps.keys():
+            if _p.product_id in cached_ps[_p.source]:
+                return cached_ps[_p.source][_p.product_id]
+        return None
+    
+    @staticmethod
+    def create_cache_ids():
+        """ Static method to initialize cache ids
+
+            Returns:
+            -----
+            cache_ids : dict
+                Nested dict by source and product_id to product_uuid map
+        """
+        _df = pd\
+            .read_sql("""SELECT product_uuid, source, product_id
+                    FROM product WHERE source NOT IN ('ims','plm','nielsen','gs1')""",
+                    g._db.conn)
+        cache_ids = {}
+        for y, gdf in _df.groupby('source'):
+            cache_ids[y] = gdf[['product_uuid','product_id']]\
+                            .set_index('product_id')\
+                            .to_dict()['product_uuid']
+        # Clean GC
+        del _df
+        return cache_ids        
+
+    @staticmethod
     def get(_by, _cols=['product_uuid'], limit=None):
         """ Static method to get Item info
 
