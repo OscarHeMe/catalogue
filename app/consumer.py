@@ -23,7 +23,7 @@ producer = RabbitEngine({
     blocking=True)
 
 # Cache variable
-cached_ps = Product.create_cache_ids()
+cached_ps = None 
 
 
 def process(new_item, reroute=True):
@@ -90,7 +90,12 @@ def callback(ch, method, properties, body):
         logger.error(e)
 
 def start():
-    logger.info("Started listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
+    logger.info("Warming up caching IDS...")
+    global cached_ps
+    cached_ps = Product.create_cache_ids()
+    logger.debug("Done warmup, loaded {} values from {} sources"\
+        .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
+    logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
     consumer.set_callback(callback)
     try:
         consumer.run()
