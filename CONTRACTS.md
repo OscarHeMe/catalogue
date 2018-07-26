@@ -544,3 +544,4 @@ filename=normalized.csv
 - **70005** : "Wrong DataType to save {table}!"
 - **70006** : "Cannot update, {value} not in DB!"
 - **70007** : "Missing file, add attachement!"
+- **70008** : "Not existing elements in DB!"

@@ -506,20 +506,33 @@ class Item(object):
         """
         # Fetch info from all retailers
         try:
-            _qry = """SELECT p.name, i.gtin, p.description,
-                p.product_uuid,
-                p.images, p.ingredients, p.source,
-                s.hierarchy, s.name as r_name
-                FROM product p 
-                INNER JOIN source s 
-                ON (p.source = s.key)
-                INNER JOIN item i
-                ON (i.item_uuid = p.item_uuid)
-                WHERE p.{} = '{}'
-            """.format(u_type, _uuid)
+            if u_type == 'item_uuid':
+                _qry = """SELECT p.name, i.gtin, p.description,
+                    p.product_uuid,
+                    p.images, p.ingredients, p.source,
+                    s.hierarchy, s.name as r_name
+                    FROM product p 
+                    INNER JOIN source s 
+                    ON (p.source = s.key)
+                    INNER JOIN item i
+                    ON (i.item_uuid = p.item_uuid)
+                    WHERE p.{} = '{}'
+                """.format(u_type, _uuid)
+            else:
+                _qry = """SELECT p.name, p.gtin, p.description,
+                    p.product_uuid,
+                    p.images, p.ingredients, p.source,
+                    s.hierarchy, s.name as r_name
+                    FROM product p 
+                    INNER JOIN source s 
+                    ON (p.source = s.key)
+                    WHERE p.{} = '{}'
+                """.format(u_type, _uuid)
             logger.debug(_qry)
             info_rets = g._db.query(_qry).fetch()
             logger.debug(info_rets)
+            if not info_rets:
+                raise errors.ApiError(70008, "Not existing elements in DB!")
         except Exception as e:
             logger.error(e)
             logger.warning("Issues fetching retailers info: {}".format(_uuid))
