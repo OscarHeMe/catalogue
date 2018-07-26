@@ -533,6 +533,48 @@ filename=normalized.csv
 ]
 ```
 
+## Get Vademecum (Additional) Info
+
+**Method**: GET
+
+**Endpoint**: `/item/additional?uuid=<item_uuid>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| uuid  | Item UUID | required |
+
+
+
+
+**Response:**
+
+```json
+// Required Fields:
+// Indicaciones, Contraindicaciones, Embarazo, Lactancia
+// Numero de Registro
+// Name Laboratorio
+// RX
+Reacciones adversas
+[
+    {
+        "key": "farmasmart",
+        "name": "Farmasmart",
+        "logo":  "farmasmart.png", // optional
+        "type": "retailer", // optional
+        "retailer": 1 // optional
+    },
+    {
+        "key": "farmacias_similares",
+        "name": "Farmacias Similares",
+        // ...
+    },
+    //...
+]
+```
+
+
 ------
 
 # Errors
