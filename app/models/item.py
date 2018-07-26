@@ -8,6 +8,7 @@ from pprint import pformat as pf
 import ast
 import json
 from app.norm.normalize_text import key_format, tuplify
+from uuid import UUID as ConstructUUID
 
 geo_stores_url = 'http://' + SRV_GEOLOCATION + '/store/retailer?key=%s'
 logger = applogger.get_logger()
@@ -598,3 +599,48 @@ class Item(object):
             'categories': categs,
             'categories_options': categ_options
         }
+
+    @staticmethod
+    def get_vademecum_info(_uuid):
+        """ Static method to deliver info from Vademecum 
+            by UUID
+
+            Params:
+            -----
+            _uuid : str
+                Item UUID
+            
+            Returns:
+            -----
+            _jresp = dict
+                JSON like response
+        """
+        # Fetch info from DB
+        try:
+            # Validate UUID
+            assert ConstructUUID(_uuid)
+            # Query
+            _qry = """SELECT * FROM item_vademecum_info
+                WHERE item_uuid = '{}' 
+                AND blacklisted = 'f' LIMIT 1""".format(_uuid)
+            logger.debug(_qry)
+            logger.info("Querying Vademecum info..")
+            _resp = g._db.query(_qry).fetch()
+            if len(_resp) == 0:
+                raise Exception("No Item with vademecum info.")
+            _data = json.loads(_resp[0]['data'])
+        except Exception as e:
+            logger.error(e)
+            _data = {}
+        _jresp = {
+            "dataSources" : [ 
+                    {
+                    "source" : "vademecum",
+                    "link" : "https://www.vademecum.es?utm_source=affiliate_source&utm_medium=web&utm_campaign=byprice",
+                    "logo" : "https://s3-us-west-2.amazonaws.com/byprice-app/assets/backgrounds/vademecum-logo-mini.png",
+                    "info" : "Fuente:",
+                    "bullets" : _data
+                    }
+            ]
+        }
+        return _jresp

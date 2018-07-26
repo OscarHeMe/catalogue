@@ -210,3 +210,16 @@ def catalogue_uuids():
         "message": "Those are the item and product uuids stored in our DB!",
         "items": _resp
     })
+
+
+@mod.route('/additional', methods=['GET'])
+def vademecum_info():
+    """ Endpoint to get info from vademecum
+    """
+    logger.info("Fetching Vademecum additonal info..")
+    params = request.args
+    if 'uuid' not in params:
+        raise errors.ApiError(70001, "Missing required UUID param")
+    # Call values
+    _resp = Item.get_vademecum_info(params['uuid'])
+    return jsonify(_resp)
