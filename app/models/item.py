@@ -385,26 +385,24 @@ class Item(object):
                 logger.error("Postgres Catalogue Connection error")
                 return False
         elif type_=='product_uuid':
-            if not type_:
-                try:
-                    catalogue = g._db.query("""
-                        SELECT product_uuid
-                            FROM product 
-                            WHERE item_uuid IS NULL
-                        """).fetch()
-                except:
-                    logger.error("Postgres Catalogue Connection error")
-                    return False
+            try:
+                catalogue = g._db.query("""
+                    SELECT product_uuid
+                        FROM product 
+                        WHERE item_uuid IS NULL
+                    """).fetch()
+            except:
+                logger.error("Postgres Catalogue Connection error")
+                return False
         elif type_=='item_uuid':
-            if not type_:
-                try:
-                    catalogue = g._db.query("""
-                        SELECT item_uuid  
-                        FROM item 
-                        """).fetch()
-                except:
-                    logger.error("Postgres Catalogue Connection error")
-                    return False
+            try:
+                catalogue = g._db.query("""
+                    SELECT item_uuid  
+                    FROM item 
+                    """).fetch()
+            except:
+                logger.error("Postgres Catalogue Connection error")
+                return False
         else:
             logger.error("Wrong type parameter {}".format(str(type_)))
             return False
