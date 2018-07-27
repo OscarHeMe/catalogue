@@ -302,7 +302,7 @@ class Item(object):
     def get_catalogue_uuids(type_):
         """ Static Method to get the item_uuids and product_uuids from database
         """
-        if not type_:
+        if type_ is None:
             try:
                 catalogue = g._db.query("""
                     SELECT item_uuid as uuid, 'item_uuid' as type  
@@ -336,6 +336,9 @@ class Item(object):
                 except:
                     logger.error("Postgres Catalogue Connection error")
                     return False
+        else:
+            logger.error("Wrong type parameter {}".format(str(type_)))
+            return False
         return catalogue
 
     @staticmethod
