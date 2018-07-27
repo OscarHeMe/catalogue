@@ -533,6 +533,48 @@ filename=normalized.csv
 ]
 ```
 
+## Get Vademecum (Additional) Info
+
+**Method**: GET
+
+**Endpoint**: `/item/additional?uuid=<item_uuid>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| uuid  | Item UUID | required |
+
+
+
+
+**Response:**
+
+```json
+// Required Fields:
+// Indicaciones, Contraindicaciones, Embarazo, Lactancia
+// Numero de Registro
+// Name Laboratorio
+// RX
+Reacciones adversas
+[
+    {
+        "key": "farmasmart",
+        "name": "Farmasmart",
+        "logo":  "farmasmart.png", // optional
+        "type": "retailer", // optional
+        "retailer": 1 // optional
+    },
+    {
+        "key": "farmacias_similares",
+        "name": "Farmacias Similares",
+        // ...
+    },
+    //...
+]
+```
+
+
 ------
 
 # Errors
@@ -544,3 +586,4 @@ filename=normalized.csv
 - **70005** : "Wrong DataType to save {table}!"
 - **70006** : "Cannot update, {value} not in DB!"
 - **70007** : "Missing file, add attachement!"
+- **70008** : "Not existing elements in DB!"

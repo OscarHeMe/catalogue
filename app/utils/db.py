@@ -75,7 +75,6 @@ def dropdb():
     db_drop.close()
 
 
-
 def getdb():
     """ Opens a new database connection if there is none yet for the
         current application context.

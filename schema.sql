@@ -115,6 +115,15 @@ CREATE TABLE "product_normalized" (
     normalized text
 );
 
+/* itemVademecumInfo */
+/* Batch created table, not need to define initial schema.
+CREATE TABLE "item_vademecum_info" (
+    item_uuid uuid PRIMARY KEY NOT NULL,
+    data json,
+    blacklisted bool
+);
+*/
+
 /* Indexes */
 CREATE INDEX ON product (source);
 CREATE INDEX ON product (product_id);

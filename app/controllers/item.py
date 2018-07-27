@@ -19,6 +19,29 @@ def get_one():
     return jsonify(prod)
 
 
+@mod.route("/by/iuuid", methods=['GET'])
+def get_byitem():
+    """ Endpoint to fetch items by item_uuids
+    """
+    logger.info("Query Items by Item UUID...")
+    params = request.args.to_dict()
+    logger.debug(params)
+    # Validate required params
+    _needed_params = {'keys'}
+    if not _needed_params.issubset(params):
+        raise errors.ApiError(70001, "Missing required key params")
+    # Complement optional params, and set default if needed
+    _opt_params = {'cols': '', 'p':1, 'ipp': 50}
+    for _o, _dft  in _opt_params.items():
+        if _o not in params:
+            params[_o] = _dft
+    _items = Item.query('item_uuid', **params)
+    return jsonify({
+        'status': 'OK',
+        'items': _items
+        })
+
+
 @mod.route('/add', methods=['POST'])
 def add_item():
     """ Endpoint to add a new `Item`
@@ -190,3 +213,16 @@ def catalogue_uuids():
         "message": "Those are the item and product uuids stored in our DB!",
         "items": _resp
     })
+
+
+@mod.route('/additional', methods=['GET'])
+def vademecum_info():
+    """ Endpoint to get info from vademecum
+    """
+    logger.info("Fetching Vademecum additonal info..")
+    params = request.args
+    if 'uuid' not in params:
+        raise errors.ApiError(70001, "Missing required UUID param")
+    # Call values
+    _resp = Item.get_vademecum_info(params['uuid'])
+    return jsonify(_resp)

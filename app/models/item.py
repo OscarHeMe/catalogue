@@ -8,6 +8,7 @@ from pprint import pformat as pf
 import ast
 import json
 from app.norm.normalize_text import key_format, tuplify
+from uuid import UUID as ConstructUUID
 
 geo_stores_url = 'http://' + SRV_GEOLOCATION + '/store/retailer?key=%s'
 logger = applogger.get_logger()
@@ -19,6 +20,8 @@ class Item(object):
 
     __attrs__ = ['item_uuid', 'gtin', 'checksum', 'name',
                  'description', 'last_modified']
+    __base_q = ['item_uuid', 'gtin', 'name']
+    __extras__ = []
 
     def __init__(self, params):
         """ Item constructor
@@ -68,6 +71,72 @@ class Item(object):
         except Exception as e:
             logger.error(e)
             raise errors.ApiError(70002, "Issues saving in DB!")
+
+    @staticmethod
+    def query(_by, **kwargs):
+        """ Static method to query by defined column values
+
+            Params:
+            -----
+            _by : str
+                Key from which query is performed
+            kwargs : dict
+                Extra arguments, such as (p, ipp, cols, etc..)
+            
+            Returns:
+            -----
+            _resp : list
+                List of product objects
+        """
+        logger.debug('Querying by: {}'.format(_by))
+        logger.debug('fetching: {}'.format(kwargs))
+        # Format columns
+        if kwargs['cols']:
+            _cols = ','.join([x for x in \
+                            (kwargs['cols'].split(',') \
+                            + Item.__base_q) \
+                        if x in Item.__attrs__])
+        else:
+            _cols = ','.join([x for x in Item.__base_q ])
+        # Format querying keys
+        if kwargs['keys']:
+            _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
+        else:
+            if _by != 'item_uuid':
+                _keys = 'WHERE {} IS NULL'.format(_by)
+            else:
+                _keys = ''
+        # Format paginators
+        _p = int(kwargs['p'])
+        if _p < 1 :
+            _p = 1
+        _ipp = int(kwargs['ipp'])
+        if _ipp > 10000:
+            _ipp = 10000
+        # Order by statement
+        if 'orderby' in kwargs:
+            _orderby = kwargs['orderby'] if kwargs['orderby'] else 'item_uuid'
+        else:
+            _orderby = 'item_uuid'
+        if _orderby not in Item.__base_q:
+            _orderby = 'item_uuid'
+        # Build query
+        _qry = """SELECT {} FROM item {} ORDER BY {} OFFSET {} LIMIT {} """\
+            .format(_cols, _keys, _orderby, (_p - 1)*_ipp, _ipp)
+        logger.debug(_qry)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()
+            logger.info("Found {} items".format(len(_resp)))
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB!")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
+
+        return _resp
 
     @staticmethod
     def exists(k_param):
@@ -441,18 +510,33 @@ class Item(object):
         """
         # Fetch info from all retailers
         try:
-            _qry = """SELECT p.name, p.gtin, p.description,
-                p.product_uuid,
-                p.images, p.ingredients, p.source,
-                s.hierarchy, s.name as r_name
-                FROM product p 
-                INNER JOIN source s 
-                ON (p.source = s.key)
-                WHERE p.{} = '{}'
-            """.format(u_type, _uuid)
+            if u_type == 'item_uuid':
+                _qry = """SELECT p.name, i.gtin, p.description,
+                    p.product_uuid,
+                    p.images, p.ingredients, p.source,
+                    s.hierarchy, s.name as r_name
+                    FROM product p 
+                    INNER JOIN source s 
+                    ON (p.source = s.key)
+                    INNER JOIN item i
+                    ON (i.item_uuid = p.item_uuid)
+                    WHERE p.{} = '{}'
+                """.format(u_type, _uuid)
+            else:
+                _qry = """SELECT p.name, p.gtin, p.description,
+                    p.product_uuid,
+                    p.images, p.ingredients, p.source,
+                    s.hierarchy, s.name as r_name
+                    FROM product p 
+                    INNER JOIN source s 
+                    ON (p.source = s.key)
+                    WHERE p.{} = '{}'
+                """.format(u_type, _uuid)
             logger.debug(_qry)
             info_rets = g._db.query(_qry).fetch()
             logger.debug(info_rets)
+            if not info_rets:
+                raise errors.ApiError(70008, "Not existing elements in DB!")
         except Exception as e:
             logger.error(e)
             logger.warning("Issues fetching retailers info: {}".format(_uuid))
@@ -518,3 +602,48 @@ class Item(object):
             'categories': categs,
             'categories_options': categ_options
         }
+
+    @staticmethod
+    def get_vademecum_info(_uuid):
+        """ Static method to deliver info from Vademecum 
+            by UUID
+
+            Params:
+            -----
+            _uuid : str
+                Item UUID
+            
+            Returns:
+            -----
+            _jresp = dict
+                JSON like response
+        """
+        # Fetch info from DB
+        try:
+            # Validate UUID
+            assert ConstructUUID(_uuid)
+            # Query
+            _qry = """SELECT * FROM item_vademecum_info
+                WHERE item_uuid = '{}' 
+                AND blacklisted = 'f' LIMIT 1""".format(_uuid)
+            logger.debug(_qry)
+            logger.info("Querying Vademecum info..")
+            _resp = g._db.query(_qry).fetch()
+            if len(_resp) == 0:
+                raise Exception("No Item with vademecum info.")
+            _data = json.loads(_resp[0]['data'])
+        except Exception as e:
+            logger.error(e)
+            _data = {}
+        _jresp = {
+            "dataSources" : [ 
+                    {
+                    "source" : "vademecum",
+                    "link" : "https://www.vademecum.es?utm_source=affiliate_source&utm_medium=web&utm_campaign=byprice",
+                    "logo" : "https://s3-us-west-2.amazonaws.com/byprice-app/assets/backgrounds/vademecum-logo-mini.png",
+                    "info" : "Fuente:",
+                    "bullets" : _data
+                    }
+            ]
+        }
+        return _jresp

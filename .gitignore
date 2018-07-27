@@ -20,3 +20,4 @@ data/*.dump
 metastore_db/
 matching_results.md
 spark-warehouse/
+data/vademecum/

@@ -22,6 +22,9 @@ producer = RabbitEngine({
     'routing_key': QUEUE_ROUTING},
     blocking=True)
 
+# Cache variable
+cached_ps = None 
+
 
 def process(new_item, reroute=True):
     """ Method that processes all elements with defined rules
@@ -33,11 +36,16 @@ def process(new_item, reroute=True):
     _frmted = mpk.product(route_key, new_item)
     logger.info('Formatted product!')
     p = Product(_frmted)
-    # Verify if product exists
-    prod_uuid = Product.get({
-        'product_id': p.product_id,
-        'source': p.source,
-        }, limit=1)
+    # Verify if product in Cache
+    prod_uuid = Product.puuid_from_cache(cached_ps, p)
+    if not prod_uuid:
+        # Verify if product exists
+        prod_uuid = Product.get({
+            'product_id': p.product_id,
+            'source': p.source,
+            }, limit=1)
+    else:
+        logger.info("Got UUID from cache!")
     # if exists
     if prod_uuid:
         logger.info('Found product!')
@@ -82,7 +90,12 @@ def callback(ch, method, properties, body):
         logger.error(e)
 
 def start():
-    logger.info("Started listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
+    logger.info("Warming up caching IDS...")
+    global cached_ps
+    cached_ps = Product.create_cache_ids()
+    logger.debug("Done warmup, loaded {} values from {} sources"\
+        .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
+    logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
     consumer.set_callback(callback)
     try:
         consumer.run()
