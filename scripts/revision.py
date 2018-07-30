@@ -11,7 +11,7 @@ SQL_IDENTITY = os.getenv("SQL_IDENTITY", "identity.byprice.db") #"192.168.99.100
 SQL_ITEMS = os.getenv("SQL_ITEMS", "items.byprice.db") #"192.168.99.100")
 SQL_IDENTITY_PORT = os.getenv("SQL_IDENTITY_PORT", 5432)
 SQL_ITEMS_PORT = os.getenv("SQL_ITEMS_PORT", 5432)
-M_SQL_USER = os.getenv("M_SQL_USER", "byprice")
+M_SQL_USER = os.getenv("M_SQL_USER", "postgres")
 M_SQL_PASSWORD = os.getenv("M_SQL_PASSWORD", "")
 
 
@@ -26,21 +26,21 @@ def load_db(host, user, psswd, db, table, cols, port=5432):
 
 # Load Tables from  Identity DB
 gtin = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
-    'identity', 'gtin', '*', SQL_IDENTITY_PORT)
+    'identity_dev', 'gtin', '*', SQL_IDENTITY_PORT)
 g_retailer = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
-    'identity', 'gtin_retailer', 'item_uuid,item_id,retailer', SQL_IDENTITY_PORT)
+    'identity_dev', 'gtin_retailer', 'item_uuid,item_id,retailer', SQL_IDENTITY_PORT)
 print('Gtin Retailers:', len(g_retailer))
 
 # Load Tables from  Items DB
 i_retailer = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
-    'items', 'item_retailer', '*', SQL_ITEMS_PORT)
+    'items_dev', 'item_retailer', '*', SQL_ITEMS_PORT)
 print('Item Retailers:', len(i_retailer))
 
 # Load Tables from  Catalogue DB
 item = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-    'catalogue', 'item', 'item_uuid,name,gtin')
+    'catalogue_dev', 'item', 'item_uuid,name,gtin')
 product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-    'catalogue', 'product', 'product_uuid,item_uuid,product_id,name,source,gtin')
+    'catalogue_dev', 'product', 'product_uuid,item_uuid,product_id,name,source,gtin')
 print('Current Products:', len(product))
 
 # JOIN past tables (gtin_retailer + item_retailer = product)
@@ -196,3 +196,67 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
                     chunksize=2000)
     print('Inserted Products!!')
     print('Finished updating products missing from file!')
+
+# -------------------
+# Missing ByPrice ingredients
+if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
+    # Load Product ingredients
+    i_ingredient = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
+        'items_dev', 'item_ingredient', '*')
+    ingredient = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
+        'items_dev', 'ingredient', '*')
+    print('Item ingredient:', len(i_ingredient))
+    print('Ingredient:', len(ingredient[ingredient.retailer == 'byprice']))
+    complete_ingred = pd.merge(i_ingredient, ingredient[ingredient.retailer == 'byprice'],
+        on='id_ingredient', how='left')
+    print('Filled ingredients:', len(complete_ingred))
+    print(complete_ingred.head())
+
+    # Verify Clss and Attr in BYprice
+    _clss = product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
+        'catalogue_dev', 'clss', '*')
+    _attr = product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
+        'catalogue_dev', 'attr', '*')
+    # If no Ingredient clss existant
+    if 'ingredient' not in _clss[_clss.source == 'byprice']['key'].tolist():
+        _db = Pygres({
+            'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
+            'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
+        })
+        _ingclss = _db.model('clss', 'id_clss')
+        _ingclss.name = 'Ingredient'
+        _ingclss.name_es = 'Ingrediente'
+        _ingclss.description = 'Ingrediente'
+        _ingclss.key = 'ingredient'
+        _ingclss.source = 'byprice'
+        _ingclss.save()
+        print('Created Ingredient ByPrice Class')
+        _db.close()
+    catalogue_ingreds = []
+    # For each Byrpice ingredient verify if exists 
+    import sys
+    sys.exit()
+
+    # Complete missing columns for item_attribute
+    complete_prod_cat = pd.merge(
+            product[['item_uuid']],
+            complete_cat[['item_uuid', 'id_category', 'last_modified']],
+            on=['item_uuid'], how='inner')\
+        .drop(['item_uuid'], axis=1)\
+        .set_index(['product_uuid'])
+
+    # Load into DB
+    _conn =  create_engine("postgresql://{}:{}@{}:{}/{}"
+                                .format(SQL_USER, SQL_PASSWORD,
+                                        SQL_HOST, SQL_PORT,
+                                        SQL_DB))
+    if not list(_conn.execute("""SELECT EXISTS (
+                SELECT 1 FROM product_category pc
+                INNER JOIN category c ON (c.id_category = pc.id_category)
+                WHERE c.source = 'byprice' LIMIT 1
+                )"""))[0]['exists']:
+        print('Loading Byprice product categories')
+        complete_prod_cat\
+            .to_sql('product_category', _conn,
+                if_exists='append', chunksize=2000)
+        print('Finished Loading Revision Product Categories to Catalogue')
