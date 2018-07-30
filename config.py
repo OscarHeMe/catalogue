@@ -23,7 +23,7 @@ LOG_PORT = os.getenv('LOG_PORT', 27971)
 
 # DB vars
 SQL_HOST = os.getenv('SQL_HOST','127.0.0.1')
-SQL_DB = os.getenv('SQL_DB','catalogue')
+SQL_DB = os.getenv('SQL_DB','catalogue_us')
 SQL_USER = os.getenv('SQL_USER','postgres')
 SQL_PASSWORD = os.getenv('SQL_PASSWORD','')
 SQL_PORT = os.getenv('SQL_PORT','5432')

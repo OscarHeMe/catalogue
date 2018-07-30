@@ -1,4 +1,4 @@
-# Byprice Item Service
+# Byprice Item Service (US Version)
 
 Service to query all item details, like images, ingredients, attributes and additional info.
 
