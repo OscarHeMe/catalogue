@@ -578,6 +578,8 @@ class Item(object):
         # Fetch Attributes
         if info_rets:
             categs += Item.fetch_categs([str(z['product_uuid']) for z in info_rets ])
+        # Add Normalized Ingredietns
+        ingreds += Item.fetch_normalized_ingreds(u_type, _uuid)
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
         df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
@@ -600,6 +602,58 @@ class Item(object):
             'categories': categs,
             'categories_options': categ_options
         }
+
+    @staticmethod
+    def fetch_normalized_ingreds(u_type, _uuid):
+        """ Static method to deliver ByPrice normalized Ingredients
+
+            Params:
+            -----
+            u_type : str
+                Definition if Product or Item UUID
+            _uuid : str
+                UUID value
+            
+            Returns:
+            -----
+            n_ingreds : list
+                List of Normalized Ingredients
+        """
+        if u_type  == 'item_uuid':
+            _qry = """SELECT bpa.name, bpa.key as type
+                FROM item_attr iat
+                INNER JOIN 
+                    (SELECT attr.id_attr, attr.name, cl.key
+                    FROM attr, clss cl
+                    WHERE attr.id_clss = cl.id_clss
+                    AND attr.source = 'byprice') AS bpa
+                ON (bpa.id_attr = iat.id_attr)
+                WHERE iat.item_uuid = '{}'
+                AND bpa.key = 'ingredient'
+            """.format(_uuid)
+        else:
+            _qry = """SELECT bpa.name, bpa.key as type
+                FROM item_attr iat
+                INNER JOIN 
+                    (SELECT attr.id_attr, attr.name, cl.key
+                    FROM attr, clss cl
+                    WHERE attr.id_clss = cl.id_clss
+                    AND attr.source = 'byprice') AS bpa
+                ON (bpa.id_attr = iat.id_attr)
+                WHERE iat.item_uuid 
+                IN (SELECT item_uuid FROM product WHERE product_uuid = '{}' LIMIT 1)
+                AND bpa.key = 'ingredient'
+            """.format(_uuid)
+        logger.debug(_qry)
+        # Request elements
+        try:
+            n_ingreds = g._db.query(_qry).fetch()
+            if len(n_ingreds) > 0:
+                return [ni['name'] for ni in n_ingreds]
+            return []
+        except Exception as e:
+            logger.error(e)
+            return []
 
     @staticmethod
     def get_vademecum_info(_uuid):
