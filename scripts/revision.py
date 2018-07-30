@@ -210,7 +210,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
     complete_ingred = pd.merge(i_ingredient, ingredient[ingredient.retailer == 'byprice'],
         on='id_ingredient', how='left')
     print('Filled ingredients:', len(complete_ingred))
-    print(complete_ingred.head())
 
     # Verify Clss and Attr in BYprice
     _clss = product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
@@ -230,20 +229,52 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
         _ingclss.key = 'ingredient'
         _ingclss.source = 'byprice'
         _ingclss.save()
+        bp_ing_clss = _ingclss.last_id
         print('Created Ingredient ByPrice Class')
         _db.close()
+    else:
+        bp_ing_clss = _clss[(_clss.key == 'ingredient') & (_clss.source == 'byprice')].id_clss.tolist()[0]
+    ##
+    # Catalogue Ingredients
     catalogue_ingreds = []
-    # For each Byrpice ingredient verify if exists 
-    import sys
-    sys.exit()
+    bp_attrs_list = _attr[_attr.source == 'byprice']['key'].tolist()
+    _db = Pygres({
+            'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
+            'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
+        })
+    # For each Byprice ingredient verify if exists or needs to be created
+    for j, bing in ingredient[ingredient.retailer == 'byprice'].iterrows():
+        if bing.key not in bp_attrs_list:
+            # Create Ingredient in catalogue
+            _ingat = _db.model('attr', 'id_attr')
+            _ingat.name = str(bing['name']).capitalize()
+            _ingat.id_clss = bp_ing_clss
+            _ingat.has_value = 0
+            _ingat.key = bing.key
+            _ingat.source = 'byprice'
+            _ingat.save()
+            print('Created {} Ingredient in Catalogue'.format(bing['name']))
+            catalogue_ingreds.append({'id_attr': _ingat.last_id, 'key': bing.key})
+        else:
+            # Fetch Ingredient ID from Attribute Table
+            catalogue_ingreds.append({'id_attr': _attr[(_attr['source']=='byprice') & (_attr['key'] == bing.key)].id_attr.tolist()[0],
+                'key': bing.key})
+            print('{} Ingredient already in Catalogue'.format(bing['name']))
+    _db.close()
+    print('Total catalogue ingredients', len(catalogue_ingreds))
 
-    # Complete missing columns for item_attribute
-    complete_prod_cat = pd.merge(
-            product[['item_uuid']],
-            complete_cat[['item_uuid', 'id_category', 'last_modified']],
-            on=['item_uuid'], how='inner')\
-        .drop(['item_uuid'], axis=1)\
-        .set_index(['product_uuid'])
+    # Generate Catalogue Item Attribute for ingredients
+    complete_ingred_item = pd.merge(
+            complete_ingred[['item_uuid', 'key']],
+            pd.DataFrame(catalogue_ingreds),
+            on='key',
+            how='left')\
+        .drop(['key'], axis=1)\
+        .set_index(['item_uuid'])
+    # Add necessary columns
+    complete_ingred_item['value'] = None
+    complete_ingred_item['precision'] = None
+    complete_ingred_item['last_modified'] = str(datetime.datetime.utcnow())
 
     # Load into DB
     _conn =  create_engine("postgresql://{}:{}@{}:{}/{}"
@@ -251,12 +282,14 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
                                         SQL_HOST, SQL_PORT,
                                         SQL_DB))
     if not list(_conn.execute("""SELECT EXISTS (
-                SELECT 1 FROM product_category pc
-                INNER JOIN category c ON (c.id_category = pc.id_category)
-                WHERE c.source = 'byprice' LIMIT 1
+                SELECT 1 FROM item_attr iat
+                INNER JOIN attr a ON (a.id_attr = iat.id_attr)
+                WHERE a.source = 'byprice' LIMIT 1
                 )"""))[0]['exists']:
-        print('Loading Byprice product categories')
-        complete_prod_cat\
-            .to_sql('product_category', _conn,
+        print('Loading Byprice Item Attributes (ingredients)')
+        complete_ingred_item\
+            .to_sql('item_attr', _conn,
                 if_exists='append', chunksize=2000)
-        print('Finished Loading Revision Product Categories to Catalogue')
+        print('Finished Loading Revision Item Attribute Ingredients to Catalogue')
+    else:
+        print('Item Attribute Ingredients Already to Catalogue')
