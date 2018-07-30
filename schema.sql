@@ -107,22 +107,6 @@ CREATE TABLE "product_category" (
     last_modified timestamp
 );
 
-/* productNormalized */ 
-/*
--- Batch created table, no need to define at initial schema.
-CREATE TABLE "product_normalized" (
-    product_uuid uuid PRIMARY KEY NOT NULL,
-    normalized text
-);
-
-/* itemVademecumInfo */
-/* Batch created table, not need to define initial schema.
-CREATE TABLE "item_vademecum_info" (
-    item_uuid uuid PRIMARY KEY NOT NULL,
-    data json,
-    blacklisted bool
-);
-*/
 
 /* Indexes */
 CREATE INDEX ON product (source);
