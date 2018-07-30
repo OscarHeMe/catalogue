@@ -26,21 +26,21 @@ def load_db(host, user, psswd, db, table, cols, port=5432):
 
 # Load Tables from  Identity DB
 gtin = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
-    'identity_dev', 'gtin', '*', SQL_IDENTITY_PORT)
+    'identity', 'gtin', '*', SQL_IDENTITY_PORT)
 g_retailer = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
-    'identity_dev', 'gtin_retailer', 'item_uuid,item_id,retailer', SQL_IDENTITY_PORT)
+    'identity', 'gtin_retailer', 'item_uuid,item_id,retailer', SQL_IDENTITY_PORT)
 print('Gtin Retailers:', len(g_retailer))
 
 # Load Tables from  Items DB
 i_retailer = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
-    'items_dev', 'item_retailer', '*', SQL_ITEMS_PORT)
+    'items', 'item_retailer', '*', SQL_ITEMS_PORT)
 print('Item Retailers:', len(i_retailer))
 
 # Load Tables from  Catalogue DB
 item = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-    'catalogue_dev', 'item', 'item_uuid,name,gtin')
+    'catalogue', 'item', 'item_uuid,name,gtin')
 product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-    'catalogue_dev', 'product', 'product_uuid,item_uuid,product_id,name,source,gtin')
+    'catalogue', 'product', 'product_uuid,item_uuid,product_id,name,source,gtin')
 print('Current Products:', len(product))
 
 # JOIN past tables (gtin_retailer + item_retailer = product)
@@ -202,9 +202,9 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
 if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
     # Load Product ingredients
     i_ingredient = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
-        'items_dev', 'item_ingredient', '*')
+        'items', 'item_ingredient', '*')
     ingredient = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
-        'items_dev', 'ingredient', '*')
+        'items', 'ingredient', '*')
     print('Item ingredient:', len(i_ingredient))
     print('Ingredient:', len(ingredient[ingredient.retailer == 'byprice']))
     complete_ingred = pd.merge(i_ingredient, ingredient[ingredient.retailer == 'byprice'],
@@ -213,9 +213,9 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
 
     # Verify Clss and Attr in BYprice
     _clss = product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-        'catalogue_dev', 'clss', '*')
+        'catalogue', 'clss', '*')
     _attr = product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-        'catalogue_dev', 'attr', '*')
+        'catalogue', 'attr', '*')
     # If no Ingredient clss existant
     if 'ingredient' not in _clss[_clss.source == 'byprice']['key'].tolist():
         _db = Pygres({
