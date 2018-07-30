@@ -11,7 +11,7 @@ SQL_IDENTITY = os.getenv("SQL_IDENTITY", "identity.byprice.db") #"192.168.99.100
 SQL_ITEMS = os.getenv("SQL_ITEMS", "items.byprice.db") #"192.168.99.100")
 SQL_IDENTITY_PORT = os.getenv("SQL_IDENTITY_PORT", 5432)
 SQL_ITEMS_PORT = os.getenv("SQL_ITEMS_PORT", 5432)
-M_SQL_USER = os.getenv("M_SQL_USER", "postgres")
+M_SQL_USER = os.getenv("M_SQL_USER", "byprice")
 M_SQL_PASSWORD = os.getenv("M_SQL_PASSWORD", "")
 
 
