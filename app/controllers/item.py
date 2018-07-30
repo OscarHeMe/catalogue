@@ -203,6 +203,9 @@ def catalogue_uuids():
     logger.info("Items catalogue")
     params = request.args
     type_ = params.get("type", None)
+    if type_ is not None and not (type_=='product_uuid' or type_=='item_uuid'):
+        raise errors.ApiError(70001, "Type parameter is wrong: {}".format(type_))
+
     # Validation
     _resp = Item.get_catalogue_uuids(type_)
     return jsonify({

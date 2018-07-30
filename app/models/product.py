@@ -1058,7 +1058,7 @@ class Product(object):
         if 'cols' not in kwargs or not kwargs['cols']:
             cols = ["*"]
         else:
-            cols = kargs['cols']
+            cols = kwargs['cols']
             del kwargs['cols']
 
         where = []
