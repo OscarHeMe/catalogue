@@ -35,7 +35,7 @@ def populate_retailer():
         else:
             type_ = "'" + type_.lower() + "'"
 
-    retailer = '1' if type_=='retailer' else '0'
+    retailer = '1' if 'retailer' in type_ else '0'
 
     logo = input('Enter the logo (Default: {}.png): '.format(name_key.replace("'", "")))
     if logo:
