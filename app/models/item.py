@@ -579,7 +579,10 @@ class Item(object):
         if info_rets:
             categs += Item.fetch_categs([str(z['product_uuid']) for z in info_rets ])
         # Add Normalized Ingredietns
-        ingreds += Item.fetch_normalized_ingreds(u_type, _uuid)
+        _normalized_attrs =  Item.fetch_normalized_attrs(u_type, _uuid)
+        ingreds += _normalized_attrs['ingredients']
+        if _normalized_attrs['brand']:
+            brand = _normalized_attrs['brand']
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
         df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
@@ -606,8 +609,8 @@ class Item(object):
         }
 
     @staticmethod
-    def fetch_normalized_ingreds(u_type, _uuid):
-        """ Static method to deliver ByPrice normalized Ingredients
+    def fetch_normalized_attrs(u_type, _uuid):
+        """ Static method to deliver ByPrice normalized Attributes
 
             Params:
             -----
@@ -618,44 +621,55 @@ class Item(object):
             
             Returns:
             -----
-            n_ingreds : list
-                List of Normalized Ingredients
+            n_attrs : dict
+                Dicto containing list of Normalized Ingredients, and Normalized brand
         """
         if u_type  == 'item_uuid':
-            _qry = """SELECT bpa.name, bpa.key as type
+            _qry = """SELECT bpa.name, bpa.key, bpa.type
                 FROM item_attr iat
                 INNER JOIN 
-                    (SELECT attr.id_attr, attr.name, cl.key
+                    (SELECT attr.id_attr, attr.name, attr.key, cl.key as type
                     FROM attr, clss cl
                     WHERE attr.id_clss = cl.id_clss
                     AND attr.source = 'byprice') AS bpa
                 ON (bpa.id_attr = iat.id_attr)
                 WHERE iat.item_uuid = '{}'
-                AND bpa.key = 'ingredient'
+                AND (bpa.type = 'ingredient' OR bpa.type = 'brand')
             """.format(_uuid)
         else:
-            _qry = """SELECT bpa.name, bpa.key as type
+            _qry = """SELECT bpa.name, bpa.key, bpa.type
                 FROM item_attr iat
                 INNER JOIN 
-                    (SELECT attr.id_attr, attr.name, cl.key
+                    (SELECT attr.id_attr, attr.name, attr.key, cl.key as type
                     FROM attr, clss cl
                     WHERE attr.id_clss = cl.id_clss
                     AND attr.source = 'byprice') AS bpa
                 ON (bpa.id_attr = iat.id_attr)
                 WHERE iat.item_uuid 
                 IN (SELECT item_uuid FROM product WHERE product_uuid = '{}' LIMIT 1)
-                AND bpa.key = 'ingredient'
+                AND (bpa.type = 'ingredient' OR bpa.type = 'brand')
             """.format(_uuid)
         logger.debug(_qry)
+        # Vars
+        n_attrs = {'ingredients': [], 'brand': {}}
         # Request elements
         try:
-            n_ingreds = g._db.query(_qry).fetch()
-            if len(n_ingreds) > 0:
-                return [ni['name'] for ni in n_ingreds]
-            return []
+            df_nattrs = pd.read_sql(_qry, g._db.conn)
+            print('DF SQL')
+            print(df_nattrs)
+            if df_nattrs.empty:
+                return n_attrs
+            if not df_nattrs[df_nattrs['type'] == 'ingredient'].empty:
+                n_attrs['ingredients'] = df_nattrs[df_nattrs['type'] == 'ingredient']['name'].tolist()
+            if not df_nattrs[df_nattrs['type'] == 'brand'].empty:
+                print('To Dict Records', df_nattrs[df_nattrs['type'] == 'brand'].to_dict(orient='records'))
+                n_attrs['brand'] = df_nattrs[df_nattrs['type'] == 'brand']\
+                                        [['name','key']].to_dict(orient='records')[0]
+            logger.debug(n_attrs)
+            return n_attrs
         except Exception as e:
             logger.error(e)
-            return []
+            return n_attrs
 
     @staticmethod
     def get_vademecum_info(_uuid):
