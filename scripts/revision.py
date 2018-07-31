@@ -48,6 +48,8 @@ past_product = pd.merge(g_retailer, i_retailer,
     on=['item_uuid', 'retailer'], how='outer')
 print('Past Products: ', len(past_product))
 
+# -------------------
+# Missing ByPrice items
 if len(sys.argv) > 1 and sys.argv[1] == 'missing_items':
     # Compute those Items that are in Past products but not in New Products
     _item_ret_set = set(past_product.groupby(['item_uuid', 'retailer']).indices.keys() \

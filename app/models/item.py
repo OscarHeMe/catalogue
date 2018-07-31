@@ -583,6 +583,8 @@ class Item(object):
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
         df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
+        if df_rets.empty:
+            return {}
         return {
             'name': sorted(df_rets['name'].tolist(),
                 key=lambda x: len(x) if x else 0,
