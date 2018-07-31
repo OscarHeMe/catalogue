@@ -13,6 +13,10 @@ SQL_IDENTITY_PORT = os.getenv("SQL_IDENTITY_PORT", 5432)
 SQL_ITEMS_PORT = os.getenv("SQL_ITEMS_PORT", 5432)
 M_SQL_USER = os.getenv("M_SQL_USER", "byprice")
 M_SQL_PASSWORD = os.getenv("M_SQL_PASSWORD", "")
+# DB names
+ITEMS_DB = 'items_dev'
+IDENTITY_DB = 'identity_dev'
+CATALOGUE_DB = 'catalogue_dev'
 
 
 def load_db(host, user, psswd, db, table, cols, port=5432):
@@ -26,21 +30,21 @@ def load_db(host, user, psswd, db, table, cols, port=5432):
 
 # Load Tables from  Identity DB
 gtin = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
-    'identity', 'gtin', '*', SQL_IDENTITY_PORT)
+    IDENTITY_DB, 'gtin', '*', SQL_IDENTITY_PORT)
 g_retailer = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
-    'identity', 'gtin_retailer', 'item_uuid,item_id,retailer', SQL_IDENTITY_PORT)
+    IDENTITY_DB, 'gtin_retailer', 'item_uuid,item_id,retailer', SQL_IDENTITY_PORT)
 print('Gtin Retailers:', len(g_retailer))
 
 # Load Tables from  Items DB
 i_retailer = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
-    'items', 'item_retailer', '*', SQL_ITEMS_PORT)
+    ITEMS_DB, 'item_retailer', '*', SQL_ITEMS_PORT)
 print('Item Retailers:', len(i_retailer))
 
 # Load Tables from  Catalogue DB
 item = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-    'catalogue', 'item', 'item_uuid,name,gtin')
+    CATALOGUE_DB, 'item', 'item_uuid,name,gtin')
 product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-    'catalogue', 'product', 'product_uuid,item_uuid,product_id,name,source,gtin')
+    CATALOGUE_DB, 'product', 'product_uuid,item_uuid,product_id,name,source,gtin')
 print('Current Products:', len(product))
 
 # JOIN past tables (gtin_retailer + item_retailer = product)
@@ -204,9 +208,9 @@ if len(sys.argv) > 1 and sys.argv[1] == 'products_not_in_migration':
 if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
     # Load Product ingredients
     i_ingredient = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
-        'items', 'item_ingredient', '*')
+        ITEMS_DB, 'item_ingredient', '*')
     ingredient = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
-        'items', 'ingredient', '*')
+        ITEMS_DB, 'ingredient', '*')
     print('Item ingredient:', len(i_ingredient))
     print('Ingredient:', len(ingredient[ingredient.retailer == 'byprice']))
     complete_ingred = pd.merge(i_ingredient, ingredient[ingredient.retailer == 'byprice'],
@@ -214,10 +218,10 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
     print('Filled ingredients:', len(complete_ingred))
 
     # Verify Clss and Attr in BYprice
-    _clss = product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-        'catalogue', 'clss', '*')
-    _attr = product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-        'catalogue', 'attr', '*')
+    _clss  = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
+        CATALOGUE_DB, 'clss', '*')
+    _attr = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
+        CATALOGUE_DB, 'attr', '*')
     # If no Ingredient clss existant
     if 'ingredient' not in _clss[_clss.source == 'byprice']['key'].tolist():
         _db = Pygres({
@@ -239,7 +243,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
     ##
     # Catalogue Ingredients
     catalogue_ingreds = []
-    bp_attrs_list = _attr[_attr.source == 'byprice']['key'].tolist()
+    bp_attrs_list = _attr[(_attr.source == 'byprice')]['key'].tolist()
     _db = Pygres({
             'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
             'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
@@ -295,3 +299,70 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
         print('Finished Loading Revision Item Attribute Ingredients to Catalogue')
     else:
         print('Item Attribute Ingredients Already to Catalogue')
+
+
+# -------------------
+# Missing ByPrice Brands
+if len(sys.argv) > 1 and sys.argv[1] == 'missing_brands':
+    # Load Product brand
+    i_brand = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
+        ITEMS_DB, "item_brand WHERE brand_uuid IN (SELECT brand_uuid FROM brand WHERE retailer = 'byprice')", '*')
+    del i_brand['retailer']
+    brand = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
+        ITEMS_DB, "brand WHERE retailer = 'byprice'", '*')
+    print('Item brand:', len(i_brand))
+    print('Brand:', len(brand))
+    complete_brand = pd.merge(i_brand, brand,
+        on='brand_uuid', how='left')
+    print('Filled brand:', len(complete_brand.key.dropna()))
+    # Verify Attr in Byprice that are brands
+    _attr = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
+        CATALOGUE_DB, "attr WHERE id_clss IN (SELECT id_clss FROM clss WHERE source = 'byprice' AND key = 'brand')", '*')
+    # Brand Attributes
+    brand_attrs = pd.merge(_attr, brand, on='key', how='left').drop_duplicates('key')
+    print('Brand Attributes', len(brand_attrs))
+    print('Brands in Items and not in Catalogue', len(set(complete_brand.brand_uuid.tolist()) - set(brand_attrs.brand_uuid.tolist())))
+    print('Item brands available from brands in Catalogue', len(complete_brand[
+                complete_brand.brand_uuid.isin(brand_attrs.brand_uuid.tolist()) ]))
+    print('Item brands available from brands not in Catalogue', len(complete_brand[~complete_brand.brand_uuid.isin(brand_attrs.brand_uuid.tolist())] ) )
+    # Generate Catalogue Item Attribute for ingredients
+    complete_brand['brand_uuid'] = complete_brand['brand_uuid'].astype(str)
+    brand_attrs['brand_uuid'] = brand_attrs['brand_uuid'].astype(str)
+    complete_brand_item = pd.merge(
+            complete_brand[['item_uuid', 'brand_uuid']],
+            brand_attrs,
+            on='brand_uuid',
+            how='inner')\
+        .drop(['key'], axis=1)\
+        .set_index(['item_uuid'])
+    print('Item brands for Catalogue', len(complete_brand_item))    
+    # Delete unnecessary columns
+    del complete_brand_item['brand_uuid'], complete_brand_item['name_x']
+    del complete_brand_item['id_clss'], complete_brand_item['meta']
+    del complete_brand_item['name_y'], complete_brand_item['retailer']
+    del complete_brand_item['logo'], complete_brand_item['has_value']
+    del complete_brand_item['source'], complete_brand_item['match']
+    # Add necessary columns
+    complete_brand_item['value'] = None
+    complete_brand_item['precision'] = None
+    complete_brand_item['last_modified'] = str(datetime.datetime.utcnow())
+
+    # Load into DB
+    _conn =  create_engine("postgresql://{}:{}@{}:{}/{}"
+                                .format(SQL_USER, SQL_PASSWORD,
+                                        SQL_HOST, SQL_PORT,
+                                        SQL_DB))
+    if not list(_conn.execute("""SELECT EXISTS (
+                SELECT 1 FROM item_attr iat
+                INNER JOIN attr a ON (a.id_attr = iat.id_attr)
+                INNER JOIN clss c ON (c.id_clss = a.id_clss)
+                WHERE a.source = 'byprice'
+                AND c.key = 'brand' LIMIT 1
+                )"""))[0]['exists']:
+        print('Loading Byprice Item Attributes (brands)')
+        complete_brand_item\
+            .to_sql('item_attr', _conn,
+                if_exists='append', chunksize=2000)
+        print('Finished Loading Revision Item Attribute Brands to Catalogue')
+    else:
+        print('Item Attribute Brands Already to Catalogue')
