@@ -19,7 +19,14 @@ CORS(app)
 # Logger
 applogger.create_logger()
 logger = applogger.get_logger()
-   
+
+
+@app.cli.command('new_retailer')
+def new_retailer_cmd():
+    get_db()
+    from scripts.add_new_retailer import populate_retailer
+    populate_retailer()
+
 @app.cli.command('consumer')
 def consumer_cmd():
     with app.app_context():
