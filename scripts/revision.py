@@ -5,6 +5,7 @@ import pandas as pd
 from pygres import Pygres
 from sqlalchemy import create_engine
 from config import *
+from tqdm import tqdm
 
 # DB Credentials
 SQL_IDENTITY = os.getenv("SQL_IDENTITY", "identity.byprice.db") #"192.168.99.100")
@@ -44,7 +45,7 @@ print('Item Retailers:', len(i_retailer))
 item = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
     CATALOGUE_DB, 'item', 'item_uuid,name,gtin')
 product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-    CATALOGUE_DB, 'product', 'product_uuid,item_uuid,product_id,name,source,gtin')
+    CATALOGUE_DB, 'product', 'product_uuid,item_uuid,product_id,name,source,gtin,last_modified')
 print('Current Products:', len(product))
 
 # JOIN past tables (gtin_retailer + item_retailer = product)
@@ -300,7 +301,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_ingreds':
     else:
         print('Item Attribute Ingredients Already to Catalogue')
 
-
 # -------------------
 # Missing ByPrice Brands
 if len(sys.argv) > 1 and sys.argv[1] == 'missing_brands':
@@ -366,3 +366,80 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_brands':
         print('Finished Loading Revision Item Attribute Brands to Catalogue')
     else:
         print('Item Attribute Brands Already to Catalogue')
+
+# -------------------
+# Wrong Sanborns IDs
+if len(sys.argv) > 1 and sys.argv[1] == 'wrong_sanborns':
+    print('Product')
+    prods = product[product.source == 'sanborns']\
+        [['item_uuid', 'product_uuid', 'name', 'product_id', 'gtin', 'source', 'last_modified']]\
+        .copy()
+    # Verify number of products
+    print('Prods', len(prods))
+    print('Prods with UUID', prods[~prods.item_uuid.isnull()].product_uuid.value_counts().count())
+    # Aux elements
+    to_update = []  # Store product_uuid to update and replacement_product_id
+    to_delete = [] # Store product_uuid to delete
+    not_found = [] # Store not found product_ids, gtins
+    # Group by gtin
+    for p, df in tqdm(prods.groupby('gtin')):
+        if len(df) > 1:
+            try:
+                _matched = df[~df.item_uuid.isnull()].to_dict(orient='records')[0]
+                not_matched = df[df.item_uuid.isnull()].to_dict(orient='records')[0]
+            except Exception as e:
+                try:
+                    if df.item_uuid.value_counts().count() == 1:
+                        _matched = df.sort_values(by='last_modified', ascending=False).to_dict(orient='records')[0]
+                        not_matched = df.sort_values(by='last_modified', ascending=False).to_dict(orient='records')[-1]
+                    else:
+                        raise Exception(e)
+                except Exception as e:
+                    print(e)
+                    print(df)
+                    import sys 
+                    sys.exit()
+            # Store Product UUID matched, and the product_id from the other
+            to_update.append({'product_uuid': _matched['product_uuid'], 'product_id': not_matched['product_id']})
+            # Store Product UUID with no matched elements
+            to_delete.append({'product_uuid': not_matched['product_uuid'], 'new_product_uuid': _matched['product_uuid']})
+        else:
+            _tmp = df.to_dict(orient='records')[0]
+            not_found.append({'product_id': _tmp['product_id'],
+                'product_uuid': _tmp['product_uuid'],
+                'item_uuid': _tmp['item_uuid'],
+                'gtin': _tmp['gtin']})
+    # Update all values
+    _db = Pygres({
+            'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
+            'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
+        })
+    updated_ids = []
+    for k in tqdm(to_update, desc='Updated elements'):
+        try:
+            _m = _db.model('product', 'product_uuid')
+            _m.product_uuid = k['product_uuid']
+            _m.product_id = k['product_id']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+    print('Updated {} products'.format(len(updated_ids)))
+    # Update product attributes and product categories
+    for j in tqdm(to_delete, desc='Updating Categs and Attrs'):
+        try:
+            _db.query("UPDATE product_attr SET product_uuid = '{}' WHERE product_uuid = '{}' "\
+                    .format(j['new_product_uuid'], j['product_uuid']))
+            _db.query("UPDATE product_category SET product_uuid = '{}' WHERE product_uuid = '{}' "\
+                    .format(j['new_product_uuid'], j['product_uuid']))
+        except Exception as e:
+            print(e)
+    for k in tqdm(to_delete, desc='Deleted elements'):
+        try:
+            _db.query("DELETE FROM product where product_uuid = '{}'".format(k['product_uuid']))
+        except Exception as e:
+            print(e)
+    _db.close()
+    print('Finished updating Sanborns IDs!')
+    
+    
