@@ -432,6 +432,8 @@ if len(sys.argv) > 1 and sys.argv[1] == 'wrong_sanborns':
                     .format(j['new_product_uuid'], j['product_uuid']))
             _db.query("UPDATE product_category SET product_uuid = '{}' WHERE product_uuid = '{}' "\
                     .format(j['new_product_uuid'], j['product_uuid']))
+            _db.query("UPDATE product_image SET product_uuid = '{}' WHERE product_uuid = '{}' "\
+                    .format(j['new_product_uuid'], j['product_uuid']))
         except Exception as e:
             print(e)
     for k in tqdm(to_delete, desc='Deleted elements'):
