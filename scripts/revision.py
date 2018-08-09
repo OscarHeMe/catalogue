@@ -30,16 +30,18 @@ def load_db(host, user, psswd, db, table, cols, port=5432):
     return df
 
 # Load Tables from  Identity DB
-gtin = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
-    IDENTITY_DB, 'gtin', '*', SQL_IDENTITY_PORT)
-g_retailer = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
-    IDENTITY_DB, 'gtin_retailer', 'item_uuid,item_id,retailer', SQL_IDENTITY_PORT)
-print('Gtin Retailers:', len(g_retailer))
+if sys.argv[1] != 'empty_names':
+    gtin = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
+        IDENTITY_DB, 'gtin', '*', SQL_IDENTITY_PORT)
+    g_retailer = load_db(SQL_IDENTITY, M_SQL_USER, M_SQL_PASSWORD,
+        IDENTITY_DB, 'gtin_retailer', 'item_uuid,item_id,retailer', SQL_IDENTITY_PORT)
+    print('Gtin Retailers:', len(g_retailer))
 
 # Load Tables from  Items DB
-i_retailer = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
-    ITEMS_DB, 'item_retailer', '*', SQL_ITEMS_PORT)
-print('Item Retailers:', len(i_retailer))
+if sys.argv[1] != 'empty_names':
+    i_retailer = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
+        ITEMS_DB, 'item_retailer', '*', SQL_ITEMS_PORT)
+    print('Item Retailers:', len(i_retailer))
 
 # Load Tables from  Catalogue DB
 item = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
@@ -49,9 +51,10 @@ product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
 print('Current Products:', len(product))
 
 # JOIN past tables (gtin_retailer + item_retailer = product)
-past_product = pd.merge(g_retailer, i_retailer,
-    on=['item_uuid', 'retailer'], how='outer')
-print('Past Products: ', len(past_product))
+if sys.argv[1] != 'empty_names':
+    past_product = pd.merge(g_retailer, i_retailer,
+        on=['item_uuid', 'retailer'], how='outer')
+    print('Past Products: ', len(past_product))
 
 # -------------------
 # Missing ByPrice items
@@ -445,3 +448,41 @@ if len(sys.argv) > 1 and sys.argv[1] == 'wrong_sanborns':
     print('Finished updating Sanborns IDs!')
     
     
+# -------------------
+# Products with Empty Names
+if len(sys.argv) > 1 and sys.argv[1] == 'empty_names': 
+    _empty_names = product[(product.name == '') | (product.name.isnull())].copy()
+    print('Number of Empty Names:', len(_empty_names))
+    # Fetch all item_uuids from elements without name
+    _empty_uuids = _empty_names.item_uuid.drop_duplicates().tolist()
+    # Get products with complementary names
+    complemt_names = product[product.item_uuid.isin(_empty_uuids) \
+                        & ~((product.name == '') | (product.name.isnull()))].copy()
+    print('Number of Complementary names:', len(complemt_names))
+    # Get Name lenght of complementary
+    complemt_names['len'] = complemt_names['name'].apply(lambda x: len(x))
+    _fixed_names = []
+    # Iter to obtain complementary names
+    for j, g in tqdm(_empty_names.iterrows(), desc="Empty Names"):
+        _tn = complemt_names[complemt_names['item_uuid']== g.item_uuid].sort_values(by='len')
+        if _tn.empty:
+            continue
+        sel_name = _tn['name'].tolist()[int(len(_tn)/2)]
+        _fixed_names.append({'puid': g.product_uuid, 'nm': sel_name})
+    # Iter over fixed names to update DB
+    _db = Pygres({
+            'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
+            'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
+        })
+    updated_ids = []
+    for k in tqdm(_fixed_names, desc='Updated elements'):
+        try:
+            _m = _db.model('product', 'product_uuid')
+            _m.product_uuid = k['puid']
+            _m.name = k['nm']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+    print('Updated {} products'.format(len(updated_ids)))
+    print('Finished Updating Empty names in DB!')
