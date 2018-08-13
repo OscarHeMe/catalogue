@@ -242,6 +242,9 @@ class Item(object):
         """
         items = params.get("items")
         type_ = params.get("type")
+        if not items:
+            logger.error("No items defined in params")
+            return False
         if type_ == "item_uuid":
             try:
                 qry_item_uuids = """
@@ -252,17 +255,26 @@ class Item(object):
                 df = pd.read_sql(qry_item_uuids, g._db.conn)
                 qry_product_uuids = """
                     SELECT p.product_uuid, p.item_uuid, p.name name2, p.source, c.name class_name, 
-                    c.key class_key,a.key attr_key,  a.name attr_name, pa.value
-                        FROM product p
-                        LEFT JOIN product_attr pa
-                            ON p.product_uuid = pa.product_uuid
-                        LEFT  JOIN attr a
-                            ON a.id_attr = pa.id_attr
-                        LEFT JOIN clss c
-                            ON a.id_clss = c.id_clss
-                    WHERE item_uuid IN {}
+                        c.key class_key,a.key attr_key,  a.name attr_name, pa.value
+                            FROM product p
+                            LEFT JOIN item_attr pa
+                                ON p.item_uuid = pa.item_uuid
+                            LEFT  JOIN attr a
+                                ON a.id_attr = pa.id_attr
+                            LEFT JOIN clss c
+                                ON a.id_clss = c.id_clss
+                        where c.name is not NULL
+                        and pa.item_uuid IN {}
                     """.format(tuplify(items))
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
+                qry_categories="""
+                    SELECT p.item_uuid, c.name as name_category, c.source
+                        FROM product p
+                        LEFT JOIN product_category pc on pc.product_uuid = p.product_uuid
+                        INNER JOIN category c on c.id_category = pc.id_category
+                        and p.item_uuid IN {}
+                """.format(tuplify(items))
+                df_categories=pd.read_sql(qry_categories, g._db.conn)
             except Exception as e:
                 logger.error("Postgres Catalogue Connection error")
                 logger.error(e)
@@ -281,17 +293,11 @@ class Item(object):
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
                         'attr_key').attr_name)
                     # All Categories Raw
-                    row['categories_raw'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
-                        'attr_key').attr_name)
+                    row['categories_raw'] = list(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
+                        (~df_categories.source.isin(["byprice", "byprice_farma"]))].name_category)
                     # All Categories
-                    row['categories'] = Item.fetch_categs(
-                        df2[
-                            df2.item_uuid.isin(
-                                [row.item_uuid]
-                            )
-                        ].product_uuid.astype(str).drop_duplicates().tolist()
-                    )
+                    row['categories'] = list(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
+                        (df_categories.source.isin(["byprice"]))].name_category)
                     row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
@@ -321,6 +327,14 @@ class Item(object):
                     WHERE p.product_uuid IN {}
                     """.format(tuplify(items))
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
+                qry_categories="""
+                    SELECT p.product_uuid, c.name as name_category, c.source
+                        FROM product p
+                        LEFT JOIN product_category pc on pc.product_uuid = p.product_uuid
+                        INNER JOIN category c on c.id_category = pc.id_category
+                        and p.product_uuid IN {}
+                """.format(tuplify(items))
+                df_categories=pd.read_sql(qry_categories, g._db.conn)
             except Exception as e:
                 logger.error("Postgres Catalogue Connection error")
                 logger.error(e)
@@ -333,23 +347,18 @@ class Item(object):
                     row['names'] = [row.best_name]
                     row['retailers'] = [row.source]
                     row['product_uuids'] = [row.product_uuid]
-                    row['attributes'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
-                                                 ['class_name', 'class_key', 'attr_key', 'attr_name',
-                                                  'value']].T.to_dict().values())
+                    #row['attributes'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
+                    #                             ['class_name', 'class_key', 'attr_key', 'attr_name',
+                    #                              'value']].T.to_dict().values())
+                    row['attributes'] = []
                     row['brands'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
                         'attr_key').attr_name)
                     # Raw Categories
-                    row['categories_raw'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('category')].drop_duplicates(
-                        'attr_key').attr_name)
+                    row['categories_raw'] = list(df_categories[df_categories.product_uuid.isin([row.product_uuid]) &
+                        (~df_categories.source.isin(["byprice", "byprice_farma"]))].name_category)
                     # Categories ByPrice
-                    row['categories'] = Item.fetch_categs(
-                        df2[
-                            df2.product_uuid.isin(
-                                [row.product_uuid]
-                            )].product_uuid.astype(str).drop_duplicates().tolist()
-                    )
+                    row['categories'] = []
                     row['ingredients'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
@@ -368,45 +377,97 @@ class Item(object):
         return items
 
     @staticmethod
-    def get_catalogue_uuids(type_):
+    def get_catalogue_uuids(type_, offset_='0', limit_='ALL', last=False):
         """ Static Method to get the item_uuids and product_uuids from database
         """
         if type_ is None:
             try:
-                catalogue = g._db.query("""
+                catalogue = pd.read_sql("""
                     SELECT item_uuid as uuid, 'item_uuid' as type  
                         FROM item 
-                    UNION 
+                    UNION ALL
                     SELECT product_uuid as uuid, 'product_uuid' as type 
                         FROM product 
                         WHERE item_uuid IS NULL
-                    """).fetch()
-            except:
-                logger.error("Postgres Catalogue Connection error")
+                    OFFSET {offset_}
+                    LIMIT {limit_}
+                    """.format(offset_=offset_, limit_=limit_), g._db.conn).to_dict(orient='records')
+            except Exception as e:
+                logger.error("Error while getting items: {}".format(e))
                 return False
         elif type_=='product_uuid':
             try:
-                catalogue = g._db.query("""
+                catalogue = pd.read_sql("""
                     SELECT product_uuid
                         FROM product 
                         WHERE item_uuid IS NULL
-                    """).fetch()
+                    OFFSET {offset_}
+                    LIMIT {limit_}
+                    """.format(offset_=offset_, limit_=limit_), g._db.conn).to_dict(orient='records')
             except:
                 logger.error("Postgres Catalogue Connection error")
                 return False
         elif type_=='item_uuid':
             try:
-                catalogue = g._db.query("""
+                catalogue = pd.read_sql("""
                     SELECT item_uuid  
-                    FROM item 
-                    """).fetch()
+                    FROM item
+                    OFFSET {offset_}
+                    LIMIT {limit_}
+                    """.format(offset_=offset_, limit_=limit_), g._db.conn).to_dict(orient='records')
             except:
                 logger.error("Postgres Catalogue Connection error")
                 return False
         else:
             logger.error("Wrong type parameter {}".format(str(type_)))
             return False
-        return catalogue
+        return ', '.join([str(dict_)for dict_ in catalogue])
+
+    @staticmethod
+    def get_total_items(type_):
+        """ Static Method to get the item_uuids and product_uuids from database
+        """
+        if type_ is None:
+            try:
+                count_1 = pd.read_sql("""
+                    SELECT count(item_uuid) as count_
+                        FROM item 
+                    """, g._db.conn)
+                count_2 = pd.read_sql("""
+                    SELECT count(product_uuid) as count_
+                        FROM product 
+                        WHERE item_uuid IS NULL
+                    """, g._db.conn)
+                count_ = int(list(count_1.count_)[0]) + int(list(count_2.count_)[0])
+
+            except:
+                logger.error("Postgres Catalogue Connection error")
+                return False
+        elif type_=='item_uuid':
+            try:
+                count_ = pd.read_sql("""
+                    SELECT count(item_uuid) as count_
+                        FROM item 
+                    """, g._db.conn)
+                count_ = int(list(count_.count_)[0])
+            except:
+                logger.error("Postgres Catalogue Connection error")
+                return False
+        elif type_=='product_uuid':
+            try:
+                count_ = pd.read_sql("""
+                    SELECT count(product_uuid) as count_
+                        FROM product 
+                        WHERE item_uuid IS NULL
+                    """, g._db.conn)
+                count_ = int(list(count_.count_)[0])
+            except:
+                logger.error("Postgres Catalogue Connection error")
+                return False
+        else:
+            logger.error("Wrong type parameter {}".format(str(type_)))
+            return False
+        return count_
 
     @staticmethod
     def fetch_attrs(puuids):

@@ -2,6 +2,8 @@
 from flask import Blueprint, jsonify, request
 from app.models.item import Item
 from app import errors, logger
+from flask import Response, stream_with_context
+import json
 from flask_cors import CORS, cross_origin
 
 mod = Blueprint('item', __name__, url_prefix="/item")
@@ -194,25 +196,29 @@ def elastic_items():
         "items": _items
     })
 
-@mod.route('/catalogue_uuids', methods=['GET'])
-def catalogue_uuids():
-    """ Endpoint to get items needed for elasticsearch index
-    @Response:
-        - resp: items list
-    """
-    logger.info("Items catalogue")
+@mod.route('/catalogue_stream', methods=['GET'])
+def generate_catalogue_stream():
+    logger.info("Getting catalogue stream")
     params = request.args
     type_ = params.get("type", None)
     if type_ is not None and not (type_=='product_uuid' or type_=='item_uuid'):
         raise errors.ApiError(70001, "Type parameter is wrong: {}".format(type_))
+    chunk_size = params.get("chunk_size", None)
+    if chunk_size and chunk_size.isdigit():
+        chunk_size = int(chunk_size)
+    else:
+        chunk_size = 1000
+    total_items = Item.get_total_items(type_)
+    def generate():
+        yield '{"items": ['
+        for offset_ in range(0, total_items, chunk_size):
+            if (offset_ + chunk_size) >= total_items:
+                yield json.dumps(Item.get_catalogue_uuids(type_, offset_=offset_, limit_=chunk_size))
+            else:
+                yield json.dumps(Item.get_catalogue_uuids(type_, offset_=offset_, limit_=chunk_size)) + ', '
+        yield '], "message": "finished"}'
 
-    # Validation
-    _resp = Item.get_catalogue_uuids(type_)
-    return jsonify({
-        "status": "OK",
-        "message": "Those are the item and product uuids stored in our DB!",
-        "items": _resp
-    })
+    return Response(stream_with_context(generate()), content_type='application/json')
 
 
 @mod.route('/additional', methods=['GET'])
