@@ -178,6 +178,7 @@ class Product(object):
                     'clss_desc': 'Categoría'
                 })
         self.save_attributes(update)
+        
 
     def save_attributes(self, update=False):
         """ Class method to save product attributes
