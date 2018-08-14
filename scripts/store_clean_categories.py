@@ -21,7 +21,7 @@ def get_category_raw(*args):
     else:
         categories = False
     if not categories:
-        categories = get_categories_related(name, min_bad_score=85, is__name=True)
+        categories = get_categories_related(name, min_bad_score=85, is_name=True)
     return {"categories": categories, "uuid": uuid}
 
 
