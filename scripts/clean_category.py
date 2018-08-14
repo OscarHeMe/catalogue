@@ -499,7 +499,7 @@ def create_categories_in_db():
         }
     )
     bp_farma = pd.read_sql("select * from category where source='byprice_farma'", db.conn)
-    bp_all = pd.read_sql("select id_parent, id_category, name as name_category, source, key from category where source='byprice'", db.conn)
+    bp_all = pd.read_sql("select id_category from category where source='byprice'", db.conn)
 
     if bp_farma.empty or bp_all.empty:
         category = db.model('category', 'id_category')
@@ -507,10 +507,7 @@ def create_categories_in_db():
         if bp_farma.empty and len(bp_all) < 20:
             for index, row in bp_all.iterrows():
                 category.id_category = row.id_category
-                category.id_parent = row.id_parent
-                category.name = row.name_category
                 category.source = 'byprice_farma'
-                category.key = row.key
                 category.save()
 
         for name, attrs in categories_json.items():
