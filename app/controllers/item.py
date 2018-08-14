@@ -232,3 +232,34 @@ def vademecum_info():
     # Call values
     _resp = Item.get_vademecum_info(params['uuid'])
     return jsonify(_resp)
+
+
+@mod.route('/sitemap', methods=['GET'])
+def sitemap():
+    '''
+    Getting items from scroll_df to create the sitemap
+
+    '''
+    # query text
+    size_ = request.args.get('size', '100')
+    from_ = request.args.get('from', '0')
+    farma = request.args.get('farma', False)
+    if not size_.isdigit():
+        size_ = '100'
+
+    if not from_.isdigit():
+        from_ = '0'
+
+    df = Item.get_sitemap_items(size_, from_, farma)
+    items = df.to_dict(orient="records")
+    if df.empty:
+        logger.error("Df was empty!")
+        return jsonify({'code': 'not found'}), 404
+
+    response = {
+        "items": items,
+        "size": size_,
+        "from": from_
+    }
+    # print response...
+    return jsonify(response)
