@@ -500,13 +500,27 @@ def create_categories_in_db():
     )
     bp_farma = pd.read_sql("select * from category where source='byprice_farma'", db.conn)
     bp_all = pd.read_sql("select id_category from category where source='byprice'", db.conn)
+    bp_source = pd.read_sql("select * from source where key='byprice_farma'", db.conn)
 
-    if bp_farma.empty or bp_all.empty:
+
+
+    if bp_source.empty or bp_farma.empty or bp_all.empty:
         category = db.model('category', 'id_category')
+
+        if bp_source.empty:
+            source = db.model('source', 'key')
+            source.key = 'byprice_farma'
+            source.name = 'ByPrice Farma'
+            source.logo = 'byprice.png'
+            source.type = 'retailer'
+            source.retailer = 1
+            source.hierarchy = 2
+            source.save()
+
 
         if bp_farma.empty and len(bp_all) < 20:
             for index, row in bp_all.iterrows():
-                category.id_category = row.id_category
+                category.id_category = int(row.id_category)
                 category.source = 'byprice_farma'
                 category.save()
 
