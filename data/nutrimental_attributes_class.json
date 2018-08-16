@@ -1,0 +1,366 @@
+[
+{
+    "name": "Active",
+    "name_es": "Activo",
+    "key": "active",
+    "match": ["active", "activo", "ingrediente_activo", "sales"],
+    "description": "Ingrediente Activo"
+},
+{
+    "name": "Presentation",
+    "name_es": "Presentación",
+    "key": "presentation",
+    "match": ["presentation", "presentacion"],
+    "description": "Presentación"
+},
+{
+    "name": "Measure Units",
+    "name_es": "Unidades de Medida",
+    "key": "measure_units",
+    "match": ["measure_units", "measure", "measurement"],
+    "description": "Unidades de Medida"
+},
+{
+    "name": "Rate",
+    "name_es": "Tasa",
+    "key": "rate",
+    "match": ["rate", "ratio", "tasa"],
+    "description": "Tasa"
+},
+{
+    "name": "Niacin",
+    "name_es": "Niacina",
+    "key": "niacin",
+    "match": ["nia", "niacin", "niacina"],
+    "description": "Niacina"
+},
+{
+    "name": "Niacin",
+    "name_es": "Niacina",
+    "key": "niacin",
+    "match": ["nia", "niacin", "niacina"],
+    "description": "Niacina"
+},
+{
+    "name": "Docosahexaenoic Acid",
+    "name_es": "Ácido Docosahexaenoico",
+    "key": "dha",
+    "match": ["docosahexaenoic", "docosahexaenoico", "dha"],
+    "description": "Ácido Docosahexaenoico"
+},
+{
+    "name": "Riboflavin",
+    "name_es": "Riboflavina",
+    "key": "riboflavin",
+    "match": ["riboflavin", "riboflavina", "ribf"],
+    "description": "Riboflavina"
+},
+{
+    "name": "Potassium",
+    "name_es": "Potasio",
+    "key": "k",
+    "match": ["potassium", "potasio", "k"],
+    "description": "Potasio"
+},
+{
+    "name": "Vitamin E",
+    "name_es": "Vitamina E",
+    "key": "vite",
+    "match": ["vite", "vite-"],
+    "description": "Vitamina E"
+},
+{
+    "name": "Iodized Salt",
+    "name_es": "Yodo",
+    "key": "iodine",
+    "match": ["iodized_salt", "yodo"],
+    "description": "Sal Iodada"
+},
+{
+    "name": "Sodium",
+    "name_es": "Sodio",
+    "key": "sodium",
+    "match": ["sodio", "sodium", "na"],
+    "description": "Sodio"
+},
+{
+    "name": "Carnitine",
+    "name_es": "Carnitina",
+    "key": "carnitine",
+    "match": ["carnitine", "l_carnitine", "carnitina"],
+    "description": "Carnitina"
+},
+{
+    "name": "Thiamin",
+    "name_es": "Tiamina",
+    "key": "tiamin",
+    "match": ["thia", "thiamin", "thiamine","tiamina", "vitb1", "vitb1-", "vitamina_b1", "vitamine_b1"],
+    "description": "Tiamina"
+},
+{
+    "name": "Fat",
+    "name_es": "Grasas",
+    "key": "fat",
+    "match": ["fat", "grasa", "grasas", "acidos_grasos"],
+    "description": "Grasas"
+},
+{
+    "name": "Saccharose",
+    "name_es": "Sacarosa",
+    "key": "saccharose",
+    "match": ["saccharose", "sacarosa"],
+    "description": "Sacarosa"
+},
+{
+    "name": "Vitamin C",
+    "name_es": "Vitamina C",
+    "key": "vitc",
+    "match": ["vitc", "vitc-", "vitamina_c", "vitamin_c"],
+    "description": "Vitamina C"
+},
+{
+    "name": "Energy",
+    "name_es": "Energía",
+    "key": "energy",
+    "match": ["ener-", "energy", "energia", "energia_kcal"],
+    "description": "Energía" 
+},
+{
+    "name": "Erythritol",
+    "name_es": "Eritritol",
+    "key": "eritritol",
+    "match": ["eritritol", "erythritol"],
+    "description": "Erythritol"
+},
+{
+    "name": "Carbohydrate",
+    "name_es": "Carbohidratos",
+    "key": "carbohydrate",
+    "match": ["carbohydrate", "carbohidrato", "choavl"],
+    "description": "Carbohidratos"
+},
+{
+    "name": "Lactose",
+    "name_es": "Lactosa",
+    "key": "lactose",
+    "match": ["lactose", "lactosa", "choavl"],
+    "description": "Lactosa"
+},
+{
+    "name": "Zinc",
+    "name_es": "Zinc",
+    "key": "zinc",
+    "match": ["zinc", "zn"],
+    "description": "Zinc"
+},
+{
+    "name": "Folic Acid",
+    "name_es": "Ácido Fólico",
+    "key": "folic_acid",
+    "match": ["folic_acid", "acido_folico", "acid_folico", "acido_folic", "acid_folic", "foldfe"],
+    "description": "Ácido Fólico"
+},
+{
+    "name": "Vitamin A",
+    "name_es": "Vitamina A",
+    "key": "vita",
+    "match": ["vita", "vita-", "vitamina_a", "vitamin_a"],
+    "description": "Vitamina A"
+},
+{
+    "name": "Vitamin D",
+    "name_es": "Vitamina D",
+    "key": "vitd",
+    "match": ["vitd", "vitd-", "vitamina_d", "vitamin_d"],
+    "description": "Vitamina D"
+},
+{
+    "name": "Polyunsaturated Fat",
+    "name_es": "Grasas Poliinsaturadas",
+    "key": "poly_fat",
+    "match": ["fapucis", "polyunsaturated_fat", "grasas_poliinsaturadas", "grasa_poliinsaturada"],
+    "description": "Grasas Poliinsaturadas"
+},
+{
+    "name": "Monounsaturated Fat",
+    "name_es": "Grasas Monoinsaturadas",
+    "key": "mono_fat",
+    "match": ["famscis", "monounsaturated_fat", "grasas_monoinsaturadas", "grasa_monoinsaturada"],
+    "description": "Grasas Monoinsaturadas"
+},
+{
+    "name": "Cholesterol",
+    "name_es": "Colesterol",
+    "key": "cholesterol",
+    "match": ["cholesterol", "colesterol"],
+    "description": "Colesterol"
+},
+{
+    "name": "Sugar",
+    "name_es": "Azúcares",
+    "key": "sugar",
+    "match": ["sugar", "sugar-", "azucar", "azucares"],
+    "description": "Azúcares"
+},
+{
+    "name": "Calcium",
+    "name_es": "Calcio",
+    "key": "calcium",
+    "match": ["calcium", "ca", "calcio"],
+    "description": "Calcio"
+},
+{
+    "name": "Selenium",
+    "name_es": "Selenio",
+    "key": "selenium",
+    "match": ["selenium", "se", "selenio"],
+    "description": "Selenio"
+},
+{
+    "name": "Pantothenic Acid",
+    "name_es": "Ácido Pantoténico",
+    "key": "pantothenic_acid",
+    "match": ["pantothenic_acid", "pantac", "acido_pantotenico"],
+    "description": "Ácido Pantoténico"
+},
+{
+    "name": "Vitamin B12",
+    "name_es": "Vitamina B12",
+    "key": "vitb12",
+    "match": ["vitb12", "vitamina_b12", "vitamin_b12"],
+    "description": "Vitamina B12"
+},
+{
+    "name": "Vitamin B2",
+    "name_es": "Vitamina B2",
+    "key": "vitb2",
+    "match": ["vitb2", "vitamina_b2", "vitamin_b2"],
+    "description": "Vitamina B2"
+},
+{
+    "name": "Vitamin B6",
+    "name_es":"Vitamina B6",
+    "key": "vitb6",
+    "match": ["vitb6", "vitb6-", "vitamina_b6", "vitamin_b6"],
+    "description": "Vitamina B6"
+},
+{
+    "name": "Vitamin K",
+    "name_es":"Vitamina K",
+    "key": "vitk",
+    "match": ["vitk", "vitk-", "vitamina_k", "vitamin_k"],
+    "description": "Vitamina K"
+},
+{
+    "name": "Fibre",
+    "name_es": "Fibra",
+    "key": "fibre",
+    "match": ["fibtg", "fibre", "fibra"],
+    "description": "Fibra"
+},
+{
+    "name": "Magnesium",
+    "name_es": "Magnesio",
+    "key": "magnesium",
+    "match": ["magnessium", "magnesio", "mg"],
+    "description": "Magnesio"
+},
+{
+    "name": "Net Content",
+    "name_es": "Contenido Neto",
+    "key": "net_content",
+    "match": ["net_content", "netcontent", "contenido_neto"],
+    "description": "Contenido Neto"
+},
+{
+    "name": "Iodide",
+    "name_es": "Yoduro",
+    "key": "iodide",
+    "match": ["id", "iodide", "yoduro"],
+    "description": "Yoduro"
+},
+{
+    "name": "Serving Quantity Information",
+    "name_es": "Tamaño de porción",
+    "key": "serving_quantity",
+    "match": ["serving_quantity", "serving_quantity_information", "tamano_de_porcion"],
+    "description": "Tamaño de porción"
+},
+{
+    "name": "Polyols",
+    "name_es": "Polioles",
+    "key": "polyols",
+    "match": ["polyols", "polioles", "polyl"],
+    "description": "Polioles"
+},
+{
+    "name": "Sodium Chloryde",
+    "name_es": "Cloruro de Sodio",
+    "key": "sodium_chloryde",
+    "match": ["sodium_chloryde", "cloruro_de_sodio", "nacl"],
+    "description": "Cloruro de Sodio"
+},
+{
+    "name": "Saturated Fat",
+    "name_es": "Grasas Saturadas",
+    "key": "sat_fat",
+    "match": ["fasat", "saturated_fat", "grasas_saturadas", "grasa_saturada"],
+    "description": "Grasas Saturadas"
+},
+{
+    "name": "Protein",
+    "name_es": "Proteína",
+    "key": "protein",
+    "match": ["pro-", "protein", "proteina"],
+    "description": "Proteína"
+},
+{
+    "name": "Galactose",
+    "name_es": "Galactosa",
+    "key": "galactose",
+    "match": ["galactose", "galactosa"],
+    "description": "Galactosa"
+},
+{
+    "name": "Bicarbonate",
+    "name_es": "Bicarbonato",
+    "key": "bicarbonate",
+    "match": ["bicarbonate", "bicarbonato", "g_hc"],
+    "description": "Bicarbonato"
+},
+{
+    "name": "Iron",
+    "name_es": "Hierro",
+    "key": "iron",
+    "match": ["hierro", "fe", "iron"],
+    "description": "Hierro"
+},
+{
+    "name": "Biotin",
+    "name_es": "Biotina",
+    "key": "biotin",
+    "match": ["biotin", "biot", "biotina"],
+    "description": "Biotina"
+},
+{
+    "name": "Oleic Acid",
+    "name_es": "Ácido Oleico",
+    "key": "oleic_acid",
+    "match": ["oleic_acid", "omega_9", "acido_oleico", "acid_oleico", "acido_oleic", "oleic_acido"],
+    "description": "Ácido Oleico"
+},
+{
+    "name": "Phosphorus",
+    "name_es": "Fósforo",
+    "key": "phosphorus",
+    "match": ["phosphorus", "p", "fosforo"],
+    "description": "Fósforo"
+},
+{
+    "name": "Copper",
+    "name_es": "Cobre",
+    "key": "copper",
+    "match": ["copper", "cu", "cobre"],
+    "description": "Cobre"
+}
+]
