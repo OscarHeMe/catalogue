@@ -69,8 +69,8 @@ cerveza_vinos_licores = ['cerveza', 'vino', 'whisky', 'licor', 'alcohol', 'tequi
 # Farma
 
 mama_bebe_t = ['bebe', 'mama', 'infantil', 'materna', 'gerber', 'papilla', 'lactancia', 'panal', 'huggies',
-               'pampers', 'biberon', 'dodot', 'baby', 'bebida']
-mama_bebe_b = ['miel', 'abeja', 'cafe', 'refresco', 'detergente'] + entretenimiento + cerveza_vinos_licores
+               'pampers', 'biberon', 'dodot', 'baby']
+mama_bebe_b = ['miel', 'abeja', 'cafe', 'refresco', 'detergente', 'bebida'] + entretenimiento + cerveza_vinos_licores
 
 medicamentos_t = ['antiacuagulante', 'antiestaminico', 'antidepresivo', 'antiviral', 'antigripal', 'antidiarreico',
                   'medicamento', 'analgesico', 'desparasitante', 'alta especialidad', 'generico', 'gripa',
