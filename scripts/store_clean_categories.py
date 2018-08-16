@@ -163,9 +163,13 @@ def store_category_in_db(*args):
                 FROM product_category pc INNER JOIN category c on pc.id_category=c.id_category
                 WHERE product_uuid = '{}' and source='byprice';
         """.format(product_uuid), db.conn)
-        repeted_categories = list(prods_stored[prods_stored.category_name.isin(categories)].category_name)
-        categories = [category for category in categories if category not in repeted_categories]
-        prods = tuple(prods_stored[~prods_stored.category_name.isin(categories)].id_product_category)
+        #print("Matched categories:", categories)
+        repeated_categories = list(prods_stored[prods_stored.category_name.isin(categories)].category_name)
+        #print("Repeated categories:", repeated_categories)
+        categories = [category for category in categories if category not in repeated_categories]
+        #print("Insert categories:", categories)
+        prods = tuple(prods_stored[~prods_stored.category_name.isin(categories+repeated_categories)].id_product_category)
+        #print("Delete categories:", list(prods_stored[~prods_stored.category_name.isin(categories)].category_name))
         if prods:
             prods = str(prods).replace(",)", ")")
             delete_query = """
