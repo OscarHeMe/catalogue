@@ -658,7 +658,9 @@ class Item(object):
             'description': sorted(df_rets['description'].dropna().tolist(),
                 key=lambda x: len(x) if x else 0, reverse=True),
             'gtin': sorted(df_rets['gtin'].dropna().tolist(),
-                key=lambda x: len(x) if x else 0)[0],
+                            key=lambda x: len(x) if x else 0)[0] \
+                    if len(df_rets['gtin'].dropna()) > 0 \
+                    else '',
             'retailers': df_rets['r_name'].tolist(),
             'attributes': attrs,
             'ingredients': ingreds,
