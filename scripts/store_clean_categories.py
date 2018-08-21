@@ -42,14 +42,14 @@ def store_clean_categories(product_uuids=False, is_update=False):
     qry = """
         SELECT p.name as product_name, p.categories as categories_raw, i.item_uuid, p.product_uuid, i.name item_name
         FROM public.product p
-        left outer join public.item i on i.item_uuid=p.item_uuid;
+        left join public.item i on i.item_uuid=p.item_uuid;
     """
     prods = pd.read_sql(qry, conn)
     if product_uuids:
         if isinstance(product_uuids, list):
             prods = prods[prods.product_uuid.isin(product_uuids)]
         else:
-            print("Prodcut uuids arg should be a list of product uuids (strings)")
+            print("Product uuids arg should be a list of product uuids (strings)")
             return False
 
     print_('{} items obtained..'.format(len(prods)))
