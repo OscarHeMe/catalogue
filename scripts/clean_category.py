@@ -84,7 +84,7 @@ naturales_b = [] + entretenimiento
 salud_sexual_t = ['tampon', 'intima', 'sexual', 'condon', 'preservativo', 'embarazo', 'vagina', 'vibrador',
                   'lubricante', 'estimulante', 'anticonceptivo', 'toalla']
 salud_sexual_b = ['bebe', 'bano', 'alberca', 'cuerpo', 'cara', 'aceite', 'papel', 'ojos', 'nariz', 'nasal', 'oftal',
-                  'laxante'] + entretenimiento
+                  'laxante', 'motor', 'antitranspirante', 'gel'] + entretenimiento
 
 equipo_botiquin_t = ['equipo medico', 'oximetro', 'baumanometro', 'termometro', 'botiquin', 'jeringa', 'nebulizador', 'alcohol', 'anticeptico',
                                    'gasa', 'venda', 'vendita', 'bandita', 'algodon', 'hisopo', 'curita',
@@ -132,7 +132,7 @@ alimentos_congelados_regrigerados_b = ['farmacia', 'polvo'] + entretenimiento
 jugos_bebidas_t = ['jugo', 'agua', 'refresco', 'leche', 'yogurt', 'bebida', 'bebible', 'hielo', 'jumex', 'boing',
                    'cocacola', 'pepsi', 'fanta', 'squirt']
 jugos_bebidas_b = ['farmacia', 'polvo', 'oxigenada', 'infantil', 'lactea', 'calentador', 'perfume', 'locion', 'perro',
-                   'gato', 'cachorro'] + entretenimiento + cerveza_vinos_licores
+                   'gato', 'cachorro', 'jabon'] + entretenimiento + cerveza_vinos_licores
 
 despensa_t = ['miel', 'mermelada', 'avena', 'cafe', 'aceite','atun', 'sopa', 'pasta', 'despensa', 'abarrote',
               'alimento', 'lata', 'cereal', 'galleta', 'azucar', 'especia', 'sazonador', 'chile',

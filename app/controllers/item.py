@@ -192,7 +192,7 @@ def elastic_items():
     _items = Item.get_elastic_items(params)
     return jsonify({
         "status": "OK",
-        "message": "Those are the item details :D",
+        "message": "Those are the elastic items :D",
         "items": _items
     })
 

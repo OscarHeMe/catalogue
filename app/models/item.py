@@ -263,8 +263,7 @@ class Item(object):
                                 ON a.id_attr = pa.id_attr
                             LEFT JOIN clss c
                                 ON a.id_clss = c.id_clss
-                        where c.name is not NULL
-                        and pa.item_uuid IN {}
+                        where p.item_uuid IN {}
                     """.format(tuplify(items))
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
                 qry_categories="""
@@ -296,8 +295,8 @@ class Item(object):
                     row['categories_raw'] = list(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
                         (~df_categories.source.isin(["byprice", "byprice_farma"]))].name_category)
                     # All Categories
-                    row['categories'] = list(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
-                        (df_categories.source.isin(["byprice"]))].name_category)
+                    row['categories'] = list(set(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
+                        (df_categories.source.isin(["byprice"]))].name_category))
                     row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
