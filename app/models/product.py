@@ -178,6 +178,7 @@ class Product(object):
                     'clss_desc': 'Categoría'
                 })
         self.save_attributes(update)
+        
 
     def save_attributes(self, update=False):
         """ Class method to save product attributes
@@ -1014,6 +1015,7 @@ class Product(object):
         # Verify file
         try:
             df = pd.read_csv(csvfile)
+            logger.info("Received {} products to upload".format(len(df)))
         except Exception as e:
             logger.error(e)
             logger.warning("Could not read CSV file")
@@ -1031,6 +1033,7 @@ class Product(object):
                                          SQL_HOST,
                                          SQL_PORT,
                                          SQL_DB))
+            logger.info("Storing {} products..".format(len(df)))
             df[['product_uuid', 'normalized']]\
                 .set_index('product_uuid')\
                 .to_sql('product_normalized', _eng, 
@@ -1058,7 +1061,7 @@ class Product(object):
         if 'cols' not in kwargs or not kwargs['cols']:
             cols = ["*"]
         else:
-            cols = kargs['cols']
+            cols = kwargs['cols']
             del kwargs['cols']
 
         where = []

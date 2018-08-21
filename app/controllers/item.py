@@ -2,6 +2,8 @@
 from flask import Blueprint, jsonify, request
 from app.models.item import Item
 from app import errors, logger
+from flask import Response, stream_with_context
+import json
 from flask_cors import CORS, cross_origin
 
 mod = Blueprint('item', __name__, url_prefix="/item")
@@ -194,22 +196,29 @@ def elastic_items():
         "items": _items
     })
 
-@mod.route('/catalogue_uuids', methods=['GET'])
-def catalogue_uuids():
-    """ Endpoint to get items needed for elasticsearch index
-    @Response:
-        - resp: items list
-    """
-    logger.info("Items catalogue")
+@mod.route('/catalogue_stream', methods=['GET'])
+def generate_catalogue_stream():
+    logger.info("Getting catalogue stream")
     params = request.args
     type_ = params.get("type", None)
-    # Validation
-    _resp = Item.get_catalogue_uuids(type_)
-    return jsonify({
-        "status": "OK",
-        "message": "Those are the item and product uuids stored in our DB!",
-        "items": _resp
-    })
+    if type_ is not None and not (type_=='product_uuid' or type_=='item_uuid'):
+        raise errors.ApiError(70001, "Type parameter is wrong: {}".format(type_))
+    chunk_size = params.get("chunk_size", None)
+    if chunk_size and chunk_size.isdigit():
+        chunk_size = int(chunk_size)
+    else:
+        chunk_size = 1000
+    total_items = Item.get_total_items(type_)
+    def generate():
+        yield '{"items": ['
+        for offset_ in range(0, total_items, chunk_size):
+            if (offset_ + chunk_size) >= total_items:
+                yield json.dumps(Item.get_catalogue_uuids(type_, offset_=offset_, limit_=chunk_size))
+            else:
+                yield json.dumps(Item.get_catalogue_uuids(type_, offset_=offset_, limit_=chunk_size)) + ', '
+        yield '], "message": "finished"}'
+
+    return Response(stream_with_context(generate()), content_type='application/json')
 
 
 @mod.route('/additional', methods=['GET'])
@@ -223,3 +232,34 @@ def vademecum_info():
     # Call values
     _resp = Item.get_vademecum_info(params['uuid'])
     return jsonify(_resp)
+
+
+@mod.route('/sitemap', methods=['GET'])
+def sitemap():
+    '''
+    Getting items from scroll_df to create the sitemap
+
+    '''
+    # query text
+    size_ = request.args.get('size', '100')
+    from_ = request.args.get('from', '0')
+    farma = request.args.get('farma', False)
+    if not size_.isdigit():
+        size_ = '100'
+
+    if not from_.isdigit():
+        from_ = '0'
+
+    df = Item.get_sitemap_items(size_, from_, farma)
+    items = df.to_dict(orient="records")
+    if df.empty:
+        logger.error("Df was empty!")
+        return jsonify({'code': 'not found'}), 404
+
+    response = {
+        "items": items,
+        "size": size_,
+        "from": from_
+    }
+    # print response...
+    return jsonify(response)

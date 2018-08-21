@@ -99,6 +99,17 @@ CREATE TABLE "product_attr" (
     last_modified timestamp
 );
 
+/* itemAttribute */
+/* Normalized attributes */
+CREATE TABLE "item_attr" (
+    id_item_attr serial PRIMARY KEY NOT NULL,
+    id_attr integer REFERENCES attr(id_attr),
+    item_uuid uuid REFERENCES item(item_uuid),
+    value text,
+    precision text,
+    last_modified timestamp
+);
+
 /* productCategory */
 CREATE TABLE "product_category" (
     id_product_category serial PRIMARY KEY NOT NULL,
@@ -108,6 +119,11 @@ CREATE TABLE "product_category" (
 );
 
 /* productNormalized */ 
+<<<<<<< HEAD
+=======
+
+/*
+>>>>>>> f0ff77e97938945728b5d6eb54db374b15b0959b
 -- Batch created table, no need to define at initial schema.
 /*
 CREATE TABLE "product_normalized" (

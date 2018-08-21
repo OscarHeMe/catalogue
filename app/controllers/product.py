@@ -136,7 +136,7 @@ def get_bysource():
     """ Endpoint to fetch `Product`s by source's.
     """
     logger.info("Query Product by source...")
-    params = request.args
+    params = request.args.to_dict()
     logger.debug(params)
     # Validate required params
     _needed_params = {'keys'}
@@ -147,7 +147,7 @@ def get_bysource():
     for _o, _dft  in _opt_params.items():
         if _o not in params:
             params[_o] = _dft
-    _prods = Product.query('source', **params.to_dict())
+    _prods = Product.query('source', **params)
     return jsonify({
         'status': 'OK',
         'products': _prods
@@ -159,7 +159,7 @@ def get_byattr():
     """ Endpoint to fetch `Product`s by attr's.
     """
     logger.info("Query Product by attr...")
-    params = request.args
+    params = request.args.to_dict()
     logger.debug(params)
     # Validate required params
     _needed_params = {'keys'}
@@ -172,7 +172,7 @@ def get_byattr():
         if _o not in params:
             params[_o] = _dft
     _prods = Product.filter('attr.key',
-        'product_attr.value', **params.to_dict())
+        'product_attr.value', **params)
     return jsonify({
         'status': 'OK',
         'products': _prods

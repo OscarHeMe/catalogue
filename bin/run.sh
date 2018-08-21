@@ -10,7 +10,7 @@ if [[ $MODE == "SERVICE" ]]
     then
     # Run gunicorm
     echo "Starting $APP_NAME in SERVICE mode"
-    ./env/bin/gunicorn --workers 3 --bind unix:$APP_NAME.sock -m 000 wsgi:app &
+    ./env/bin/gunicorn --workers 3 --bind unix:$APP_NAME.sock -m 000 -t 200 wsgi:app &
     nginx -g "daemon off;"
 elif [[ $MODE == "CONSUMER" ]]
     then
