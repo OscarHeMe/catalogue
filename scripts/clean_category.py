@@ -103,7 +103,7 @@ vitaminas_suplementos_b = [] + entretenimiento
 # Ambos
 cuidado_personal_belleza_t = derma_t + cuidado_personal_belleza
 cuidado_personal_belleza_b = ['lacteo', 'huevo', 'leche', 'disfraz', 'perro', 'mascota', 'bebida', 'alimento',
-                              'abarrote', 'despensa', 'caramelo'] + entretenimiento
+                              'abarrote', 'despensa', 'caramelo', 'mezcal'] + entretenimiento
 
 # Super
 frutas_verduras_t = ['fruta', 'verdura', 'ensalada', 'lechuga', 'manojo', 'tuberculo']
