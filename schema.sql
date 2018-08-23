@@ -111,11 +111,12 @@ CREATE TABLE "item_attr" (
 );
 
 /* productCategory */
-CREATE TABLE "product_category" (
+CREATE TABLE "product_category_tmp" (
     id_product_category serial PRIMARY KEY NOT NULL,
     id_category int REFERENCES category(id_category),
     product_uuid uuid REFERENCES product(product_uuid),
-    last_modified timestamp
+    last_modified timestamp DEFAULT (now() AT TIME ZONE 'utc'),
+    deprecated int
 );
 
 /* productNormalized */ 

@@ -12,22 +12,9 @@ def print_(string):
     print(str(datetime.today())[:19] + "\t" + string)
 
 
-def get_category_raw(*args):
-    categories_raw = args[0][0]
-    name = args[0][1]
-    uuid = args[0][2]
-    if categories_raw:
-        categories = get_categories_related(categories_raw, min_bad_score=90)
-    else:
-        categories = False
-    if not categories:
-        categories = get_categories_related(name, min_bad_score=85, is_name=True)
-    return {"categories": categories, "uuid": uuid}
-
-
-def store_clean_categories(product_uuids=False, is_update=False):
+def connect_database():
     print_('connecting to database....')
-    db = Pygres(
+    return Pygres(
         {
             "SQL_HOST": os.getenv("SQL_HOST"),
             "SQL_PORT": os.getenv("SQL_PORT"),
@@ -36,6 +23,38 @@ def store_clean_categories(product_uuids=False, is_update=False):
             "SQL_PASSWORD": os.getenv("SQL_PASSWORD")
         }
     )
+
+
+def get_category_raw(*args):
+    categories_raw = args[0][0]
+    name = args[0][1]
+    uuid = args[0][2]
+    if categories_raw:
+        categories = get_categories_related(categories_raw, min_bad_score=90)
+    # if not categories:
+    #     categories = get_categories_related(name, min_bad_score=85, is_name=True)
+    else:
+        categories = False
+    return {"categories": categories, "uuid": uuid}
+
+
+def deprecate_categories():
+    db = connect_database()
+    print_("Deprecating old categories")
+    qry_deprecate = """
+        UPDATE public.product_category
+        SET deprecated=1
+        WHERE id_category in (
+            SELECT id_category 
+                FROM category
+                WHERE source='byprice' 
+            );
+    """
+    db.query(qry_deprecate)
+
+
+def store_clean_categories(product_uuids=False, is_update=False):
+    db = connect_database()
     conn = db.conn
 
     print_('Obtaining products')
@@ -138,20 +157,13 @@ def store_clean_categories(product_uuids=False, is_update=False):
 
 
 def main():
+    deprecate_categories()
     store_clean_categories()
 
 
 def store_category_in_db(*args):
     global id_categories
-    db = Pygres(
-        {
-            "SQL_HOST": os.getenv("SQL_HOST"),
-            "SQL_PORT": os.getenv("SQL_PORT"),
-            "SQL_DB": os.getenv("SQL_DB"),
-            "SQL_USER": os.getenv("SQL_USER"),
-            "SQL_PASSWORD": os.getenv("SQL_PASSWORD")
-        }
-    )
+    db = connect_database()
     model = db.model('product_category', 'id_product_category')
     categories = args[0][0]
     product_uuid = args[0][1]
