@@ -1,9 +1,6 @@
 import os
 import pandas as pd
-import requests
 import re
-import logging
-from tqdm import tqdm_notebook
 from pygres import Pygres
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process

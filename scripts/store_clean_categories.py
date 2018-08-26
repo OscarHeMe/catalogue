@@ -13,7 +13,6 @@ def print_(string):
 
 
 def connect_database():
-    print_('connecting to database....')
     return Pygres(
         {
             "SQL_HOST": os.getenv("SQL_HOST"),
