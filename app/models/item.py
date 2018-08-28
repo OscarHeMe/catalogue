@@ -646,7 +646,8 @@ class Item(object):
             brand = _normalized_attrs['brand']
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
-        df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
+        if 'source' in df_rets.columns:
+            df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
         if df_rets.empty:
             return {}
         return {
