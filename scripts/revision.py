@@ -532,7 +532,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'wrong_sanpablo':
     _m = _db.model('product', 'product_uuid')
     updated_ids = []
     print('To fix products:', len(concat_matches))
-    for sp in tqdm(concat_matches[:100].to_dict(orient='records'), desc='Updated elements'):
+    for sp in tqdm(concat_matches.to_dict(orient='records'), desc='Updated elements'):
         try:
             _m.product_uuid = sp['product_uuid']
             _m.gtin = sp['gtin']
