@@ -1,9 +1,6 @@
 import os
 import pandas as pd
-import requests
 import re
-import logging
-from tqdm import tqdm_notebook
 from pygres import Pygres
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
@@ -83,7 +80,8 @@ naturales_b = [] + entretenimiento
 
 salud_sexual_t = ['tampon', 'intima', 'sexual', 'condon', 'preservativo', 'embarazo', 'vagina', 'vibrador',
                   'lubricante', 'estimulante', 'anticonceptivo', 'toalla']
-salud_sexual_b = ['bano', 'alberca', 'cuerpo', 'cara'] + entretenimiento
+salud_sexual_b = ['bebe', 'bano', 'alberca', 'cuerpo', 'cara', 'aceite', 'papel', 'ojos', 'nariz', 'nasal', 'oftal',
+                  'laxante', 'motor', 'antitranspirante', 'gel'] + entretenimiento
 
 equipo_botiquin_t = ['equipo medico', 'oximetro', 'baumanometro', 'termometro', 'botiquin', 'jeringa', 'nebulizador', 'alcohol', 'anticeptico',
                                    'gasa', 'venda', 'vendita', 'bandita', 'algodon', 'hisopo', 'curita',
@@ -102,7 +100,7 @@ vitaminas_suplementos_b = [] + entretenimiento
 # Ambos
 cuidado_personal_belleza_t = derma_t + cuidado_personal_belleza
 cuidado_personal_belleza_b = ['lacteo', 'huevo', 'leche', 'disfraz', 'perro', 'mascota', 'bebida', 'alimento',
-                              'abarrote', 'despensa', 'caramelo'] + entretenimiento
+                              'abarrote', 'despensa', 'caramelo', 'mezcal'] + entretenimiento
 
 # Super
 frutas_verduras_t = ['fruta', 'verdura', 'ensalada', 'lechuga', 'manojo', 'tuberculo']
@@ -128,9 +126,10 @@ salchichoneria_quesos_gourmet_b = ['farmacia'] + entretenimiento
 alimentos_congelados_regrigerados_t = ['congelado', 'refrigerado', 'gelatina', 'flan', 'natilla', 'nata', 'hielo']
 alimentos_congelados_regrigerados_b = ['farmacia', 'polvo'] + entretenimiento
 
-jugos_bebidas_t = ['jugo', 'agua', 'refresco', 'leche', 'yogurt', 'bebida', 'bebible', 'hielo', 'soda', 'mineral',
-                   'jumex', 'boing', 'cocacola', 'pepsi', 'fanta', 'squirt']
-jugos_bebidas_b = ['farmacia', 'polvo'] + entretenimiento
+jugos_bebidas_t = ['jugo', 'agua', 'refresco', 'leche', 'yogurt', 'bebida', 'bebible', 'hielo', 'jumex', 'boing',
+                   'cocacola', 'pepsi', 'fanta', 'squirt']
+jugos_bebidas_b = ['farmacia', 'polvo', 'oxigenada', 'infantil', 'lactea', 'calentador', 'perfume', 'locion', 'perro',
+                   'gato', 'cachorro', 'jabon'] + entretenimiento + cerveza_vinos_licores
 
 despensa_t = ['miel', 'mermelada', 'avena', 'cafe', 'aceite','atun', 'sopa', 'pasta', 'despensa', 'abarrote',
               'alimento', 'lata', 'cereal', 'galleta', 'azucar', 'especia', 'sazonador', 'chile',
@@ -470,13 +469,13 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                                                            score_cutoff=min_bad_score)
                         if not bad_results_sub:
                             cat_name = list(cat.keys())[0]
-                            #print("++++++ \t", cat_name, ': ', results)
+                            print("++++++ \t", cat_name, ': ', results)
                             match_categories.append(cat_name)
-                        # else:
-                        #     cat_name = list(cat.keys())[0]
-                        #     print("------ \t", cat_name, ': ', bad_results_sub)
-            # else:
-            #     print("------ \t", name, ': ', bad_results)
+                        else:
+                            cat_name = list(cat.keys())[0]
+                            print("------ \t", cat_name, ': ', bad_results_sub)
+            else:
+                print("------ \t", name, ': ', bad_results)
 
         aux = {"Limpieza y Detergentes", "Mascotas", "Autos, Motos y llantas", "Hogar"} & set(match_categories)
         if len(aux) > 1 and not is_name:

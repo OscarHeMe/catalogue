@@ -263,8 +263,7 @@ class Item(object):
                                 ON a.id_attr = pa.id_attr
                             LEFT JOIN clss c
                                 ON a.id_clss = c.id_clss
-                        where c.name is not NULL
-                        and pa.item_uuid IN {}
+                        where p.item_uuid IN {}
                     """.format(tuplify(items))
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
                 qry_categories="""
@@ -296,8 +295,8 @@ class Item(object):
                     row['categories_raw'] = list(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
                         (~df_categories.source.isin(["byprice", "byprice_farma"]))].name_category)
                     # All Categories
-                    row['categories'] = list(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
-                        (df_categories.source.isin(["byprice"]))].name_category)
+                    row['categories'] = list(set(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
+                        (df_categories.source.isin(["byprice"]))].name_category))
                     row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
@@ -779,54 +778,74 @@ class Item(object):
 
 
     @staticmethod
-    def get_sitemap_items(size_, from_, farma=False):
+    def get_sitemap_items(size_, from_, farma=False, is_count=False):
 
         if farma:
-            qry_farma_id_categories = """
-                SELECT id_category
-                    FROM category c 
-                    where id_parent  in (select id_category 
-                                        from category tmp 
-                                        where source = 'byprice' and key='farmacia')
-                        or (key = 'farmacia' and source = 'byprice')		
-            """
-            farma_id_categories = pd.read_sql(qry_farma_id_categories, g._db.conn)
-            farma_id_categories = tuple(farma_id_categories.id_category)
             qry_categories = """
-            and (pc.id_category in {} or s.key='farmacias_similares')
-            """.format(farma_id_categories)
+            AND (
+                pc.id_category IN (                
+                    SELECT id_category 
+                    FROM category tmp 
+                    WHERE source = 'byprice' 
+                        AND (key='farmacia' OR key='jugos y bebidas')
+                    )
+                OR s.key='farmacias_similares'
+            )
+            """
         else:
             qry_categories = ""
 
+        if is_count:
+            qry_select_item ="""
+                SELECT COUNT(DISTINCT(i.item_uuid)) AS count_, 'items' AS type_
+            """
+            qry_select_product = """
+                SELECT COUNT(DISTINCT(p.product_uuid)) AS count_, 'products' AS type_
+            """
+            qry_group=""
+        else:
+            qry_select_item = """
+                            SELECT 
+                                DISTINCT(i.item_uuid), 
+                                NULL::UUID AS product_uuid,
+                                i.name, 
+                                i.description
+                        """
+            qry_select_product ="""
+                SELECT  
+                    NULL as item_uuid, 
+                    p.product_uuid, 
+                    p.name, 
+                    p.description
+            """
+            qry_group = """GROUP BY p.product_uuid, p.name, p.description """
+
         qry_item_uuids = """
-            SELECT DISTINCT(i.item_uuid), NULL::UUID as product_uuid,
-                   CASE WHEN i.name is NULL
-                        THEN p.name
-                        ELSE i.name END AS name, 
-                    CASE WHEN i.description is NULL
-                        THEN p.description
-                        ELSE i.description END AS description
+            {qry_select_item}
                     FROM item i 
-                    INNER JOIN product p on i.item_uuid=p.item_uuid
-                    INNER JOIN source s on s.key=p.source
-                    INNER JOIN product_category pc on p.product_uuid=pc.product_uuid
+                    INNER JOIN product p ON i.item_uuid=p.item_uuid
+                    INNER JOIN source s ON s.key=p.source
+                    INNER JOIN product_category pc ON p.product_uuid=pc.product_uuid
                     WHERE s.retailer=1
+                    AND p.item_uuid IS NOT NULL
                     {qry_categories}
 
             UNION ALL
             
-            SELECT  NULL as item_uuid, p.product_uuid, p.name, p.description
+            {qry_select_product}
                 FROM product p
-                    INNER JOIN source s on s.key=p.source
-                    INNER JOIN product_category pc on p.product_uuid=pc.product_uuid
+                    INNER JOIN source s ON s.key=p.source
+                    INNER JOIN product_category pc ON p.product_uuid=pc.product_uuid
                     WHERE s.retailer=1
-                    AND p.item_uuid is NULL
+                    AND p.item_uuid IS NULL
                     {qry_categories}
-                    
+                {qry_group}
             OFFSET {from_}
-            limit {size_}
-            """.format(size_=size_, from_=from_, qry_categories=qry_categories)
+            LIMIT {size_}
+            """.format(qry_select_item=qry_select_item, qry_select_product=qry_select_product, size_=size_, from_=from_,
+                       qry_categories=qry_categories, qry_group=qry_group)
         logger.debug(qry_item_uuids)
         df = pd.read_sql(qry_item_uuids, g._db.conn)
-        df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
+        if is_count is False:
+            df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
         return df
