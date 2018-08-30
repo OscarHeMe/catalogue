@@ -58,7 +58,10 @@ class Item(object):
         if self.item_uuid:
             m_item.item_uuid = self.item_uuid
         m_item.gtin = self.gtin
-        m_item.checksum = int(self.gtin[-1])
+        try:
+            m_item.checksum = int(self.gtin[-1])
+        except:
+            m_item.checksum = int(self.gtin[-1])
         m_item.name = self.name
         m_item.description = self.description
         m_item.last_modified = str(datetime.datetime.utcnow())
