@@ -89,7 +89,7 @@ equipo_botiquin_t = ['equipo medico', 'oximetro', 'baumanometro', 'termometro', 
 equipo_botiquin_b = [] + entretenimiento + ropa_zapatos_accesorios
 
 derma_t = ['piel', 'cara', 'bloqueador', 'derma']
-derma_b = ['lacteo', 'huevo', 'leche', 'bebida', 'alimento', 'abarrote', 'despensa'] + entretenimiento
+derma_b = ['lacteo', 'huevo', 'leche', 'bebida', 'alimento', 'abarrote', 'despensa', 'pestana', 'shampo'] + entretenimiento
 
 vitaminas_suplementos_t = ['vitamina', 'vitaminico', 'suplemento']
 vitaminas_suplementos_b = [] + entretenimiento
@@ -112,7 +112,7 @@ panaderia_tortilleria_b = ['farmacia', 'pantalla', 'pantalon', 'ropa'] + entrete
 botanas_dulces_t = ['dulce', 'botana', 'nacho', 'dip', 'chicle', 'paleta', 'chocolate', 'papas', 'fritas',
                     'cacahuate', 'sabritas', 'doritos', 'cheetos', 'palomita', 'caramelo', 'goma mascar', 'chamoy',
                     'salsa valentina', 'salsa maggy', 'salsa inglesa']
-botanas_dulces_b = ['farmacia', 'verdura', 'olor', 'color', 'desodorante', 'aromatizante'] + entretenimiento + cuidado_personal_belleza
+botanas_dulces_b = ['farmacia', 'verdura', 'olor', 'color', 'desodorante', 'aromatizante', 'frida'] + entretenimiento + cuidado_personal_belleza
 
 carnes_pescados_t = ['carne', 'ternera', 'puerco', 'cerdo', 'pulpo', 'pescado', 'camaron', 'pulpo']
 carnes_pescados_b = ['farmacia', 'lata'] + entretenimiento
@@ -129,7 +129,7 @@ alimentos_congelados_regrigerados_b = ['farmacia', 'polvo'] + entretenimiento
 jugos_bebidas_t = ['jugo', 'agua', 'refresco', 'leche', 'yogurt', 'bebida', 'bebible', 'hielo', 'jumex', 'boing',
                    'cocacola', 'pepsi', 'fanta', 'squirt']
 jugos_bebidas_b = ['farmacia', 'polvo', 'oxigenada', 'infantil', 'lactea', 'calentador', 'perfume', 'locion', 'perro',
-                   'gato', 'cachorro', 'jabon'] + entretenimiento + cerveza_vinos_licores
+                   'gato', 'cachorro', 'jabon', 'galleta'] + entretenimiento + cerveza_vinos_licores
 
 despensa_t = ['miel', 'mermelada', 'avena', 'cafe', 'aceite','atun', 'sopa', 'pasta', 'despensa', 'abarrote',
               'alimento', 'lata', 'cereal', 'galleta', 'azucar', 'especia', 'sazonador', 'chile',
@@ -469,13 +469,13 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                                                            score_cutoff=min_bad_score)
                         if not bad_results_sub:
                             cat_name = list(cat.keys())[0]
-                            print("++++++ \t", cat_name, ': ', results)
+                            #print("++++++ \t", cat_name, ': ', results)
                             match_categories.append(cat_name)
-                        else:
-                            cat_name = list(cat.keys())[0]
-                            print("------ \t", cat_name, ': ', bad_results_sub)
-            else:
-                print("------ \t", name, ': ', bad_results)
+                        # else:
+                        #     cat_name = list(cat.keys())[0]
+                        #     print("------ \t", cat_name, ': ', bad_results_sub)
+            # else:
+            #     print("------ \t", name, ': ', bad_results)
 
         aux = {"Limpieza y Detergentes", "Mascotas", "Autos, Motos y llantas", "Hogar"} & set(match_categories)
         if len(aux) > 1 and not is_name:
