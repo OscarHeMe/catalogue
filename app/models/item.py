@@ -245,30 +245,33 @@ class Item(object):
         """
         items = params.get("items")
         type_ = params.get("type")
+        print("Type {}".format(type_))
         if not items:
             logger.error("No items defined in params")
             return False
         if type_ == "item_uuid":
             try:
                 qry_item_uuids = """
-                    SELECT item_uuid, gtin, name as best_name, description, page_views
+                    SELECT item_uuid, gtin, name as best_name, page_views
                         FROM item 
                         WHERE item_uuid IN {}
                     """.format(tuplify(items))
+                #print(qry_item_uuids)
                 df = pd.read_sql(qry_item_uuids, g._db.conn)
                 qry_product_uuids = """
-                    SELECT p.product_uuid, p.item_uuid, p.name name2, p.source, c.name class_name, 
+                    SELECT p.product_uuid, p.item_uuid, p.description, p.name name2, p.source, c.name class_name, 
                         c.key class_key,a.key attr_key,  a.name attr_name, pa.value
                             FROM product p
-                            LEFT JOIN item_attr pa
-                                ON p.item_uuid = pa.item_uuid
+                            LEFT JOIN product_attr pa
+                                ON p.product_uuid = pa.product_uuid
                             LEFT  JOIN attr a
                                 ON a.id_attr = pa.id_attr
                             LEFT JOIN clss c
                                 ON a.id_clss = c.id_clss
                         where c.name is not NULL
-                        and pa.item_uuid IN {}
+                        and p.item_uuid IN {}
                     """.format(tuplify(items))
+                #print(qry_product_uuids)
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
                 qry_categories="""
                     SELECT p.item_uuid, c.name as name_category, c.source
@@ -277,6 +280,7 @@ class Item(object):
                         INNER JOIN category c on c.id_category = pc.id_category
                         and p.item_uuid IN {}
                 """.format(tuplify(items))
+                #print(qry_categories)
                 df_categories=pd.read_sql(qry_categories, g._db.conn)
             except Exception as e:
                 logger.error("Postgres Catalogue Connection error")
@@ -287,6 +291,7 @@ class Item(object):
                 df['ingredients'], df['providers'], df['categories_raw'] = None, None, None, None, None, None, None, None, None
                 for index, row in df.iterrows():
                     row['names'] = list(df2[df2.item_uuid == row.item_uuid]["name2"].drop_duplicates())
+                    row['description'] = list(df2[df2.item_uuid == row.item_uuid]["description"].drop_duplicates())
                     row['retailers'] = list(df2[df2.item_uuid == row.item_uuid]["source"].drop_duplicates())
                     row['product_uuids'] = list(df2[df2.item_uuid == row.item_uuid]["product_uuid"].drop_duplicates())
                     row['attributes'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
