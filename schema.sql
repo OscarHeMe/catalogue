@@ -120,9 +120,13 @@ CREATE TABLE "product_category_tmp" (
 );
 
 /* productNormalized */ 
+<<<<<<< HEAD
+=======
 
 /*
+>>>>>>> f0ff77e97938945728b5d6eb54db374b15b0959b
 -- Batch created table, no need to define at initial schema.
+/*
 CREATE TABLE "product_normalized" (
     product_uuid uuid PRIMARY KEY NOT NULL,
     normalized text
