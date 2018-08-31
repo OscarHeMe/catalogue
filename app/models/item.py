@@ -61,7 +61,7 @@ class Item(object):
         try:
             m_item.checksum = int(self.gtin[-1])
         except:
-            m_item.checksum = 0
+            m_item.checksum = None
         m_item.name = self.name
         m_item.description = self.description
         m_item.last_modified = str(datetime.datetime.utcnow())
