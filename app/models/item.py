@@ -287,8 +287,9 @@ class Item(object):
                 logger.error(e)
                 return False
             try:
-                df['names'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
-                df['ingredients'], df['providers'], df['categories_raw'] = None, None, None, None, None, None, None, None, None
+                # All fields of df2 have to be declared as None in d1 in order to insert them
+                df['names'], df['description'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
+                df['ingredients'], df['providers'], df['categories_raw'] = None, None, None, None, None, None, None, None, None, None
                 for index, row in df.iterrows():
                     row['names'] = list(df2[df2.item_uuid == row.item_uuid]["name2"].drop_duplicates())
                     row['description'] = list(df2[df2.item_uuid == row.item_uuid]["description"].drop_duplicates())
