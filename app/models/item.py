@@ -356,10 +356,9 @@ class Item(object):
                     row['names'] = [row.best_name]
                     row['retailers'] = [row.source]
                     row['product_uuids'] = [row.product_uuid]
-                    #row['attributes'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
-                    #                             ['class_name', 'class_key', 'attr_key', 'attr_name',
-                    #                              'value']].T.to_dict().values())
-                    row['attributes'] = []
+                    row['attributes'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
+                                                ['class_name', 'class_key', 'attr_key', 'attr_name',
+                                                 'value']].T.to_dict().values())
                     row['brands'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
                         'attr_key').attr_name)
