@@ -179,8 +179,6 @@ def store_clean_categories(product_uuids=False, is_update=False):
     del(prods_categories['category'])
     engine = connect_database('sqlalchemy')
     prods_categories.to_sql('product_category', index=False, con=engine, if_exists='append', chunksize=2000)
-    # with Pool(4) as pool:
-    #     pool.map(store_category_in_db, zip(prods.categories, prods.product_uuid, repeat(is_update)))
 
 
     print_("The script has finished!")
