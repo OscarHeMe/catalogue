@@ -651,7 +651,7 @@ class Item(object):
         if 'source' in df_rets.columns:
             df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
         if df_rets.empty:
-            return {}
+            raise errors.ApiError(70003, "Issues fetching elements in DB", 404)
         return {
             'name': sorted(df_rets['name'].tolist(),
                 key=lambda x: len(x) if x else 0,
