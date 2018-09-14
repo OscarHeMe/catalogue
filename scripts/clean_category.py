@@ -40,7 +40,7 @@ entretenimiento  = ['novela', 'drama', 'terror', 'miedo', 'ciencia ficcion', 'pe
                     'musica', 'video', 'fotografia', 'camara', 'libro', 'television', 'radio', 'literatura', 'cuento']
 
 farmacia = ['cardiobascular', 'bacteria', 'infeccion', 'antiseptico', 'moreton', 'cortadura', 'inmuno',
-            'hormonal', 'farmaco', 'hipertension', 'diabetes', 'hospital', 'pediatra', 'doctor']
+            'hormonal', 'farmaco', 'hipertension', 'diabetes', 'hospital', 'pediatra', 'doctor', 'medicamento']
 
 
 cuidado_personal_belleza = ['belleza', 'maquillaje', 'rubor', 'mascarilla', 'pies',
@@ -127,9 +127,11 @@ alimentos_congelados_regrigerados_t = ['congelado', 'refrigerado', 'gelatina', '
 alimentos_congelados_regrigerados_b = ['farmacia', 'polvo'] + entretenimiento
 
 jugos_bebidas_t = ['jugo', 'agua', 'refresco', 'leche', 'yogurt', 'bebida', 'bebible', 'hielo', 'jumex', 'boing',
-                   'cocacola', 'pepsi', 'fanta', 'squirt']
-jugos_bebidas_b = ['farmacia', 'polvo', 'oxigenada', 'infantil', 'lactea', 'calentador', 'perfume', 'locion', 'perro',
-                   'gato', 'cachorro', 'jabon', 'galleta'] + entretenimiento + cerveza_vinos_licores
+                   'cocacola', 'pepsi', 'squirt']
+jugos_bebidas_b = ['farmacia', 'polvo', 'oxigenada', 'infantil', 'lactea', 'calentador', 'perro', 'gato', 'cachorro',
+                   'jabon', 'alimento', 'galleta', 'nerf', 'capsula', 'barra', 'crema', 'tocador', 'tina', 'purificador',
+                   'destilado', 'mascota'
+                   ] + entretenimiento + cerveza_vinos_licores + cuidado_personal_belleza + farmacia
 
 despensa_t = ['miel', 'mermelada', 'avena', 'cafe', 'aceite','atun', 'sopa', 'pasta', 'despensa', 'abarrote',
               'alimento', 'lata', 'cereal', 'galleta', 'azucar', 'especia', 'sazonador', 'chile',
@@ -442,7 +444,7 @@ categories_json = {
     }
 }
 
-def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_name=False):
+def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_name=False, names=None):
     if categories_raw:
         categories_raw = clean(categories_raw, is_name)
     #print(categories_raw)
@@ -451,6 +453,8 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
         for name, attrs in categories_json.items():
             not_choices = attrs.get('banned')
             bad_results = process.extractBests(categories_raw, not_choices, scorer=fuzz.partial_token_set_ratio,
+                                               score_cutoff=min_bad_score)
+            bad_results += process.extractBests(names, not_choices, scorer=fuzz.partial_token_set_ratio,
                                                score_cutoff=min_bad_score)
             if not bad_results:
                 choices = attrs.get('tokens')
