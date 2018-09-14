@@ -61,11 +61,7 @@ class Item(object):
         try:
             m_item.checksum = int(self.gtin[-1])
         except:
-<<<<<<< HEAD
             m_item.checksum = None
-=======
-            m_item.checksum = 0
->>>>>>> 64b9ccadd682c1ffb97ef1b89aecd054ff106828
         m_item.name = self.name
         m_item.description = self.description
         m_item.last_modified = str(datetime.datetime.utcnow())
@@ -856,11 +852,6 @@ class Item(object):
                        qry_categories=qry_categories, qry_group=qry_group)
         logger.debug(qry_item_uuids)
         df = pd.read_sql(qry_item_uuids, g._db.conn)
-<<<<<<< HEAD
         if is_count is False:
             df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
         return df
-=======
-        df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
-        return df
->>>>>>> f71c32dc67f9d8852abdaf95832b273e57307a8a
