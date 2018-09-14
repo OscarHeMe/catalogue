@@ -447,6 +447,8 @@ categories_json = {
 def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_name=False, names=None):
     if categories_raw:
         categories_raw = clean(categories_raw, is_name)
+    if names:
+        names = clean(names, True)
     #print(categories_raw)
     if categories_raw:
         match_categories = []
@@ -454,8 +456,9 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
             not_choices = attrs.get('banned')
             bad_results = process.extractBests(categories_raw, not_choices, scorer=fuzz.partial_token_set_ratio,
                                                score_cutoff=min_bad_score)
-            bad_results += process.extractBests(names, not_choices, scorer=fuzz.partial_token_set_ratio,
-                                               score_cutoff=min_bad_score)
+            if names:
+                bad_results += process.extractBests(names, not_choices, scorer=fuzz.partial_token_set_ratio,
+                                                   score_cutoff=min_bad_score)
             if not bad_results:
                 choices = attrs.get('tokens')
                 results = process.extractBests(categories_raw, choices, scorer=fuzz.partial_token_set_ratio, score_cutoff=min_score)
