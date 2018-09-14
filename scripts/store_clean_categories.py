@@ -4,24 +4,43 @@ from pygres import Pygres
 import pandas as pd
 from tqdm import tqdm
 from multiprocessing import Pool
-from itertools import repeat
 from datetime import datetime
 import os
+from sqlalchemy import create_engine
+import numpy as np
 
 def print_(string):
     print(str(datetime.today())[:19] + "\t" + string)
 
 
-def connect_database():
-    return Pygres(
-        {
-            "SQL_HOST": os.getenv("SQL_HOST"),
-            "SQL_PORT": os.getenv("SQL_PORT"),
-            "SQL_DB": os.getenv("SQL_DB"),
-            "SQL_USER": os.getenv("SQL_USER"),
-            "SQL_PASSWORD": os.getenv("SQL_PASSWORD")
-        }
-    )
+def connect_database(type_='pygres'):
+    db_host = os.getenv("SQL_HOST")
+    db_port = os.getenv("SQL_PORT")
+    db_name = os.getenv("SQL_DB")
+    db_user = os.getenv("SQL_USER")
+    db_password = os.getenv("SQL_PASSWORD")
+    if type_.lower() == 'pygres':
+        return Pygres(
+            {
+                "SQL_HOST": db_host,
+                "SQL_PORT": db_port,
+                "SQL_DB": db_name,
+                "SQL_USER": db_user,
+                "SQL_PASSWORD": db_password
+            }
+        )
+    if type_.lower() == 'sqlalchemy':
+        return create_engine(
+            'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'.format(
+                db_user=db_user,
+                db_password=db_password,
+                db_host=db_host,
+                db_port=db_port,
+                db_name=db_name
+            )
+        )
+    else:
+        return False
 
 
 def get_category_raw(*args):
@@ -29,7 +48,7 @@ def get_category_raw(*args):
     name = args[0][1]
     uuid = args[0][2]
     if categories_raw:
-        categories = get_categories_related(categories_raw, min_bad_score=90)
+        categories = get_categories_related(categories_raw, min_bad_score=90, names=name)
     # if not categories:
     #     categories = get_categories_related(name, min_bad_score=85, is_name=True)
     else:
@@ -101,8 +120,8 @@ def store_clean_categories(product_uuids=False, is_update=False):
         df_item = pd.DataFrame(categories_clean_items)
         df_item.rename(columns={"uuid": "item_uuid"}, inplace=True)
         item_categories = item_categories.merge(df_item, on="item_uuid")
-        print_("Creating csv items...")
-        item_categories.to_csv('df_items.csv')
+        print_("Creating pickle items...")
+        item_categories.to_pickle('df_items.p')
         item_categories = item_categories[['item_uuid', 'categories']]
 
         prods_i = prods.merge(item_categories, on='item_uuid', how='inner')
@@ -122,8 +141,8 @@ def store_clean_categories(product_uuids=False, is_update=False):
         df_prod = pd.DataFrame(categories_clean_prods)
         df_prod.rename(columns={"uuid": "product_uuid"}, inplace=True)
         prods_product = prods_product.merge(df_prod, on='product_uuid')
-        print_("Creating products csv...")
-        prods_product.to_csv('df_products.csv')
+        print_("Creating products pickle...")
+        prods_product.to_pickle('df_products.p')
         prods_product = prods_product[['product_uuid', 'categories']]
 
         prods_p = prods.merge(prods_product, on='product_uuid', how='inner')
@@ -141,17 +160,27 @@ def store_clean_categories(product_uuids=False, is_update=False):
     else:
         print("There are no items and no products to create categories")
         return False
-    print_("Creating csv final")
-    prods.to_csv('final_products.csv')
+    print_("Creating pickle final")
+    prods.to_pickle('final_products.p')
 
-    global id_categories
+
     id_categories = get_id_categories()
 
     print_("Inserting {} in product category".format(len(prods)))
 
-    with Pool(4) as pool:
-        pool.map(store_category_in_db, zip(prods.categories, prods.product_uuid, repeat(is_update)))
-    db.close()
+    prods = prods[['product_uuid', 'categories']]
+    prods = prods[(prods.categories != False) & (prods.categories.str.len() > 0)]
+    prods_categories = pd.DataFrame({'product_uuid': np.repeat(prods.product_uuid.values, prods.categories.str.len()),
+                                     'category': np.concatenate(prods.categories.values)})
+    prods_categories['id_category'] = prods_categories.category.apply(id_categories.get).astype(int)
+
+    prods_categories.to_pickle("prods_categories.p")
+
+    del(prods_categories['category'])
+    engine = connect_database('sqlalchemy')
+    prods_categories.to_sql('product_category', index=False, con=engine, if_exists='append', chunksize=2000)
+
+
     print_("The script has finished!")
 
 
@@ -194,8 +223,6 @@ def store_category_in_db(*args):
         model.product_uuid = product_uuid
         model.save()
     db.close()
-
-
 
 
 if __name__ == "__main__":

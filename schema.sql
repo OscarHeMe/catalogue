@@ -123,6 +123,8 @@ CREATE TABLE "product_category_tmp" (
 
 /*
 -- Batch created table, no need to define at initial schema.
+*/
+/*
 CREATE TABLE "product_normalized" (
     product_uuid uuid PRIMARY KEY NOT NULL,
     normalized text

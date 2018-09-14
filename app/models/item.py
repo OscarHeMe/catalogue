@@ -61,7 +61,11 @@ class Item(object):
         try:
             m_item.checksum = int(self.gtin[-1])
         except:
+<<<<<<< HEAD
             m_item.checksum = None
+=======
+            m_item.checksum = 0
+>>>>>>> 64b9ccadd682c1ffb97ef1b89aecd054ff106828
         m_item.name = self.name
         m_item.description = self.description
         m_item.last_modified = str(datetime.datetime.utcnow())
@@ -648,7 +652,8 @@ class Item(object):
             brand = _normalized_attrs['brand']
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
-        df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
+        if 'source' in df_rets.columns:
+            df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
         if df_rets.empty:
             return {}
         return {
@@ -660,7 +665,9 @@ class Item(object):
             'description': sorted(df_rets['description'].dropna().tolist(),
                 key=lambda x: len(x) if x else 0, reverse=True),
             'gtin': sorted(df_rets['gtin'].dropna().tolist(),
-                key=lambda x: len(x) if x else 0)[0],
+                            key=lambda x: len(x) if x else 0)[0] \
+                    if len(df_rets['gtin'].dropna()) > 0 \
+                    else '',
             'retailers': df_rets['r_name'].tolist(),
             'attributes': attrs,
             'ingredients': ingreds,
@@ -849,6 +856,11 @@ class Item(object):
                        qry_categories=qry_categories, qry_group=qry_group)
         logger.debug(qry_item_uuids)
         df = pd.read_sql(qry_item_uuids, g._db.conn)
+<<<<<<< HEAD
         if is_count is False:
             df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
         return df
+=======
+        df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
+        return df
+>>>>>>> f71c32dc67f9d8852abdaf95832b273e57307a8a
