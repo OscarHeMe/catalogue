@@ -87,8 +87,6 @@ class Source(object):
             (p - 1) * ipp
         )
 
-        print(qry)
-
         try:
             rows = g._db.query(qry).fetch()
         except Exception as e:
