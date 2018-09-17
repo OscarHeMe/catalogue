@@ -794,8 +794,7 @@ class Item(object):
                     FROM category tmp 
                     WHERE source = 'byprice' 
                         AND (key='farmacia' OR key='jugos y bebidas')
-                        AND deprecated is NULL
-                    )
+                )
                 OR s.key='farmacias_similares'
             )
             """
@@ -835,6 +834,7 @@ class Item(object):
                     INNER JOIN product_category pc ON p.product_uuid=pc.product_uuid
                     WHERE s.retailer=1
                     AND p.item_uuid IS NOT NULL
+                    AND pc.deprecated IS NULL
                     {qry_categories}
 
             UNION ALL
@@ -845,6 +845,7 @@ class Item(object):
                     INNER JOIN product_category pc ON p.product_uuid=pc.product_uuid
                     WHERE s.retailer=1
                     AND p.item_uuid IS NULL
+                    AND pc.deprecated IS NULL
                     {qry_categories}
                 {qry_group}
             OFFSET {from_}
