@@ -60,7 +60,7 @@ ropa_zapatos_accesorios = ['ropa', 'zapato', 'calzado', 'reloj', 'joyeria' 'puls
 super_ = ['super', 'hamburguesa', 'hot-dog', 'alimento', 'pizza', 'fiesta', 'pastel', 'cafe']
 
 cerveza_vinos_licores = ['cerveza', 'vino', 'whisky', 'licor', 'alcohol', 'tequila', 'champagne', 'vodka',
-                           'mezcal', 'brandy', 'cognac', 'hielo', 'destilado', 'sidra', 'clericot']
+                         'mezcal', 'brandy', 'cognac', 'hielo', 'destilado', 'sidra', 'clericot', 'aguardiente']
 
 # CATEGORIES
 # Farma
@@ -199,7 +199,8 @@ farmacia_t = list(set(['farmacia'] + farmacia + mama_bebe_t + medicamentos_t + n
                       equipo_botiquin_t+ derma_t + vitaminas_suplementos_t + cuidado_personal_belleza_t))
 
 
-farmacia_b = ['ferreteria', 'jarceria', 'mascota', 'perro', 'gato', 'antifaz', 'abarrote', 'cafe'] + entretenimiento + mascotas_t + salchichoneria_quesos_gourmet_t
+farmacia_b = ['ferreteria', 'jarceria', 'mascota', 'perro', 'gato', 'antifaz', 'abarrote', 'cafe'] + entretenimiento + \
+             mascotas_t + salchichoneria_quesos_gourmet_t + cerveza_vinos_licores
 
 
 super_t = list(set( super_ + frutas_verduras_t + panaderia_tortilleria_t + botanas_dulces_t + carnes_pescados_t + \

@@ -794,6 +794,7 @@ class Item(object):
                     FROM category tmp 
                     WHERE source = 'byprice' 
                         AND (key='farmacia' OR key='jugos y bebidas')
+                        AND deprecated is NULL
                     )
                 OR s.key='farmacias_similares'
             )
@@ -811,12 +812,12 @@ class Item(object):
             qry_group=""
         else:
             qry_select_item = """
-                            SELECT 
-                                DISTINCT(i.item_uuid), 
-                                NULL::UUID AS product_uuid,
-                                i.name, 
-                                i.description
-                        """
+                SELECT 
+                    DISTINCT(i.item_uuid), 
+                    NULL::UUID AS product_uuid,
+                    i.name, 
+                    i.description
+            """
             qry_select_product ="""
                 SELECT  
                     NULL as item_uuid, 
