@@ -42,5 +42,5 @@ STREAMER_PORT = os.getenv('STREAMER_PORT', '9092')
 STREAMER_EXCHANGE = os.getenv('STREAMER_EXCHANGE', 'data')
 STREAMER_EXCHANGE_TYPE = os.getenv('STREAMER_EXCHANGE_TYPE', 'direct')
 
-QUEUE_ROUTING = "bp_routing_us_dev" if ENV.upper() == 'DEV' else "bp_routing_us"
-QUEUE_CATALOGUE = 'bp_catalogue_us_dev' if ENV.upper() == 'DEV' else 'bp_catalogue_us'
+QUEUE_ROUTING = "bp_routing_dev" if ENV.upper() == 'DEV' else "bp_routing"
+QUEUE_CATALOGUE = 'bp_catalogue_dev' if ENV.upper() == 'DEV' else 'bp_catalogue'

@@ -61,7 +61,7 @@ class Item(object):
         try:
             m_item.checksum = int(self.gtin[-1])
         except:
-            m_item.checksum = 0
+            m_item.checksum = None
         m_item.name = self.name
         m_item.description = self.description
         m_item.last_modified = str(datetime.datetime.utcnow())
@@ -651,7 +651,7 @@ class Item(object):
         if 'source' in df_rets.columns:
             df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
         if df_rets.empty:
-            return {}
+            raise errors.ApiError(70003, "Issues fetching elements in DB", 404)
         return {
             'name': sorted(df_rets['name'].tolist(),
                 key=lambda x: len(x) if x else 0,
@@ -853,11 +853,6 @@ class Item(object):
                        qry_categories=qry_categories, qry_group=qry_group)
         logger.debug(qry_item_uuids)
         df = pd.read_sql(qry_item_uuids, g._db.conn)
-<<<<<<< HEAD
         if is_count is False:
             df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
         return df
-=======
-        df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
-        return df
->>>>>>> f71c32dc67f9d8852abdaf95832b273e57307a8a

@@ -86,7 +86,7 @@ def initdb_cmd():
 @app.route('/')
 def main():
     return jsonify({
-        'service' : 'ByPrice US Catalogue',
+        'service' : 'ByPrice Catalogue',
         'author' : 'Byprice Dev',
         'date' : datetime.datetime.utcnow(),
         'version': __version__
