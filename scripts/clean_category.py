@@ -55,7 +55,7 @@ cuidado_personal_belleza = ['belleza', 'maquillaje', 'rubor', 'mascarilla', 'pie
 ropa_zapatos_accesorios = ['ropa', 'zapato', 'calzado', 'reloj', 'joyeria' 'pulsera', 'anillo', 'oro', 'lente',
                              'vesitdo', 'gorra', 'chamarra', 'playera', 'sueter', 'sudadera', 'falda', 'tennis',
                              'pantalon', 'short', 'bermuda', 'pantufla', 'jeans', 'camisa', 'sombrero', 'jersey',
-                             'brasier', 'calzon', 'calcetin', 'collar']
+                             'brasier', 'calzon', 'calcetin', 'collar', 'moda']
 
 super_ = ['super', 'hamburguesa', 'hot-dog', 'alimento', 'pizza', 'fiesta', 'pastel', 'cafe']
 
@@ -69,62 +69,78 @@ mama_bebe_t = ['bebe', 'mama', 'infantil', 'materna', 'gerber', 'papilla', 'lact
                'pampers', 'biberon', 'dodot', 'baby']
 mama_bebe_b = ['miel', 'abeja', 'cafe', 'refresco', 'detergente', 'bebida'] + entretenimiento + cerveza_vinos_licores
 
+
 medicamentos_t = ['antiacuagulante', 'antiestaminico', 'antidepresivo', 'antiviral', 'antigripal', 'antidiarreico',
                   'medicamento', 'analgesico', 'desparasitante', 'alta especialidad', 'generico', 'gripa',
                   'antiespasmodico', 'antiniinflamatorio', 'antiagregante', 'antidiabeticos', 'antiemeticos',
                   'alergia', 'dolor', 'ampolleta', 'inyeccion', 'antimicoticos']
 medicamentos_b = ['ortopedia'] + entretenimiento
 
+
 naturales_t = ['natural', 'naturista', 'herbolario']
 naturales_b = [] + entretenimiento
 
+
 salud_sexual_t = ['tampon', 'intima', 'sexual', 'condon', 'preservativo', 'embarazo', 'vagina', 'vibrador',
-                  'lubricante', 'estimulante', 'anticonceptivo', 'toalla']
+                  'lubricante', 'estimulante', 'anticonceptivo', 'toalla', 'viagra', 'cialis', 'erectil']
 salud_sexual_b = ['bebe', 'bano', 'alberca', 'cuerpo', 'cara', 'aceite', 'papel', 'ojos', 'nariz', 'nasal', 'oftal',
-                  'laxante', 'motor', 'antitranspirante', 'gel'] + entretenimiento
+                  'laxante', 'motor', 'antitranspirante', 'gel', 'servilleta', 'bebe', 'baby', 'infantil', 'kids', 'bano',
+                  'panal', 'lactea', 'leche'] + entretenimiento
+
 
 equipo_botiquin_t = ['equipo medico', 'oximetro', 'baumanometro', 'termometro', 'botiquin', 'jeringa', 'nebulizador', 'alcohol', 'anticeptico',
-                                   'gasa', 'venda', 'vendita', 'bandita', 'algodon', 'hisopo', 'curita',
-                                   'oxigenada', 'suero', 'aparato', 'guante latex']
+                     'gasa', 'venda', 'vendita', 'bandita', 'algodon', 'hisopo', 'curita', 'oxigenada', 'suero',
+                     'aparato', 'guante latex']
 equipo_botiquin_b = [] + entretenimiento + ropa_zapatos_accesorios
 
-derma_t = ['piel', 'cara', 'bloqueador', 'derma']
-derma_b = ['lacteo', 'huevo', 'leche', 'bebida', 'alimento', 'abarrote', 'despensa', 'pestana', 'shampo'] + entretenimiento
+
+derma_t = ['piel', 'cara', 'bloqueador', 'derma', 'acne']
+derma_b = ['lacteo', 'huevo', 'leche', 'bebida', 'alimento', 'abarrote', 'despensa', 'pestana', 'shampo',
+           'mascara', 'disfraz', 'fiesta', 'papeleria', 'oficina'] + entretenimiento
+
 
 vitaminas_suplementos_t = ['vitamina', 'vitaminico', 'suplemento']
 vitaminas_suplementos_b = [] + entretenimiento
-
 
 
 #Ambos
 # Ambos
 cuidado_personal_belleza_t = derma_t + cuidado_personal_belleza
 cuidado_personal_belleza_b = ['lacteo', 'huevo', 'leche', 'disfraz', 'perro', 'mascota', 'bebida', 'alimento',
-                              'abarrote', 'despensa', 'caramelo', 'mezcal'] + entretenimiento
+                              'abarrote', 'despensa', 'caramelo', 'mezcal', 'moda', 'disfraz', 'fiesta', 'papeleria',
+                              'oficina'] + entretenimiento
+
 
 # Super
 frutas_verduras_t = ['fruta', 'verdura', 'ensalada', 'lechuga', 'manojo', 'tuberculo']
 frutas_verduras_b = ['farmacia', 'preparado', 'lata'] + entretenimiento
 
+
 panaderia_tortilleria_t = ['panaderia', 'dona', 'tortilla', 'maiz', 'harina', 'rosca', 'panque', 'bolillo', 'muffin']
 panaderia_tortilleria_b = ['farmacia', 'pantalla', 'pantalon', 'ropa'] + entretenimiento
+
 
 botanas_dulces_t = ['dulce', 'botana', 'nacho', 'dip', 'chicle', 'paleta', 'chocolate', 'papas', 'fritas',
                     'cacahuate', 'sabritas', 'doritos', 'cheetos', 'palomita', 'caramelo', 'goma mascar', 'chamoy',
                     'salsa valentina', 'salsa maggy', 'salsa inglesa']
 botanas_dulces_b = ['farmacia', 'verdura', 'olor', 'color', 'desodorante', 'aromatizante', 'frida'] + entretenimiento + cuidado_personal_belleza
 
+
 carnes_pescados_t = ['carne', 'ternera', 'puerco', 'cerdo', 'pulpo', 'pescado', 'camaron', 'pulpo']
 carnes_pescados_b = ['farmacia', 'lata'] + entretenimiento
+
 
 lacteos_huevo_t = ['leche', 'huevo', 'yogurt', 'yoghurt', 'yugur', 'lacteo', 'helado', 'flan', 'natilla', 'nata']
 lacteos_huevo_b = ['farmacia', 'higiene', 'cuerpo', 'mano', 'dental', 'oral'] + entretenimiento
 
+
 salchichoneria_quesos_gourmet_t = ['salchicha', 'jamon', 'queso', 'gourmet', 'pavo', 'platillo']
 salchichoneria_quesos_gourmet_b = ['farmacia'] + entretenimiento
 
+
 alimentos_congelados_regrigerados_t = ['congelado', 'refrigerado', 'gelatina', 'flan', 'natilla', 'nata', 'hielo']
 alimentos_congelados_regrigerados_b = ['farmacia', 'polvo'] + entretenimiento
+
 
 jugos_bebidas_t = ['jugo', 'agua', 'refresco', 'leche', 'yogurt', 'bebida', 'bebible', 'hielo', 'jumex', 'boing',
                    'cocacola', 'pepsi', 'squirt']
@@ -133,6 +149,7 @@ jugos_bebidas_b = ['farmacia', 'polvo', 'oxigenada', 'infantil', 'lactea', 'cale
                    'destilado', 'mascota'
                    ] + entretenimiento + cerveza_vinos_licores + cuidado_personal_belleza + farmacia
 
+
 despensa_t = ['miel', 'mermelada', 'avena', 'cafe', 'aceite','atun', 'sopa', 'pasta', 'despensa', 'abarrote',
               'alimento', 'lata', 'cereal', 'galleta', 'azucar', 'especia', 'sazonador', 'chile',
               'salsa', 'semilla', 'mayoneza', 'aderezo', 'mayonesa', 'herdez', 'tuny', 'costeña', 'del monte',
@@ -140,30 +157,38 @@ despensa_t = ['miel', 'mermelada', 'avena', 'cafe', 'aceite','atun', 'sopa', 'pa
               ] + panaderia_tortilleria_t + lacteos_huevo_t + jugos_bebidas_t
 despensa_b = ['diente', 'farmacia', 'cabello', 'cuerpo', 'pescado', 'fresco', 'mascota', 'perro', 'gato'] + entretenimiento
 
+
 desechables_t = ['clinex', 'plato', 'vaso', 'servilleta', 'desechable', 'cuchillo', 'cuchara', 'tenedor',
                  'cubiertos', 'higienico', 'panuelo']
 desechables_b = ['metal', 'cuaderno'] + entretenimiento
 
+
 jugueteria_t = ['juguete', 'juego', 'muneco', 'pelota', 'burbuja', 'peluche']
 jugueteria_b = ['farmacia', 'bano'] + entretenimiento
+
 
 ferreteria_jarceria_t = ['ferreteria', 'jarceria', 'herramienta', 'truper', 'martillo', 'taladro', 'bombilla', 'foco']
 ferreteria_jarceria_b = ['farmacia'] + entretenimiento
 
+
 mascotas_t = ['mascota', 'perro', 'peces', 'gato', 'pajaro', 'tortuga', 'cachorro', 'antipulga', 'morder', 'carnaza']
 mascotas_b = ['farmacia'] + entretenimiento
+
 
 hogar_t = ['hogar', 'blancos', 'bano', 'comedor', 'sala', 'mueble', 'silla', 'cocina', 'casa', 'domestico', 'cojin',
            'sabana', 'mesa', 'patio', 'adorno', 'plato', 'cubierto', 'cubiertos', 'taza', 'jardin', 'iluminacion',
            'lampara', 'vajilla', 'olla', 'tocador', 'tapete', 'alfombra']
 hogar_b = ['farmacia', 'mascota', 'perro', 'gato', 'carro', 'auto'] + entretenimiento
 
+
 limpieza_detergentes_t = ['limpieza', 'jabon', 'detergente', 'manchas', 'aromatizante']
 limpieza_detergentes_b = ['farmacia'] + entretenimiento
+
 
 entretenimiento_t = ['arte', 'telescopio', 'baraja', 'casino', 'juegos', 'consola', 'nintendo', 'play station',
                      'xbox', 'hasbro', 'matel', 'muneco', 'platilina'] + entretenimiento
 entretenimiento_b = ['farmacia']
+
 
 computo_electronica_t = ['tecnologia', 'electronico', 'celular', 'telefono', 'computo', 'computadora', 'pc',
                          'teclado', 'monitor', 'pantalla', 'bocina', 'cargador', 'usb', 'game',
@@ -172,13 +197,16 @@ computo_electronica_t = ['tecnologia', 'electronico', 'celular', 'telefono', 'co
                          'estereo', 'display', 'mouse', 'inalambrico', 'nvidia']
 computo_electronica_b = ['farmacia', 'mickey', 'mascota'] + entretenimiento
 
+
 autos_motos_llantas_t = ['moto', 'auto', 'carro', 'llanta']
 autos_motos_llantas_b = ['farmacia', 'autores', 'ferreteria'] + entretenimiento
+
 
 deportes_t = ['deporte', 'pesas', 'futbol', 'football', 'alberca', 'natacion', 'baseball', 'beisbol', 'basquetbol',
               'basketball', 'volibol', 'volleyball', 'pelota', 'balon', 'gimnasio', 'gym', 'caminadora', 'bicicleta',
               'ciclismo', 'raqueta', 'nike', 'adidas', 'nfl', 'nba', 'goggles']
 deportes_b = ['farmacia'] + entretenimiento
+
 
 oficina_papeleria_t = ['oficina', 'cuaderno', 'lapiz', 'lapices', 'lapicera', 'gis', 'colores', 'pluma', 'plumon',
                        'pepeleria','papel', 'confeti', 'globo', 'regalo', 'tarjeta', 'serpentina', 'libreta', 'fiesta',
@@ -186,8 +214,10 @@ oficina_papeleria_t = ['oficina', 'cuaderno', 'lapiz', 'lapices', 'lapicera', 'g
 oficina_papeleria_b = ['farmacia', 'higienico', 'bano', 'labial', 'belleza', 'pestana', 'delineador', 'maquillaje',
                        'ojo', 'labio', 'ganso', 'cojin', 'cobija', 'almohada', 'pavo'] + entretenimiento
 
+
 cerveza_vinos_licores_t = cerveza_vinos_licores
 cerveza_vinos_licores_b = ['farmacia', 'etilico', 'sin', 'sidral'] + entretenimiento + limpieza_detergentes_t + cuidado_personal_belleza_t
+
 
 ropa_zapatos_accesorios_t = ropa_zapatos_accesorios
 ropa_zapatos_accesorios_b = ['farmacia', 'perro', 'gato', 'mascota', 'carne', 'alimento', 'panaderia',
@@ -199,8 +229,8 @@ farmacia_t = list(set(['farmacia'] + farmacia + mama_bebe_t + medicamentos_t + n
                       equipo_botiquin_t+ derma_t + vitaminas_suplementos_t + cuidado_personal_belleza_t))
 
 
-farmacia_b = ['ferreteria', 'jarceria', 'mascota', 'perro', 'gato', 'antifaz', 'abarrote', 'cafe'] + entretenimiento + \
-             mascotas_t + salchichoneria_quesos_gourmet_t + cerveza_vinos_licores
+farmacia_b = ['ferreteria', 'jarceria', 'mascota', 'perro', 'gato', 'antifaz', 'abarrote', 'cafe', 'moda', 'disfraz',
+              'fiesta', 'papeleria', 'oficina'] + entretenimiento + mascotas_t + salchichoneria_quesos_gourmet_t + cerveza_vinos_licores
 
 
 super_t = list(set( super_ + frutas_verduras_t + panaderia_tortilleria_t + botanas_dulces_t + carnes_pescados_t + \

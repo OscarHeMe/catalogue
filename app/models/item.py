@@ -360,7 +360,8 @@ class Item(object):
                     row['categories_raw'] = list(df_categories[df_categories.product_uuid.isin([row.product_uuid]) &
                         (~df_categories.source.isin(["byprice", "byprice_farma"]))].name_category)
                     # Categories ByPrice
-                    row['categories'] = []
+                    row['categories'] = list(set(df_categories[df_categories.product_uuid.isin([row.product_uuid]) &
+                        (df_categories.source.isin(["byprice"]))].name_category))
                     row['ingredients'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
