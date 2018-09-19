@@ -505,6 +505,10 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                         bad_results_sub = process.extractBests(categories_raw, not_choices,
                                                            scorer=fuzz.partial_token_set_ratio,
                                                            score_cutoff=min_bad_score)
+                        if names:
+                            bad_results_sub = process.extractBests(names, not_choices,
+                                                                   scorer=fuzz.partial_token_set_ratio,
+                                                                   score_cutoff=min_bad_score)
                         if not bad_results_sub:
                             cat_name = list(cat.keys())[0]
                             #print("++++++ \t", cat_name, ': ', results)
