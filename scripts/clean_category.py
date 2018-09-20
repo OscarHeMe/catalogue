@@ -85,7 +85,7 @@ salud_sexual_t = ['tampon', 'intima', 'sexual', 'condon', 'preservativo', 'embar
                   'lubricante', 'estimulante', 'anticonceptivo', 'toalla', 'viagra', 'cialis', 'erectil']
 salud_sexual_b = ['bebe', 'bano', 'alberca', 'cuerpo', 'cara', 'aceite', 'papel', 'ojos', 'nariz', 'nasal', 'oftal',
                   'laxante', 'motor', 'antitranspirante', 'gel', 'servilleta', 'bebe', 'baby', 'infantil', 'kids', 'bano',
-                  'panal', 'lactea', 'leche'] + entretenimiento
+                  'panal', 'lactea', 'leche', 'facial'] + entretenimiento
 
 
 equipo_botiquin_t = ['equipo medico', 'oximetro', 'baumanometro', 'termometro', 'botiquin', 'jeringa', 'nebulizador', 'alcohol', 'anticeptico',
@@ -506,7 +506,7 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                                                            scorer=fuzz.partial_token_set_ratio,
                                                            score_cutoff=min_bad_score)
                         if names:
-                            bad_results_sub = process.extractBests(names, not_choices,
+                            bad_results_sub += process.extractBests(names, not_choices,
                                                                    scorer=fuzz.partial_token_set_ratio,
                                                                    score_cutoff=min_bad_score)
                         if not bad_results_sub:
