@@ -40,7 +40,7 @@ entretenimiento  = ['novela', 'drama', 'terror', 'miedo', 'ciencia ficcion', 'pe
                     'musica', 'video', 'fotografia', 'camara', 'libro', 'television', 'radio', 'literatura', 'cuento']
 
 farmacia = ['cardiobascular', 'bacteria', 'infeccion', 'antiseptico', 'moreton', 'cortadura', 'inmuno',
-            'hormonal', 'farmaco', 'hipertension', 'diabetes', 'hospital', 'pediatra', 'doctor', 'medicamento']
+            'hormonal', 'farmaco', 'hipertension', 'hospital', 'pediatra', 'doctor', 'medicamento']
 
 
 cuidado_personal_belleza = ['belleza', 'maquillaje', 'rubor', 'mascarilla', 'pies',
@@ -78,7 +78,7 @@ medicamentos_b = ['ortopedia'] + entretenimiento
 
 
 naturales_t = ['natural', 'naturista', 'herbolario']
-naturales_b = [] + entretenimiento
+naturales_b = ['yogurt', 'yugur', 'alpura', 'lala', 'helado', 'agua', 'nieve'] + entretenimiento
 
 
 salud_sexual_t = ['tampon', 'intima', 'sexual', 'condon', 'preservativo', 'embarazo', 'vagina', 'vibrador',
@@ -96,11 +96,11 @@ equipo_botiquin_b = [] + entretenimiento + ropa_zapatos_accesorios
 
 derma_t = ['piel', 'cara', 'bloqueador', 'derma', 'acne']
 derma_b = ['lacteo', 'huevo', 'leche', 'bebida', 'alimento', 'abarrote', 'despensa', 'pestana', 'shampo',
-           'mascara', 'disfraz', 'fiesta', 'papeleria', 'oficina'] + entretenimiento
+           'mascara', 'disfraz', 'fiesta', 'papeleria', 'oficina', 'desbloqueado', 'caramelo'] + entretenimiento
 
 
 vitaminas_suplementos_t = ['vitamina', 'vitaminico', 'suplemento']
-vitaminas_suplementos_b = [] + entretenimiento
+vitaminas_suplementos_b = ['antihistaminico'] + entretenimiento
 
 
 #Ambos
@@ -146,13 +146,13 @@ jugos_bebidas_t = ['jugo', 'agua', 'refresco', 'leche', 'yogurt', 'bebida', 'beb
                    'cocacola', 'pepsi', 'squirt']
 jugos_bebidas_b = ['farmacia', 'polvo', 'oxigenada', 'infantil', 'lactea', 'calentador', 'perro', 'gato', 'cachorro',
                    'jabon', 'alimento', 'galleta', 'nerf', 'capsula', 'barra', 'crema', 'tocador', 'tina', 'purificador',
-                   'destilado', 'mascota'
+                   'destilado', 'mascota', 'maquina', 'cafetera', 'curacion', 'bolsa'
                    ] + entretenimiento + cerveza_vinos_licores + cuidado_personal_belleza + farmacia
 
 
 despensa_t = ['miel', 'mermelada', 'avena', 'cafe', 'aceite','atun', 'sopa', 'pasta', 'despensa', 'abarrote',
               'alimento', 'lata', 'cereal', 'galleta', 'azucar', 'especia', 'sazonador', 'chile',
-              'salsa', 'semilla', 'mayoneza', 'aderezo', 'mayonesa', 'herdez', 'tuny', 'costeña', 'del monte',
+              'salsa', 'semilla', 'mayoneza', 'aderezo', 'mayonesa', 'herdez', 'tuny', 'costena', 'del monte',
               'nestle', 'kellogs', 'gelatina', 'flan', 'postre'
               ] + panaderia_tortilleria_t + lacteos_huevo_t + jugos_bebidas_t
 despensa_b = ['diente', 'farmacia', 'cabello', 'cuerpo', 'pescado', 'fresco', 'mascota', 'perro', 'gato'] + entretenimiento
@@ -228,9 +228,10 @@ ropa_zapatos_accesorios_b = ['farmacia', 'perro', 'gato', 'mascota', 'carne', 'a
 farmacia_t = list(set(['farmacia'] + farmacia + mama_bebe_t + medicamentos_t + naturales_t + salud_sexual_t +
                       equipo_botiquin_t+ derma_t + vitaminas_suplementos_t + cuidado_personal_belleza_t))
 
-
 farmacia_b = ['ferreteria', 'jarceria', 'mascota', 'perro', 'gato', 'antifaz', 'abarrote', 'cafe', 'moda', 'disfraz',
-              'fiesta', 'papeleria', 'oficina'] + entretenimiento + mascotas_t + salchichoneria_quesos_gourmet_t + cerveza_vinos_licores
+              'fiesta', 'papeleria', 'oficina', 'phone', 'caramelo', 'despensa', 'alpura', 'lala', 'yogurt', 'helado',
+              'nieve', 'abarrote'] + \
+             entretenimiento + mascotas_t + salchichoneria_quesos_gourmet_t + cerveza_vinos_licores
 
 
 super_t = list(set( super_ + frutas_verduras_t + panaderia_tortilleria_t + botanas_dulces_t + carnes_pescados_t + \
@@ -494,6 +495,7 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                 choices = attrs.get('tokens')
                 results = process.extractBests(categories_raw, choices, scorer=fuzz.partial_token_set_ratio, score_cutoff=min_score)
                 if results:
+                    # print("++++++ \t", name, ': ', results)
                     match_categories.append(name)
                 result_keys = {result[0] for result in results}
 
@@ -511,11 +513,11 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                                                                    score_cutoff=min_bad_score)
                         if not bad_results_sub:
                             cat_name = list(cat.keys())[0]
-                            #print("++++++ \t", cat_name, ': ', results)
+                            # print("++++++ \t", cat_name, ': ', results)
                             match_categories.append(cat_name)
                         # else:
-                        #     cat_name = list(cat.keys())[0]
-                        #     print("------ \t", cat_name, ': ', bad_results_sub)
+                            # cat_name = list(cat.keys())[0]
+                            #print("------ \t", cat_name, ': ', bad_results_sub)
             # else:
             #     print("------ \t", name, ': ', bad_results)
 
