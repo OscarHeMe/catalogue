@@ -562,25 +562,29 @@ if len(sys.argv) > 1 and sys.argv[1] == 'wrong_walmart':
         ]
     # Matched by past Item id
     ig_retailer = pd.merge(i_retailer[i_retailer.retailer == 'walmart'],
-        g_retailer[g_retailer.retailer == 'san_pablo'][['item_uuid','item_id']].rename(columns={'item_id':'product_id'}),
+        g_retailer[g_retailer.retailer == 'walmart'][['item_uuid','item_id']].rename(columns={'item_id':'product_id'}),
         on='item_uuid', how = 'left')
     matched_by_iid = pd.merge(non_matched_walmart, ig_retailer[['item_uuid', 'product_id']].dropna(), on='product_id', how='left')
     matched_by_iid = matched_by_iid[~matched_by_iid.item_uuid.isnull()]
     print('Matched {} by Past Item ID'.format(len(matched_by_iid)))
-    #######
-    ######
-    # Validae matching with Catalogue.product.product_id ~ IGRetailer.gtin
-    import sys
-    sys.exit()
     non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_iid.product_uuid.tolist()))
         ]
     # Match by Name
-    matched_by_name = pd.merge(non_matched_sanpablo.drop_duplicates('product_id'),
-        matched_sanpablo[['item_uuid','name']].drop_duplicates('item_uuid'), on='name', how='left')
+    matched_by_name = pd.merge(non_matched_walmart.drop_duplicates('product_id'),
+        matched_walmart[['item_uuid','name']].drop_duplicates('item_uuid'), on='name', how='left')
     matched_by_name = matched_by_name[~matched_by_name.item_uuid.isnull()].drop_duplicates('product_id')
     print('Matched {} by Name'.format(len(matched_by_name)))
-    non_matched_sanpablo = non_matched_sanpablo[(~non_matched_sanpablo.product_uuid.isin(matched_by_name.product_uuid.tolist()))
+    non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_name.product_uuid.tolist()))
         ]
+    #######
+    # To review later
+    # Match Catalogue.product.product_id ~ IGRetailer.gtin
+    #matched_by_gtin = pd.merge(non_matched_walmart.drop_duplicates('product_id'),
+    #    matched_walmart[['item_uuid','gtin']].drop_duplicates('item_uuid'), left_on='name', how='left')
+    #matched_by_name = matched_by_name[~matched_by_name.item_uuid.isnull()].drop_duplicates('product_id')
+    #print('Matched {} by Name'.format(len(matched_by_name)))
+    #non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_name.product_uuid.tolist()))
+    #    ]
     # Append all matches
     _cols = ['item_uuid', 'product_id', 'product_uuid']
     concat_matches = pd.concat([matched_by_pid[_cols], matched_by_iid[_cols], matched_by_name[_cols]])\
@@ -605,4 +609,4 @@ if len(sys.argv) > 1 and sys.argv[1] == 'wrong_walmart':
         except Exception as e:
             print(e)
     print('Updated {} products'.format(len(updated_ids)))
-    print('Finished updated San Pablo Elements')
+    print('Finished updated Walmart Elements')
