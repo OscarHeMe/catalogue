@@ -617,17 +617,16 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_fresko':
 # Missing Fresko Elements UUIDs
     # Elements in Identity.GtinRetailer
     ig_fresko = g_retailer[g_retailer.retailer == 'fresko']
+    print('Total Fresko Gtin Retailers:', len(ig_fresko))
     # Elements in Items.ItemRetailer
     ir_fresko = i_retailer[i_retailer.retailer == 'fresko']
-    # Elements in Catalogue.Product
-    #print('Product\n')
-    #product[product.source == 'fresko'].info()
+    print('Total Fresko Item Retailers:', len(ir_fresko))
     #### Fixing records
     # How many records are not in Identity.GtinRetailer
-    print("How many records are not in Identity.GtinRetailer\n")
+    print("How many records are not in Identity.GtinRetailer")
     fresko_not_identity = ir_fresko[~ir_fresko.item_uuid.isin(ig_fresko.item_uuid.tolist())].copy()
     print(len(fresko_not_identity))
-    print("For those not in identity how many are in La Comer or City Market\n")   
+    print("\nFor those not in identity how many are in La Comer or City Market")   
     fresko_missing_g = g_retailer[g_retailer.item_uuid.isin(fresko_not_identity.item_uuid) \
         & ((g_retailer.retailer == 'city_market') | (g_retailer.retailer == 'la_comer'))].copy()
     fresko_missing_i = i_retailer[i_retailer.item_uuid.isin(fresko_not_identity.item_uuid) \
