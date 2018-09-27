@@ -610,3 +610,58 @@ if len(sys.argv) > 1 and sys.argv[1] == 'wrong_walmart':
             print(e)
     print('Updated {} products'.format(len(updated_ids)))
     print('Finished updated Walmart Elements')
+
+
+# -------------------
+if len(sys.argv) > 1 and sys.argv[1] == 'missing_fresko': 
+# Missing Fresko Elements UUIDs
+    # Elements in Identity.GtinRetailer
+    ig_fresko = g_retailer[g_retailer.retailer == 'fresko']
+    # Elements in Items.ItemRetailer
+    ir_fresko = i_retailer[i_retailer.retailer == 'fresko']
+    # Elements in Catalogue.Product
+    #print('Product\n')
+    #product[product.source == 'fresko'].info()
+    #### Fixing records
+    # How many records are not in Identity.GtinRetailer
+    print("How many records are not in Identity.GtinRetailer\n")
+    fresko_not_identity = ir_fresko[~ir_fresko.item_uuid.isin(ig_fresko.item_uuid.tolist())].copy()
+    print(len(fresko_not_identity))
+    print("For those not in identity how many are in La Comer or City Market\n")   
+    fresko_missing_g = g_retailer[g_retailer.item_uuid.isin(fresko_not_identity.item_uuid) \
+        & ((g_retailer.retailer == 'city_market') | (g_retailer.retailer == 'la_comer'))].copy()
+    fresko_missing_i = i_retailer[i_retailer.item_uuid.isin(fresko_not_identity.item_uuid) \
+        & ((i_retailer.retailer == 'city_market') | (i_retailer.retailer == 'la_comer'))\
+        & ~(i_retailer.item_uuid.isin(fresko_missing_g.item_uuid))].copy()
+    print(fresko_missing_g[~fresko_missing_g.item_id.isnull()].drop_duplicates('item_uuid').groupby('retailer').item_id.count())
+    print(fresko_missing_i[~fresko_missing_i.gtin.isnull()].drop_duplicates('item_uuid').groupby('retailer').gtin.count())
+    # Set Missing fresko to the correct retailer
+    fresko_missing_g['retailer'] = 'fresko'
+    # Set missing fresko with correct retailer, drop dups, set gtin to item_id completed
+    fresko_missing_i = fresko_missing_i[['item_uuid','retailer','gtin']]\
+        .drop_duplicates('item_uuid').rename(columns={'gtin':'item_id'})
+    fresko_missing_i['retailer'] = 'fresko'
+    fresko_missing_i['item_id'] = fresko_missing_i['item_id'].apply(lambda x: str(x).zfill(20))
+    # Concat missing elements
+    fresko_total_missing = pd.concat([fresko_missing_i,fresko_missing_g]).drop_duplicates('item_uuid')
+    ## Update Identity DB
+    _db = Pygres({
+            'SQL_HOST': SQL_IDENTITY, 'SQL_PORT': SQL_IDENTITY_PORT, 'SQL_USER': M_SQL_USER,
+            'SQL_PASSWORD': M_SQL_PASSWORD, 'SQL_DB': IDENTITY_DB
+        })
+    _m = _db.model('gtin_retailer', 'id_gtin_retailer')
+    updated_ids = []
+    print('To fix products:', len(fresko_total_missing))
+    for sp in tqdm(fresko_total_missing.to_dict(orient='records'), desc='Updated GRetailer elements'):
+        try:
+            _m.item_uuid = sp['item_uuid']
+            _m.item_id = sp['item_id']
+            _m.item_id_type = 'id'
+            _m.retailer = sp['retailer']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+            break
+print('Updated {} GtinRetailer records'.format(len(updated_ids)))
+print('Finished updated Fresko Elements')
