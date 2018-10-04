@@ -609,8 +609,8 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                                                                    score_cutoff=min_bad_score)
                         if not bad_results_sub:
                             cat_name = list(cat.keys())[0]
-                            # print("++++++ \t", cat_name, ': ', results)
                             match_categories.append(cat_name)
+                            # print("++++++ \t", cat_name, ': ', results)
             #             else:
             #                 cat_name = list(cat.keys())[0]
             #                 print("------ \t", cat_name, ': ', bad_results_sub)

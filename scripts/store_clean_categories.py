@@ -49,8 +49,8 @@ def get_category_raw(*args):
     uuid = args[0][2]
     if categories_raw:
         categories = get_categories_related(categories_raw, min_bad_score=90, names=name)
-    # if not categories:
-    #     categories = get_categories_related(name, min_bad_score=85, is_name=True)
+    # aaa if not categories:
+    # aaa     categories = get_categories_related(name, min_bad_score=85, is_name=True)
     else:
         categories = False
     return {"categories": categories, "uuid": uuid}
