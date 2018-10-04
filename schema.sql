@@ -1,4 +1,3 @@
-
 CREATE EXTENSION "uuid-ossp";
 CREATE extension pgcrypto;
 CREATE extension fuzzystrmatch;
@@ -14,7 +13,7 @@ CREATE TABLE "source"(
 );
 
 /* Class */
-/* Provider, Brand, Presentation, Color, etc... */
+/* Provider, Brand, Presentation, Retailer, Color, etc... */
 CREATE TABLE "clss" (
     id_clss serial PRIMARY KEY NOT NULL,
     name text,
@@ -29,7 +28,7 @@ CREATE TABLE "clss" (
 /* Chedraui, Advil, Tabletas, Pfizer, ibuprofeno */
 CREATE TABLE "attr" (
     id_attr serial PRIMARY KEY NOT NULL,
-    id_clss int REFERENCES clss(id_clss),
+    id_clss int REFERENCES clss(id_clss)
     name text,
     key text,
     match text,
@@ -55,20 +54,18 @@ CREATE TABLE "item" (
     checksum integer,
     name varchar(255),
     description text,
-    page_views integer,
     last_modified timestamp
  );
 
 /* productRetailer */
 CREATE TABLE "product" (
-    product_uuid uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     item_uuid uuid REFERENCES "item" (item_uuid),
     source varchar(255) not null,
     product_id varchar(255) not null,
     name varchar(255),
     gtin varchar(14),
     description text,
-    normalized text,
     raw_product json,
     raw_html text,
     categories text,
@@ -80,71 +77,39 @@ CREATE TABLE "product" (
     last_modified timestamp
 );
 
-/* productImage */
 CREATE TABLE "product_image" (
     id_product_image serial PRIMARY KEY,
     product_uuid uuid REFERENCES "product" (product_uuid),
-    image text,
-    descriptor json,
-    last_modified timestamp
+    image text
 );
 
-/* productAttribute */
+/* productRetailerAttribute */
 CREATE TABLE "product_attr" (
     id_product_attr serial PRIMARY KEY NOT NULL,
-    id_attr integer REFERENCES attr(id_attr),
+    id_attr integer REFERENCES attribute(id_attribute),
     product_uuid uuid REFERENCES product(product_uuid),
+    source character varying(255) REFERENCES retailer(key),
     value text,
     precision text,
-    last_modified timestamp
+    last_modified timestamp,
+    source character varying(255) REFERENCES retailer(key)
 );
 
-/* itemAttribute */
-/* Normalized attributes */
-CREATE TABLE "item_attr" (
-    id_item_attr serial PRIMARY KEY NOT NULL,
-    id_attr integer REFERENCES attr(id_attr),
-    item_uuid uuid REFERENCES item(item_uuid),
-    value text,
-    precision text,
-    last_modified timestamp
-);
-
-/* productCategory */
-CREATE TABLE "product_category_tmp" (
+/* productRetailerCategory */
+CREATE TABLE "product_category" (
     id_product_category serial PRIMARY KEY NOT NULL,
     id_category int REFERENCES category(id_category),
     product_uuid uuid REFERENCES product(product_uuid),
-    last_modified timestamp DEFAULT (now() AT TIME ZONE 'utc'),
-    deprecated int
+    last_modified timestamp
 );
-
-/* productNormalized */ 
-
-/*
--- Batch created table, no need to define at initial schema.
-*/
-/*
-CREATE TABLE "product_normalized" (
-    product_uuid uuid PRIMARY KEY NOT NULL,
-    normalized text
-);
-*/
-
-/* itemVademecumInfo */
-/* Batch created table, not need to define initial schema.
-CREATE TABLE "item_vademecum_info" (
-    item_uuid uuid PRIMARY KEY NOT NULL,
-    data json,
-    blacklisted bool
-);
-*/
 
 /* Indexes */
 CREATE INDEX ON product (source);
 CREATE INDEX ON product (product_id);
-CREATE INDEX ON product (product_uuid);
+CREATE INDEX ON product (item_uuid);
 CREATE INDEX ON attr (key);
 CREATE INDEX ON attr (id_clss);
 CREATE INDEX ON clss (key);
 CREATE INDEX ON category (source);
+CREATE INDEX ON product_attr (product_uuid)
+CREATE INDEX ON product_category (product_uuid);
