@@ -562,25 +562,29 @@ if len(sys.argv) > 1 and sys.argv[1] == 'wrong_walmart':
         ]
     # Matched by past Item id
     ig_retailer = pd.merge(i_retailer[i_retailer.retailer == 'walmart'],
-        g_retailer[g_retailer.retailer == 'san_pablo'][['item_uuid','item_id']].rename(columns={'item_id':'product_id'}),
+        g_retailer[g_retailer.retailer == 'walmart'][['item_uuid','item_id']].rename(columns={'item_id':'product_id'}),
         on='item_uuid', how = 'left')
     matched_by_iid = pd.merge(non_matched_walmart, ig_retailer[['item_uuid', 'product_id']].dropna(), on='product_id', how='left')
     matched_by_iid = matched_by_iid[~matched_by_iid.item_uuid.isnull()]
     print('Matched {} by Past Item ID'.format(len(matched_by_iid)))
-    #######
-    ######
-    # Validae matching with Catalogue.product.product_id ~ IGRetailer.gtin
-    import sys
-    sys.exit()
     non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_iid.product_uuid.tolist()))
         ]
     # Match by Name
-    matched_by_name = pd.merge(non_matched_sanpablo.drop_duplicates('product_id'),
-        matched_sanpablo[['item_uuid','name']].drop_duplicates('item_uuid'), on='name', how='left')
+    matched_by_name = pd.merge(non_matched_walmart.drop_duplicates('product_id'),
+        matched_walmart[['item_uuid','name']].drop_duplicates('item_uuid'), on='name', how='left')
     matched_by_name = matched_by_name[~matched_by_name.item_uuid.isnull()].drop_duplicates('product_id')
     print('Matched {} by Name'.format(len(matched_by_name)))
-    non_matched_sanpablo = non_matched_sanpablo[(~non_matched_sanpablo.product_uuid.isin(matched_by_name.product_uuid.tolist()))
+    non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_name.product_uuid.tolist()))
         ]
+    #######
+    # To review later
+    # Match Catalogue.product.product_id ~ IGRetailer.gtin
+    #matched_by_gtin = pd.merge(non_matched_walmart.drop_duplicates('product_id'),
+    #    matched_walmart[['item_uuid','gtin']].drop_duplicates('item_uuid'), left_on='name', how='left')
+    #matched_by_name = matched_by_name[~matched_by_name.item_uuid.isnull()].drop_duplicates('product_id')
+    #print('Matched {} by Name'.format(len(matched_by_name)))
+    #non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_name.product_uuid.tolist()))
+    #    ]
     # Append all matches
     _cols = ['item_uuid', 'product_id', 'product_uuid']
     concat_matches = pd.concat([matched_by_pid[_cols], matched_by_iid[_cols], matched_by_name[_cols]])\
@@ -605,4 +609,58 @@ if len(sys.argv) > 1 and sys.argv[1] == 'wrong_walmart':
         except Exception as e:
             print(e)
     print('Updated {} products'.format(len(updated_ids)))
-    print('Finished updated San Pablo Elements')
+    print('Finished updated Walmart Elements')
+
+
+# -------------------
+if len(sys.argv) > 1 and sys.argv[1] == 'missing_fresko': 
+# Missing Fresko Elements UUIDs
+    # Elements in Identity.GtinRetailer
+    ig_fresko = g_retailer[g_retailer.retailer == 'fresko']
+    print('Total Fresko Gtin Retailers:', len(ig_fresko))
+    # Elements in Items.ItemRetailer
+    ir_fresko = i_retailer[i_retailer.retailer == 'fresko']
+    print('Total Fresko Item Retailers:', len(ir_fresko))
+    #### Fixing records
+    # How many records are not in Identity.GtinRetailer
+    print("How many records are not in Identity.GtinRetailer")
+    fresko_not_identity = ir_fresko[~ir_fresko.item_uuid.isin(ig_fresko.item_uuid.tolist())].copy()
+    print(len(fresko_not_identity))
+    print("\nFor those not in identity how many are in La Comer or City Market")   
+    fresko_missing_g = g_retailer[g_retailer.item_uuid.isin(fresko_not_identity.item_uuid) \
+        & ((g_retailer.retailer == 'city_market') | (g_retailer.retailer == 'la_comer'))].copy()
+    fresko_missing_i = i_retailer[i_retailer.item_uuid.isin(fresko_not_identity.item_uuid) \
+        & ((i_retailer.retailer == 'city_market') | (i_retailer.retailer == 'la_comer'))\
+        & ~(i_retailer.item_uuid.isin(fresko_missing_g.item_uuid))].copy()
+    print(fresko_missing_g[~fresko_missing_g.item_id.isnull()].drop_duplicates('item_uuid').groupby('retailer').item_id.count())
+    print(fresko_missing_i[~fresko_missing_i.gtin.isnull()].drop_duplicates('item_uuid').groupby('retailer').gtin.count())
+    # Set Missing fresko to the correct retailer
+    fresko_missing_g['retailer'] = 'fresko'
+    # Set missing fresko with correct retailer, drop dups, set gtin to item_id completed
+    fresko_missing_i = fresko_missing_i[['item_uuid','retailer','gtin']]\
+        .drop_duplicates('item_uuid').rename(columns={'gtin':'item_id'})
+    fresko_missing_i['retailer'] = 'fresko'
+    fresko_missing_i['item_id'] = fresko_missing_i['item_id'].apply(lambda x: str(x).zfill(20))
+    # Concat missing elements
+    fresko_total_missing = pd.concat([fresko_missing_i,fresko_missing_g]).drop_duplicates('item_uuid')
+    ## Update Identity DB
+    _db = Pygres({
+            'SQL_HOST': SQL_IDENTITY, 'SQL_PORT': SQL_IDENTITY_PORT, 'SQL_USER': M_SQL_USER,
+            'SQL_PASSWORD': M_SQL_PASSWORD, 'SQL_DB': IDENTITY_DB
+        })
+    _m = _db.model('gtin_retailer', 'id_gtin_retailer')
+    updated_ids = []
+    print('To fix products:', len(fresko_total_missing))
+    for sp in tqdm(fresko_total_missing.to_dict(orient='records'), desc='Updated GRetailer elements'):
+        try:
+            _m.item_uuid = sp['item_uuid']
+            _m.item_id = sp['item_id']
+            _m.item_id_type = 'id'
+            _m.retailer = sp['retailer']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+            break
+print('Updated {} GtinRetailer records'.format(len(updated_ids)))
+print('Finished updated Fresko Elements')
