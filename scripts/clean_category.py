@@ -567,7 +567,7 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                 choices = attrs.get('tokens')
                 results = process.extractBests(categories_raw, choices, scorer=fuzz.partial_token_set_ratio, score_cutoff=min_score)
                 if results:
-                    print("++++++ \t", name, ': ', results)
+                    # print("++++++ \t", name, ': ', results)
                     match_categories.append(name)
                 result_keys = {result[0] for result in results}
 
@@ -585,13 +585,13 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                                                                    score_cutoff=min_bad_score)
                         if not bad_results_sub:
                             cat_name = list(cat.keys())[0]
-                            print("++++++ \t", cat_name, ': ', results)
+                            # print("++++++ \t", cat_name, ': ', results)
                             match_categories.append(cat_name)
-                        else:
-                            cat_name = list(cat.keys())[0]
-                            print("------ \t", cat_name, ': ', bad_results_sub)
-            else:
-                print("------ \t", name, ': ', bad_results)
+                        # else:
+                        #     cat_name = list(cat.keys())[0]
+            #                 print("------ \t", cat_name, ': ', bad_results_sub)
+            # else:
+            #     print("------ \t", name, ': ', bad_results)
         if {"Mascotas", "Autos, Motos y llantas"} & set(match_categories):
             aux = set(match_categories) - {"Super"}
             if len(aux) > 1:
