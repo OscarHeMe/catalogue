@@ -37,7 +37,8 @@ def to_key(categories):
 
 # SPECIAL TOKENS
 entretenimiento  = ['novela', 'drama', 'terror', 'miedo', 'ciencia ficcion', 'pelicula', 'cd', 'dvd', 'blu ray',
-                    'musica', 'video', 'fotografia', 'camara', 'libro', 'television', 'radio', 'literatura', 'cuento']
+                    'musica', 'video', 'fotografia', 'camara', 'libro', 'television', 'radio', 'literatura', 'cuento',
+                    'revista']
 
 farmacia = ['cardiobascular', 'bacteria', 'infeccion', 'antiseptico', 'moreton', 'cortadura', 'inmuno',
             'hormonal', 'farmaco', 'hipertension', 'hospital', 'pediatra', 'doctor', 'medicamento']
@@ -143,7 +144,7 @@ lacteos_huevo_b = [
                     'farmacia', 'higiene', 'cuerpo', 'mano', 'dental', 'oral', 'carne', 'verdura', 'nugget', 'pollo',
                     'papa', 'pasta', 'mezcla', 'gelatina', 'jugo', 'tostado', 'infantil', 'formula','pan',
                     'tortilla', 'gelatina', 'verdura', 'salsa', 'carne', 'pollo', 'papa', 'pechuga',
-                    'botana', 'pizza', 'extractor', 'hamburguesa', 'pescado', 'botana'
+                    'botana', 'pizza', 'extractor', 'hamburguesa', 'pescado', 'botana', 'atun', 'caviar'
                    ] + entretenimiento
 
 
@@ -216,7 +217,10 @@ mascotas_b = ['farmacia', 'pegamento', 'adhesivo', 'cubiertos', 'chocolate', 'de
               'copa', 'despensa', 'hielera', 'palillo', 'botana', 'bebida', 'pila', 'candado', 'locion', 'fragancia',
               'tabla', 'carbon', 'parrilla', 'regalo', 'jardin', 'llanta', 'neumatico', 'congelado', 'despensa', 'aceite',
               'moto', 'carro', 'aromatizante', 'multicontacto', 'evento', 'restaurador', 'pulir', 'calzado', 'insecticida',
-              'taza', 'direccion hidraulica'
+              'taza', 'direccion', 'hidraulica', 'limpiador', 'aromatizante', 'toalla', 'toallita', 'blanqueador', 'cloro',
+              'brasso', 'fibra', 'hermetico', 'tupper', 'gancho', 'vidrio', 'destenidos', 'boligrafo', 'vanish', 'basura',
+              'musculo', 'destapacano', 'colorante', 'jabonzote', 'multiusos', 'sandwichera', 'aromatizante', 'ajax',
+              'lavanderia', 'zapato', 'calcomania', 'pinol'
               ] + entretenimiento
 
 
@@ -234,13 +238,14 @@ hogar_b = ['farmacia', 'mascota', 'perro', 'gato', 'carro', 'auto', 'perfume', '
            'higiene', 'sexual', 'intimo', 'pingpong', 'estuchera', 'calculadora', 'manguera', 'fertilizante', 'abono',
            'disfraz', 'disfraces', 'globo', 'mascara', 'unicel', 'servilleta', 'higienico', 'marcador', 'cuaderno', 'mochila',
            'papeleria', 'tijeras', 'calculadora', 'libreta', 'ligas', 'insecticida', 'detergente', 'lapiz', 'boligrafo',
-           'libreta'
+           'libreta', 'geometria', 'tijeras', 'marcador', 'boligrafo', 'cuaderno', 'libreta'
            ] + entretenimiento
 
 
 limpieza_detergentes_t = ['limpieza', 'jabon', 'detergente', 'manchas', 'aromatizante', 'desengrasante', 'escoba',
                           'plumero', 'recogedor', 'trapeador', 'cloro', 'lavatrastes', 'suavizante', 'parabrisas',
-                          'glade', 'airwick', 'insecticida'
+                          'glade', 'airwick', 'insecticida', 'limpiador', 'microfibra', 'cloralex', 'atrapapolvo',
+                          'vanish', 'brasso', 'destapacano', 'lysol', 'ajax'
                           ]
 limpieza_detergentes_b = ['farmacia', 'fertilizante', 'jardin', 'cara', 'cabello', 'manos', 'cuerpo', 'crema', 'auto',
                           'carro', 'cuaderno', 'higienico', 'palillo', 'libreta', 'lapiz', 'tijera', 'frazada', 'papeleria',
@@ -250,7 +255,7 @@ limpieza_detergentes_b = ['farmacia', 'fertilizante', 'jardin', 'cara', 'cabello
                           'bombilla', 'foco', 'lampara', 'linterna', 'poster', 'cuaderno', 'cuchara', 'tenedor', 'cuchillo',
                           'jardin', 'olla', 'portafolio', 'documento', 'pintura', 'regalo', 'tinta', 'pastel', 'party', 'cicuitos',
                           'juguete', 'bebe', 'alimento', 'herramienta', 'llave', 'desarmador', 'corporal', 'facial', 'popote',
-                          'tarjeta', 'kids', 'tabla', 'scribe'
+                          'tarjeta', 'kids', 'tabla', 'scribe', 'parabrisas'
                           ] + entretenimiento
 
 
@@ -294,14 +299,14 @@ deportes_b = ['farmacia', 'bano', 'aromatizante', 'hogar', 'cocina', 'foco', 'pi
               'bebe', 'bocina', 'detergente', 'jabon', 'polish', 'tinta', 'colorante', 'navaja', 'colchon', 'esponja',
               'mascota', 'perro', 'peces', 'gato', 'pajaro', 'tortuga', 'cachorro', 'antipulga', 'morder', 'carnaza',
               'hamster', 'cepillo', 'pegamento', 'adhesivo', 'carbon', 'cocina', 'naproxeno', 'pila', 'extension', 'juego',
-              'casa'
+              'casa', 'casita', 'castillo', 'juguete', 'house', 'pastel'
               ] + entretenimiento + autos_motos_llantas_t + mascotas_t
 
 
 oficina_papeleria_t = ['oficina', 'cuaderno', 'lapiz', 'lapices', 'lapicera', 'gis', 'colores', 'pluma', 'plumon',
                        'pepeleria','papel', 'confeti', 'globo', 'tarjeta', 'serpentina', 'libreta', 'folder', 'unicel',
                        'engrapadora', 'perforadora', 'cartulina', 'monografia', 'boligrafo', 'hoja', 'tijera', 'calculadora',
-                       'escolar', 'crayones', 'carpeta'
+                       'escolar', 'crayones', 'carpeta', 'calcomania', 'geometria'
                        ]
 oficina_papeleria_b = ['farmacia', 'higienico', 'bano', 'labial', 'belleza', 'pestana', 'delineador', 'maquillaje',
                        'ojo', 'labio', 'ganso', 'cojin', 'cobija', 'almohada', 'pavo', 'juguete', 'mascota', 'perro',
