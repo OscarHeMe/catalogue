@@ -129,7 +129,9 @@ panaderia_tortilleria_b = ['farmacia', 'pantalla', 'pantalon', 'ropa', 'lata', '
 botanas_dulces_t = ['dulce', 'botana', 'nacho', 'dip', 'chicle', 'paleta', 'chocolate', 'papas', 'fritas',
                     'cacahuate', 'sabritas', 'doritos', 'cheetos', 'palomita', 'caramelo', 'goma mascar', 'chamoy',
                     'salsa valentina', 'salsa maggy', 'salsa inglesa']
-botanas_dulces_b = ['farmacia', 'verdura', 'olor', 'color', 'desodorante', 'aromatizante', 'frida', 'cafe'] + entretenimiento + cuidado_personal_belleza
+botanas_dulces_b = ['farmacia', 'verdura', 'olor', 'color', 'desodorante', 'aromatizante', 'frida', 'cafe',
+                    'pasta'
+                    ] + entretenimiento + cuidado_personal_belleza
 
 
 carnes_pescados_t = ['carne', 'ternera', 'puerco', 'cerdo', 'pulpo', 'pescado', 'camaron', 'pulpo', 'salmon', 'calamar']
