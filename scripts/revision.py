@@ -682,7 +682,6 @@ if len(sys.argv) > 1 and sys.argv[1] == 'fix_names':
         list_names = z['name'].tolist()
         list_names = sorted(list_names, key=lambda y: len(y))
         return list_names[int(len(list_names)/2)]
-
     def arg_long(z):
         list_names = z['name'].tolist()
         list_names = list(filter(lambda f: len(f) < 300, list_names))
@@ -716,4 +715,55 @@ if len(sys.argv) > 1 and sys.argv[1] == 'fix_names':
             break
     print('Updated {} Item records'.format(len(updated_ids)))
     print('Finished updating Item Names to Fix')
+
+
+# -------------------
+# Item Names Fix Descriptions with Product UUIDs
+if len(sys.argv) > 1 and sys.argv[1] == 'fix_descs': 
+    # Matched Products
+    print('Catalogue.Product')
+    prod_matched = product[product.item_uuid.notnull()].copy()
+    prod_matched['name'] = prod_matched['name'].combine_first(prod_matched['description'])
+    prod_matched = prod_matched[prod_matched['name'] != '']
+    # Correspondant Items
+    print('Catalogue.Item')
+    item_assigned = item[item.item_uuid.isin(prod_matched.item_uuid)].copy()
+    # Group by function ( best name by )
+    def arg_median(z):
+        list_names = z['description'].tolist()
+        list_names = sorted(list_names, key=lambda y: len(y))
+        return list_names[int(len(list_names)/2)]
+    def arg_long(z):
+        list_names = z['description'].tolist()
+        list_names = list(filter(lambda f: len(f) < 300, list_names))
+        if not list_names:
+            list_names = z['description'].tolist()
+        list_names = sorted(list_names, key=lambda y: len(y))
+        return list_names[-1]
+    best_names = prod_matched.groupby('item_uuid')\
+        .apply(lambda x: arg_long(x)).to_frame()
+    best_names.reset_index(inplace=True)
+    best_names.rename(columns={0: 'right_desc'}, inplace=True)
+    # Merge Results
+    fixed_names = pd.merge(item_assigned, best_names,
+                        on='item_uuid', how='left')
+    ## Update Catalogue.Item DB
+    _db = Pygres({
+            'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
+            'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
+        })
+    _m = _db.model('item', 'item_uuid')
+    updated_ids = []
+    print('To fix items:', len(fixed_names))
+    for sp in tqdm(fixed_names.to_dict(orient='records'), desc='Updated Item elements'):
+        try:
+            _m.item_uuid = sp['item_uuid']
+            _m.description = sp['right_desc']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+            break
+    print('Updated {} Item records'.format(len(updated_ids)))
+    print('Finished updating Item Descriptions to Fix')
 
