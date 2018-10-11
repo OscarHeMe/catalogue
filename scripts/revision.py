@@ -670,12 +670,10 @@ if len(sys.argv) > 1 and sys.argv[1] == 'missing_fresko':
 # Item Names Fix Names with Product UUIDs
 if len(sys.argv) > 1 and sys.argv[1] == 'fix_names': 
     # Matched Products
-    print('Catalogue.Product')
-    prod_matched = product[product.item_uuid.notnull()].copy()
+    prod_matched = product[product.item_uuid.notnull() & ~(product.source.isin(['plm','nielsen', 'gs1']))].copy()
     prod_matched['name'] = prod_matched['name'].combine_first(prod_matched['description'])
     prod_matched = prod_matched[prod_matched['name'] != '']
     # Correspondant Items
-    print('Catalogue.Item')
     item_assigned = item[item.item_uuid.isin(prod_matched.item_uuid)].copy()
     # Group by function ( best name by )
     def arg_median(z):
@@ -718,24 +716,21 @@ if len(sys.argv) > 1 and sys.argv[1] == 'fix_names':
 
 
 # -------------------
-# Item Names Fix Descriptions with Product UUIDs
+# Item Fix Descriptions with Product UUIDs
 if len(sys.argv) > 1 and sys.argv[1] == 'fix_descs': 
     # Matched Products
-    print('Catalogue.Product')
-    prod_matched = product[product.item_uuid.notnull()].copy()
-    prod_matched['name'] = prod_matched['name'].combine_first(prod_matched['description'])
-    prod_matched = prod_matched[prod_matched['name'] != '']
+    prod_matched = product[product.item_uuid.notnull() & ~(product.source.isin(['plm','nielsen', 'gs1']))].copy()
+    prod_matched = prod_matched[(prod_matched['description'] != '') & (prod_matched['description'].notnull())]
     # Correspondant Items
-    print('Catalogue.Item')
     item_assigned = item[item.item_uuid.isin(prod_matched.item_uuid)].copy()
     # Group by function ( best name by )
     def arg_median(z):
-        list_names = z['description'].tolist()
+        list_names = z['description'].dropna().tolist()
         list_names = sorted(list_names, key=lambda y: len(y))
         return list_names[int(len(list_names)/2)]
     def arg_long(z):
-        list_names = z['description'].tolist()
-        list_names = list(filter(lambda f: len(f) < 300, list_names))
+        list_names = z['description'].dropna().tolist()
+        list_names = list(filter(lambda f: len(f) < 500, list_names))
         if not list_names:
             list_names = z['description'].tolist()
         list_names = sorted(list_names, key=lambda y: len(y))
