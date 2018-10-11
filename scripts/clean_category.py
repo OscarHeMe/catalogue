@@ -156,9 +156,9 @@ salchichoneria_quesos_gourmet_b = ['farmacia', 'gerber', 'mascota', 'gato', 'per
                                    'chicharron', 'miel', 'verdura', 'leche', 'enlatado', 'crema'] + entretenimiento
 
 
-alimentos_congelados_regrigerados_t = ['congelado', 'refrigerado', 'gelatina', 'flan', 'natilla', 'hielo', 'helado',
+alimentos_congelados_refrigerados_t = ['congelado', 'refrigerado', 'gelatina', 'flan', 'natilla', 'hielo', 'helado',
                                        'yogur', 'yugur', 'nugget']
-alimentos_congelados_regrigerados_b = ['farmacia', 'polvo', 'electro', 'hogar', 'enlatado', 'gerber', 'mascotas'] + entretenimiento
+alimentos_congelados_refrigerados_b = ['farmacia', 'polvo', 'electro', 'hogar', 'enlatado', 'gerber', 'mascotas'] + entretenimiento
 
 
 jugos_bebidas_t = ['jugo', 'agua', 'refresco', 'leche', 'yogurt', 'bebida', 'bebible', 'hielo', 'jumex', 'boing',
@@ -338,7 +338,7 @@ farmacia_b = ['ferreteria', 'jarceria', 'mascota', 'perro', 'gato', 'antifaz', '
 
 
 super_t = list(set( super_ + frutas_verduras_t + panaderia_tortilleria_t + botanas_dulces_t + carnes_pescados_t + \
-             lacteos_huevo_t + salchichoneria_quesos_gourmet_t + alimentos_congelados_regrigerados_t + jugos_bebidas_t + \
+             lacteos_huevo_t + salchichoneria_quesos_gourmet_t + alimentos_congelados_refrigerados_t + jugos_bebidas_t + \
              despensa_t + desechables_t + jugueteria_t + ferreteria_jarceria_t + mascotas_t + hogar_t + \
              limpieza_detergentes_t + entretenimiento_t + computo_electronica_t + autos_motos_llantas_t + \
              deportes_t + oficina_papeleria_t + cerveza_vinos_licores_t + ropa_zapatos_accesorios_t + cuidado_personal_belleza_t))
@@ -462,10 +462,10 @@ categories_json = {
                 }
             },
             {
-                "Alimentos Congelados y Regrigerados": {
+                "Alimentos Congelados y Refrigerados": {
                     "subcats": [],
-                    "tokens": alimentos_congelados_regrigerados_t,
-                    "banned": alimentos_congelados_regrigerados_b
+                    "tokens": alimentos_congelados_refrigerados_t,
+                    "banned": alimentos_congelados_refrigerados_b
                 }
             },
             {
@@ -497,7 +497,7 @@ categories_json = {
                 }
             },
             {
-                "Ferretería y Jarcería": {
+                "Ferretería y Jarciería": {
                     "subcats": [],
                     "tokens": ferreteria_jarceria_t,
                     "banned": ferreteria_jarceria_b
