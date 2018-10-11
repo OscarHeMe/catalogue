@@ -674,11 +674,9 @@ if len(sys.argv) > 1 and sys.argv[1] == 'fix_names':
     prod_matched = product[product.item_uuid.notnull()].copy()
     prod_matched['name'] = prod_matched['name'].combine_first(prod_matched['description'])
     prod_matched = prod_matched[prod_matched['name'] != '']
-    print(prod_matched.drop_duplicates('item_uuid').info())
     # Correspondant Items
     print('Catalogue.Item')
     item_assigned = item[item.item_uuid.isin(prod_matched.item_uuid)].copy()
-    print(item_assigned.info())
     # Group by function ( best name by )
     def arg_median(z):
         list_names = z['name'].tolist()
@@ -691,7 +689,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'fix_names':
         if not list_names:
             list_names = z['name'].tolist()
         list_names = sorted(list_names, key=lambda y: len(y))
-        return list_names[int(len(list_names)/2)]
+        return list_names[-1]
     best_names = prod_matched.groupby('item_uuid')\
         .apply(lambda x: arg_long(x)).to_frame()
     best_names.reset_index(inplace=True)
