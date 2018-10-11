@@ -684,8 +684,16 @@ if len(sys.argv) > 1 and sys.argv[1] == 'fix_names':
         list_names = z['name'].tolist()
         list_names = sorted(list_names, key=lambda y: len(y))
         return list_names[int(len(list_names)/2)]
+
+    def arg_long(z):
+        list_names = z['name'].tolist()
+        list_names = list(filter(lambda f: len(f) < 300, list_names))
+        if not list_names:
+            list_names = z['name'].tolist()
+        list_names = sorted(list_names, key=lambda y: len(y))
+        return list_names[int(len(list_names)/2)]
     best_names = prod_matched.groupby('item_uuid')\
-        .apply(lambda x: arg_median(x)).to_frame()
+        .apply(lambda x: arg_long(x)).to_frame()
     best_names.reset_index(inplace=True)
     best_names.rename(columns={0: 'right_name'}, inplace=True)
     # Merge Results
