@@ -677,11 +677,11 @@ if len(sys.argv) > 1 and sys.argv[1] == 'fix_names':
     item_assigned = item[item.item_uuid.isin(prod_matched.item_uuid)].copy()
     # Group by function ( best name by )
     def arg_median(z):
-        list_names = z['name'].tolist()
+        list_names = z['name'].dropna().tolist()
         list_names = sorted(list_names, key=lambda y: len(y))
         return list_names[int(len(list_names)/2)]
     def arg_long(z):
-        list_names = z['name'].tolist()
+        list_names = z['name'].dropna().tolist()
         list_names = list(filter(lambda f: len(f) < 300, list_names))
         if not list_names:
             list_names = z['name'].tolist()
