@@ -801,7 +801,7 @@ class Item(object):
                     WHERE source = 'byprice' 
                         AND (key='farmacia' OR key='jugos y bebidas')
                 )
-                OR s.key='farmacias_similares'
+                OR p.source='farmacias_similares'
             )
             """
             qry_group = """GROUP BY p.product_uuid, p.name, p.description """
