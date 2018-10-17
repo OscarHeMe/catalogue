@@ -788,7 +788,12 @@ class Item(object):
     def get_sitemap_items(size_, from_, farma=False, is_count=False):
 
         if farma:
+            qry_join_categories = """
+            INNER JOIN product_category pc ON p.product_uuid=pc.product_uuid
+            """
+
             qry_categories = """
+            AND pc.deprecated IS NULL
             AND (
                 pc.id_category IN (                
                     SELECT id_category 
@@ -799,8 +804,11 @@ class Item(object):
                 OR s.key='farmacias_similares'
             )
             """
+            qry_group = """GROUP BY p.product_uuid, p.name, p.description """
         else:
+            qry_join_categories = ""
             qry_categories = ""
+            qry_group = ""
 
         if is_count:
             qry_select_item ="""
@@ -825,34 +833,30 @@ class Item(object):
                     p.name, 
                     p.description
             """
-            qry_group = """GROUP BY p.product_uuid, p.name, p.description """
+
 
         qry_item_uuids = """
             {qry_select_item}
                     FROM item i 
                     INNER JOIN product p ON i.item_uuid=p.item_uuid
-                    INNER JOIN source s ON s.key=p.source
-                    INNER JOIN product_category pc ON p.product_uuid=pc.product_uuid
-                    WHERE s.retailer=1
+                    {qry_join_categories}
+                    WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
                     AND p.item_uuid IS NOT NULL
-                    AND pc.deprecated IS NULL
                     {qry_categories}
 
             UNION ALL
             
             {qry_select_product}
                 FROM product p
-                    INNER JOIN source s ON s.key=p.source
-                    INNER JOIN product_category pc ON p.product_uuid=pc.product_uuid
-                    WHERE s.retailer=1
+                    {qry_join_categories}
+                    WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
                     AND p.item_uuid IS NULL
-                    AND pc.deprecated IS NULL
                     {qry_categories}
                 {qry_group}
             OFFSET {from_}
             LIMIT {size_}
             """.format(qry_select_item=qry_select_item, qry_select_product=qry_select_product, size_=size_, from_=from_,
-                       qry_categories=qry_categories, qry_group=qry_group)
+                       qry_categories=qry_categories, qry_group=qry_group, qry_join_categories=qry_join_categories)
         logger.debug(qry_item_uuids)
         df = pd.read_sql(qry_item_uuids, g._db.conn)
         if is_count is False:

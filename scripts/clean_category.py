@@ -68,14 +68,15 @@ cerveza_vinos_licores = ['cerveza', 'vino', 'whisky', 'licor', 'alcohol', 'tequi
 
 mama_bebe_t = ['bebe', 'mama', 'infantil', 'materna', 'gerber', 'papilla', 'lactancia', 'panal', 'huggies',
                'pampers', 'biberon', 'dodot', 'baby']
-mama_bebe_b = ['miel', 'abeja', 'cafe', 'refresco', 'detergente', 'bebida'] + entretenimiento + cerveza_vinos_licores
+mama_bebe_b = ['miel', 'abeja', 'cafe', 'refresco', 'detergente', 'bebida', 'adulto', 'curacion', 'botiquin'
+               ] + entretenimiento + cerveza_vinos_licores
 
 
 medicamentos_t = ['antiacuagulante', 'antiestaminico', 'antidepresivo', 'antiviral', 'antigripal', 'antidiarreico',
-                  'medicamento', 'analgesico', 'desparasitante', 'alta especialidad', 'generico', 'gripa',
+                  'medicamento', 'analgesico', 'desparasitante', 'altaespecialidad', 'generico', 'gripa',
                   'antiespasmodico', 'antiniinflamatorio', 'antiagregante', 'antidiabeticos', 'antiemeticos',
                   'alergia', 'dolor', 'ampolleta', 'inyeccion', 'antimicoticos']
-medicamentos_b = ['ortopedia'] + entretenimiento
+medicamentos_b = ['ortopedia', 'desodorante'] + entretenimiento
 
 
 naturales_t = ['natural', 'naturista', 'herbolario']
@@ -86,7 +87,7 @@ salud_sexual_t = ['tampon', 'intima', 'sexual', 'condon', 'preservativo', 'embar
                   'lubricante', 'estimulante', 'anticonceptivo', 'toalla', 'viagra', 'cialis', 'erectil']
 salud_sexual_b = ['bebe', 'bano', 'alberca', 'cuerpo', 'cara', 'aceite', 'papel', 'ojos', 'nariz', 'nasal', 'oftal',
                   'laxante', 'motor', 'antitranspirante', 'gel', 'servilleta', 'bebe', 'baby', 'infantil', 'kids', 'bano',
-                  'panal', 'lactea', 'leche', 'facial'] + entretenimiento
+                  'panal', 'lactea', 'leche', 'facial', 'ocular', 'psycoestimulante'] + entretenimiento
 
 
 equipo_botiquin_t = ['equipo medico', 'oximetro', 'baumanometro', 'termometro', 'botiquin', 'jeringa', 'nebulizador', 'alcohol', 'anticeptico',
@@ -109,14 +110,15 @@ vitaminas_suplementos_b = ['antihistaminico'] + entretenimiento
 cuidado_personal_belleza_t = derma_t + cuidado_personal_belleza
 cuidado_personal_belleza_b = ['lacteo', 'huevo', 'leche', 'disfraz', 'perro', 'mascota', 'bebida', 'alimento',
                               'abarrote', 'despensa', 'caramelo', 'mezcal', 'moda', 'disfraz', 'fiesta', 'papeleria',
-                              'oficina', 'disfraces', 'papeleria'] + entretenimiento
+                              'oficina', 'disfraces', 'papeleria', 'lustrado', 'zapato', 'escoba'] + entretenimiento + medicamentos_t
 
 
 # Super
 frutas_verduras_t = ['fruta', 'verdura', 'ensalada', 'lechuga', 'manojo', 'tuberculo']
 frutas_verduras_b = ['farmacia', 'preparado', 'lata', 'aderezo', 'gelatina', 'congelado', 'bebida', 'frita',
                      'botana', 'jugo', 'fritura', 'nectar', 'cereal', 'palomita', 'papilla', 'mascota', 'polvo'
-                     'bebe', 'lacteo', 'detergente', 'perfume', 'aromatizante', 'jabon', 'shampoo', 'cafe', 'leche'
+                     'bebe', 'lacteo', 'detergente', 'perfume', 'aromatizante', 'jabon', 'shampoo', 'cafe', 'leche',
+                     'gerber', 'papilla'
                      ] + entretenimiento
 
 
