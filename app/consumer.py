@@ -23,7 +23,11 @@ producer = RabbitEngine({
     blocking=True)
 
 # Cache variable
-cached_ps = None 
+cached_ps = {}
+
+# Product Acumulator
+pstack = []
+last_updt = datetime.datetime.utcnow()
 
 
 def process(new_item, reroute=True):
@@ -53,15 +57,15 @@ def process(new_item, reroute=True):
         p.product_uuid = prod_uuid[0]['product_uuid']
         # If `item` update item
         if route_key == 'item':
-            logger.info('Found product, updating...')
-            p.save()
+            logger.info('Found product, batch updating...') 
+            p.save(pcommit=True)
             logger.info('Updated ({}) product!'.format(p.product_uuid))
     else:
         logger.info('Could not find product, creating new one..')
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
-        if not p.save():
+        if not p.save(pcommit=True):
             raise Exception('Unable to create new Product!')
         logger.info('Created product ({})'.format(p.product_uuid))
     if route_key == 'price':
@@ -69,7 +73,7 @@ def process(new_item, reroute=True):
         new_item.update({'product_uuid': p.product_uuid})
         if reroute:
             producer.send('routing', new_item)
-        logger.info("Rerouted back ({})".format(new_item['product_uuid']))
+            logger.info("[price] Rerouted back ({})".format(new_item['product_uuid']))
     if not reroute:
         return new_item
 

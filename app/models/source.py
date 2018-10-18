@@ -12,6 +12,47 @@ class Source(object):
 
     __attrs__ = ['key', 'name', 'logo', 'type', 'retailer', 'hierarchy']
 
+    def __init__(self, _args):
+        """ Source Constructor
+
+            Params:
+            -----
+            _args : dict
+                `Source` model arguments
+        """
+        # Arguments verification and addition
+        for _k in self.__attrs__:
+            if _k in _args:
+                self.__dict__[_k] = _args[_k]
+                continue
+            self.__dict__[_k] = None
+        # Formatting needed params
+        if not self.key:
+            raise Exception("Missing Source key")
+        
+    
+    def save(self, commit=True):
+        """ Class method to save attr in DB
+        """
+        logger.info("Saving source...")
+        # Load model
+        m_src = g._db.model("source", "key")
+        for _at in self.__attrs__:
+            if self.__dict__[_at]:
+                m_src.__dict__[_at] = self.__dict__[_at]
+        try:
+            # Save record
+            self.message = "Source {} correctly!".format(\
+                'updated' if self.key else 'stored')
+            m_src.save(commit=commit)
+            self.key = m_src.last_id
+            logger.info(self.message \
+                    + '({})'.format(self.key))
+            return self.key
+        except Exception as e:
+            logger.error(e)
+            return None
+
     @staticmethod
     def get_all(_cols=''):
         """ Get all sources

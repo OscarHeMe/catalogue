@@ -86,7 +86,7 @@ class Product(object):
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70005, "Wrong DataType to save Product!")
 
-    def save(self):
+    def save(self, pcommit=True):
         """ Class method to save Product record in DB
             with product_image, product_attr and product_category
         """
@@ -123,18 +123,20 @@ class Product(object):
         try:
             self.message = "Correctly {} Product!"\
                 .format('updated' if self.product_uuid else 'stored')
+            logger.debug("COMMIT: {}".format(pcommit))
             m_prod.save()
             self.product_uuid = m_prod.last_id
+            logger.debug("Stored: {}".format(self.product_uuid))
             logger.info(self.message)
             # Save product images
             if self.images:
-                self.save_images(_is_update)
+                self.save_images(pcommit=pcommit)
             # Save product categories
             if self.categories:
-                self.save_categories(_is_update)
+                self.save_categories(_is_update, pcommit=pcommit)
             # Save product attrs
             if self.attributes:
-                self.save_attributes(_is_update)
+                self.save_attributes(_is_update, pcommit=pcommit)
             # Save category, brand and provider as attributes
             self.save_extras(_is_update)
         except Exception as e:
@@ -146,7 +148,7 @@ class Product(object):
                 raise errors.ApiError(70002, "Issues saving in DB!")
         return True
 
-    def save_extras(self, update=False):
+    def save_extras(self, update=False, pcommit=True):
         """ Class method to save brand, provider and categs
             as attributes
         """
@@ -177,10 +179,10 @@ class Product(object):
                     'clss_key': 'category',
                     'clss_desc': 'Categoría'
                 })
-        self.save_attributes(update)
+        self.save_attributes(update, pcommit=pcommit)
         
 
-    def save_attributes(self, update=False):
+    def save_attributes(self, update=False, pcommit=True):
         """ Class method to save product attributes
         """
         _nprs = {'attr_name', 'clss_name', 'attr_key', 'clss_key'}
@@ -205,7 +207,7 @@ class Product(object):
                             if "clss_desc" in _attr else None,
                         "source": self.source}
                 })
-                id_attr = attr.save()
+                id_attr = attr.save(commit=pcommit)
             # Verify if product_attr exists
             id_prod_attr = g._db.query("""SELECT id_product_attr
                                         FROM product_attr
@@ -231,7 +233,7 @@ class Product(object):
                 if 'precision' in _attr:
                     m_prod_at.precision = _attr['precision']
                 m_prod_at.last_modified = str(datetime.datetime.utcnow())
-                m_prod_at.save()
+                m_prod_at.save(commit=pcommit)
                 logger.info("Product Attr correctly saved! ({})"
                             .format(m_prod_at.last_id))
             except Exception as e:
@@ -239,36 +241,29 @@ class Product(object):
                 logger.warning("Could not save Product attr!")
         return True
 
-    def save_images(self, update=False):
+    def save_images(self, pcommit=True):
         """ Class method to save product images
         """
         for _img in self.images:
             try:
                 # Verify if prod image exists
-                _exist = g._db.query("""SELECT EXISTS (
-                                        SELECT 1 FROM product_image
+                _exist = g._db.query("""SELECT id_product_image FROM product_image
                                         WHERE product_uuid = '{}'
-                                        AND image = '{}')"""
+                                        AND image = '{}'"""
                                      .format(self.product_uuid, _img))\
-                                .fetch()[0]['exists']
+                                .fetch()
                 if _exist:
-                    if update:
-                        Product.update_image({
-                            'product_uuid': self.product_uuid,
-                            'image': _img
-                        }, True)
-                    else:
-                        logger.info("Image already in DB!")
+                    Product.save_pimage(self.product_uuid, _img, _exist[0]['id_product_image'],pcommit=pcommit)
                     continue
                 # Load model
-                Product.save_pimage(self.product_uuid, _img)
+                Product.save_pimage(self.product_uuid, _img, pcommit=pcommit)
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product image!")
         return True
 
     @staticmethod
-    def save_pimage(p_uuid, _img, id_pim=None, descs=[]):
+    def save_pimage(p_uuid, _img, id_pim=None, descs=[], pcommit=False):
         """ Static method to store in `product image`
         """
         m_prod_im = g._db.model('product_image', 'id_product_image')
@@ -279,7 +274,7 @@ class Product(object):
         if descs:
             m_prod_im.descriptor = json.dumps(descs)
         m_prod_im.last_modified = str(datetime.datetime.utcnow())
-        m_prod_im.save()
+        m_prod_im.save(commit=pcommit)
         logger.info("Product Image correctly saved! ({})"
                     .format(m_prod_im.last_id))
         return True
@@ -350,7 +345,7 @@ class Product(object):
                     "message": "Could not apply transaction in DB"
                     }
     
-    def save_categories(self, update=False):
+    def save_categories(self, update=False, pcommit=True):
         """ Class method to save product categories
         """
         _parent = None
@@ -366,7 +361,7 @@ class Product(object):
                                                      'id_parent'),
                         'name': _cat
                         })
-                    id_cat = categ.save()
+                    id_cat = categ.save(commit=pcommit)
                     # Emergency skip
                     if not id_cat:
                         continue
@@ -390,7 +385,7 @@ class Product(object):
                 m_prod_cat.product_uuid = self.product_uuid
                 m_prod_cat.id_category = id_cat
                 m_prod_cat.last_modified = str(datetime.datetime.utcnow())
-                m_prod_cat.save()
+                m_prod_cat.save(commit=pcommit)
                 logger.info("Product Category correctly saved! ({})"
                             .format(m_prod_cat.last_id))
             except Exception as e:
@@ -416,7 +411,7 @@ class Product(object):
         _where = ' AND '.join(["{}='{}'".format(*z)
                                for z in list(k_param.items())])
         try:
-            _q = """SELECT EXISTS (SELECT 1 FROM product WHERE {})"""\
+            _q = """SELECT EXISTS (SELECT 1 FROM product WHERE {} LIMIT 1)"""\
                  .format(_where)
             logger.debug("Query: {}".format(_q))
             exists = g._db.query(_q)\

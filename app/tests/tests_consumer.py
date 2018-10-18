@@ -8,6 +8,7 @@ import time
 import sys
 from pprint import pprint
 from app.models.product import Product
+from app.models.source import Source
 from app.norm import map_product_keys as mpk
 
 # Incoming Product Test (PRICE)
@@ -88,10 +89,24 @@ class CatalogueServiceTestCase(unittest.TestCase):
         self.ctx = app.app.app_context()
         self.ctx.push()
         app.get_db()
+        print('----------------------------------------------------')
 
     def tearDown(self):
         # Dropping flask ctx
         self.ctx.pop()
+
+    #@unittest.skip('Already tested')
+    def test_000_source_creation(self):
+        """ Testing Catalogue Source Creation
+        """ 
+        print("Testing Catalogue Source Creation")
+        for pti in prods_test_item:
+            sm = Source({'key': pti['retailer'] if 'retailer' in pti else pti['source'],
+                        'name': pti['retailer'].capitalize() if 'retailer' in pti else pti['source'].capitalize()})
+            # Equal to the one saved
+            self.assertEqual(pti['retailer'] if 'retailer' in pti else pti['source'],
+                            sm.save())
+
 
     @unittest.skip('Already tested')
     def test_00_product_validation(self):
@@ -165,14 +180,14 @@ class CatalogueServiceTestCase(unittest.TestCase):
         """ 
         print("Testing Item type process")
         from app.consumer import process
-        for _ptest in prods_test_item:
+        for _ptest in prods_test_item[:1]:
             try:
                 res_item = process(_ptest, False)
                 self.assertTrue(res_item)
             except:
                 self.assertFalse(True)
     
-    #@unittest.skip('Already Tested')
+    @unittest.skip('Already Tested')
     def test_04_process_price(self):
         """ Testing price type process
         """ 
