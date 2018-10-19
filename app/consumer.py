@@ -65,7 +65,7 @@ def process(new_item, reroute=True):
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
-        if not p.save(pcommit=True):
+        if not p.save(pcommit=False):
             raise Exception('Unable to create new Product!')
         logger.info('Created product ({})'.format(p.product_uuid))
     if route_key == 'price':
