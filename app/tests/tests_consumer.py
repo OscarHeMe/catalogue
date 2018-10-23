@@ -78,7 +78,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
     def tearDownClass(cls):
         """ Drops database
         """
-        if config.TESTING:
+        if config.TESTING and False:
             with app.app.app_context():
                 app.dropdb()
 
@@ -180,12 +180,17 @@ class CatalogueServiceTestCase(unittest.TestCase):
         """ 
         print("Testing Item type process")
         from app.consumer import process
-        for _ptest in prods_test_item[:1]:
+        print('TESTING TIMING......')
+        import datetime
+        t_0 = datetime.datetime.utcnow()
+        for _ptest in (prods_test_item)*20:
             try:
                 res_item = process(_ptest, False)
                 self.assertTrue(res_item)
             except:
                 self.assertFalse(True)
+        print("LASTED FOR:")
+        print((datetime.datetime.utcnow()-t_0))
     
     @unittest.skip('Already Tested')
     def test_04_process_price(self):

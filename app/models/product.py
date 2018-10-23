@@ -86,15 +86,18 @@ class Product(object):
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70005, "Wrong DataType to save Product!")
 
-    def save(self, pcommit=True):
+    def save(self, pcommit=True, _is_update=False, verified=False):
         """ Class method to save Product record in DB
             with product_image, product_attr and product_category
         """
-        logger.info("Saving Product...")
+        logger.debug("Saving Product...")
         _is_update = False
         # Verify for update
         if self.product_uuid:
-            if not Product.exists({'product_uuid': self.product_uuid}):
+            # If already validated for updated, dont do it again
+            if _is_update:
+                pass
+            elif not Product.exists({'product_uuid': self.product_uuid}):
                 # If wants to update but wrong UUID, return Error
                 if APP_MODE == "CONSUMER":
                     logger.error("Cannot update, UUID not in DB!")
@@ -103,14 +106,18 @@ class Product(object):
                     raise errors.ApiError(70006,
                                           "Cannot update, UUID not in DB!")
             _is_update = True
-        # Verify for insert
-        elif Product.exists({'product_id': self.product_id,
+        # Verify for insert, if previously verified continue to save
+        elif verified:
+            pass
+        else:
+            # If not verified, check if not already in DB
+            if Product.exists({'product_id': self.product_id,
                              'source': self.source}):
-            self.message = 'Product already exists!'
-            self.product_uuid = Product\
-                .get({'product_id': self.product_id,
-                      'source': self.source})[0]['product_uuid']
-            return True
+                self.message = 'Product already exists!'
+                self.product_uuid = Product\
+                    .get({'product_id': self.product_id,
+                        'source': self.source})[0]['product_uuid']
+                return True
         # Load model
         m_prod = g._db.model('product', 'product_uuid')
         for _k in self.__attrs__:
@@ -123,11 +130,9 @@ class Product(object):
         try:
             self.message = "Correctly {} Product!"\
                 .format('updated' if self.product_uuid else 'stored')
-            logger.debug("COMMIT: {}".format(pcommit))
-            m_prod.save()
+            m_prod.save(commit=pcommit)
             self.product_uuid = m_prod.last_id
-            logger.debug("Stored: {}".format(self.product_uuid))
-            logger.info(self.message)
+            logger.debug(self.message)
             # Save product images
             if self.images:
                 self.save_images(pcommit=pcommit)
@@ -218,7 +223,7 @@ class Product(object):
             # If not create product_attr
             if id_prod_attr:
                 if not update:
-                    logger.info("Product Attr already in DB!")
+                    logger.debug("Product Attr already in DB!")
                     continue
                 id_prod_attr = id_prod_attr[0]['id_product_attr']
             # Load model
@@ -234,7 +239,7 @@ class Product(object):
                     m_prod_at.precision = _attr['precision']
                 m_prod_at.last_modified = str(datetime.datetime.utcnow())
                 m_prod_at.save(commit=pcommit)
-                logger.info("Product Attr correctly saved! ({})"
+                logger.debug("Product Attr correctly saved! ({})"
                             .format(m_prod_at.last_id))
             except Exception as e:
                 logger.error(e)
@@ -275,7 +280,7 @@ class Product(object):
             m_prod_im.descriptor = json.dumps(descs)
         m_prod_im.last_modified = str(datetime.datetime.utcnow())
         m_prod_im.save(commit=pcommit)
-        logger.info("Product Image correctly saved! ({})"
+        logger.debug("Product Image correctly saved! ({})"
                     .format(m_prod_im.last_id))
         return True
 
@@ -386,7 +391,7 @@ class Product(object):
                 m_prod_cat.id_category = id_cat
                 m_prod_cat.last_modified = str(datetime.datetime.utcnow())
                 m_prod_cat.save(commit=pcommit)
-                logger.info("Product Category correctly saved! ({})"
+                logger.debug("Product Category correctly saved! ({})"
                             .format(m_prod_cat.last_id))
             except Exception as e:
                 logger.error(e)
@@ -485,7 +490,7 @@ class Product(object):
         _where = ' AND '.join(["{} IN {}"
                               .format(z[0], tuplify(z[1]))
                               for z in _by.items()])
-        logger.info("Fetching products...")
+        logger.debug("Fetching products...")
         _query = "SELECT {} FROM product WHERE {}"\
             .format(_cols, _where)
         if limit:
@@ -513,7 +518,7 @@ class Product(object):
             logger.error("Postgres Catalogue Connection error")
             return False
         for i in q:
-            logger.info('Product UUID: ' + str(i['product_uuid']))
+            logger.debug('Product UUID: ' + str(i['product_uuid']))
         return {'msg': 'Postgres Items One Working!'}
     
     @staticmethod
@@ -571,7 +576,7 @@ class Product(object):
         # Query DB
         try:
             _resp = g._db.query(_qry).fetch()
-            logger.info("Found {} products".format(len(_resp)))
+            logger.debug("Found {} products".format(len(_resp)))
         except Exception as e:
             logger.error(e)
             logger.warning("Issues fetching elements in DB!")
@@ -645,15 +650,15 @@ class Product(object):
             _prod_ext[z]= {w:[] for w in _cols}
         if 'prod_attrs' in _cols:
             # Fetch Product Attrs
-            logger.info('Retrieving Product Attrs...')
+            logger.debug('Retrieving Product Attrs...')
             p_extrs['prod_attrs'] = Product.query_attrs(p_uuids)
         if 'prod_images' in _cols:
             # Fetch Product Images
-            logger.info('Retrieving Product Images...')
+            logger.debug('Retrieving Product Images...')
             p_extrs['prod_images'] = Product.query_imgs(p_uuids)
         if 'prod_categs' in _cols:
             # Fetch Product Images
-            logger.info('Retrieving Product Categories...')
+            logger.debug('Retrieving Product Categories...')
             p_extrs['prod_categs'] = Product.query_categs(p_uuids)
         if 'normalized' in _cols:
             # Fetch Product Normalized text
@@ -713,7 +718,7 @@ class Product(object):
             logger.error(e)
             logger.warning("Issues fetching Product Attrs!")
             return {}
-        logger.info('Found {} attributes'.format(len(p_attrs)))
+        logger.debug('Found {} attributes'.format(len(p_attrs)))
         logger.debug(p_attrs)
         return p_attrs
     
@@ -788,7 +793,7 @@ class Product(object):
             logger.error(e)
             logger.warning("Issues fetching Product Images!")
             return {}
-        logger.info('Found {} images'.format(len(p_imgs)))
+        logger.debug('Found {} images'.format(len(p_imgs)))
         logger.debug(p_imgs)
         return p_imgs
     
@@ -831,7 +836,7 @@ class Product(object):
             logger.error(e)
             logger.warning("Issues fetching Product Categs!")
             return {}
-        logger.info('Found {} categories'.format(len(p_categs)))
+        logger.debug('Found {} categories'.format(len(p_categs)))
         logger.debug(p_categs)
         return p_categs
 
@@ -888,7 +893,7 @@ class Product(object):
             _fres = g._db.query(f_query).fetch()
             if not _fres:
                 return []
-            logger.info("Found {} prods by filters"
+            logger.debug("Found {} prods by filters"
                         .format(len(_fres)))
         except Exception as e:
             logger.error(e)
@@ -1010,7 +1015,7 @@ class Product(object):
         # Verify file
         try:
             df = pd.read_csv(csvfile)
-            logger.info("Received {} products to upload".format(len(df)))
+            logger.debug("Received {} products to upload".format(len(df)))
         except Exception as e:
             logger.error(e)
             logger.warning("Could not read CSV file")
@@ -1038,7 +1043,7 @@ class Product(object):
             logger.error(e)
             return {'status': 'ERROR',
                     'message': 'Issues upserting normalized names'}
-        logger.info("Finished upserting table")
+        logger.debug("Finished upserting table")
         return {'status': 'OK',
                 'message': 'Correctly upserted normalized names!'}
 
