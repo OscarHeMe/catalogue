@@ -206,7 +206,7 @@ ferreteria_jarceria_t = ['ferreteria', 'jarceria', 'herramienta', 'truper', 'mar
                          ]
 ferreteria_jarceria_b = ['farmacia', 'deporte', 'perro', 'gato', 'ropa', 'balon', 'electrodomestico', 'aceite', 'llanta'
                          'papeleria', 'acuarela', 'playa', 'balon', 'parabrisas', 'juguete', 'playera',
-                         'camiseta', 'maleta', 'alberca', 'neumatico'
+                         'camiseta', 'maleta', 'alberca', 'neumatico', 'anticongelante'
                          ] + entretenimiento
 
 
@@ -282,7 +282,7 @@ computo_electronica_b = ['farmacia', 'mickey', 'mascota', 'maskingtape', 'ferret
 
 autos_motos_llantas_t = ['moto', 'auto', 'carro', 'llanta', 'parabrisas', 'motocilceta', 'automovil', 'prestone', 'bardahl',
                          'vistony', 'gtx', 'penzzoil', 'quackerstate', 'castrol', 'automobile', 'octanaje', 'gasolina',
-                         'neumatico']
+                         'neumatico', 'anticongelante']
 autos_motos_llantas_b = ['farmacia', 'autores', 'ferreteria', 'carriola', 'bebe', 'sierra', 'taladro', 'desarmador',
                          'tecnologia', 'bombilla', 'computo', 'inteligente', 'hogar', 'abrillantador',
                          'brillante', 'locomot', 'juguete', 'control', 'remoto', 'pista', 'cocina', 'infantil',
