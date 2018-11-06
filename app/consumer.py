@@ -58,7 +58,8 @@ def process(new_item, reroute=True):
         # If `item` update item
         if route_key == 'item':
             logger.debug('Found product, batch updating...') 
-            p.save(pcommit=True, _is_update=True)
+            if not p.save(pcommit=True, _is_update=True, verified=True):
+                raise Exception("Could not update product!")
             logger.info('Updated ({}) product!'.format(p.product_uuid))
     else:
         logger.debug('Could not find product, creating new one..')
@@ -81,12 +82,8 @@ def process(new_item, reroute=True):
 def callback(ch, method, properties, body):
     new_item = json.loads(body.decode('utf-8'))
     logger.debug("New incoming product..")
-    #logger.debug(new_item)
-    try:
-        process(new_item)
-    except Exception as e:
-        logger.error(e)
-        logger.warning("Could not save product in DB!")
+    # Processing without try catch, to reset container in case of failure
+    process(new_item)
     try: 
         ch.basic_ack(delivery_tag = method.delivery_tag)
     except Exception as e:

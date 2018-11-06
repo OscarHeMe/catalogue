@@ -128,9 +128,9 @@ class Product(object):
         # Always add what Item UUID is set
         m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
         try:
+            res = m_prod.save(commit=True)
             self.message = "Correctly {} Product!"\
                 .format('updated' if self.product_uuid else 'stored')
-            m_prod.save(commit=pcommit)
             self.product_uuid = m_prod.last_id
             logger.debug(self.message)
             # Save product images
