@@ -41,7 +41,7 @@ class Clss(object):
         if not self.match:
             self.match = [self.key]
 
-    def save(self):
+    def save(self, commit=True):
         """ Class method to save Clss in DB
         """
         logger.info("Saving clss...")
@@ -62,7 +62,7 @@ class Clss(object):
             # Save record
             self.message = "Clss {} correctly!".format(\
                 'updated' if self.id_clss else 'stored')
-            m_cls.save()
+            m_cls.save(commit=commit)
             self.id_clss = m_cls.last_id
             logger.info(self.message \
                     + '({})'.format(self.id_clss))

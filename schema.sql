@@ -28,7 +28,7 @@ CREATE TABLE "clss" (
 /* Chedraui, Advil, Tabletas, Pfizer, ibuprofeno */
 CREATE TABLE "attr" (
     id_attr serial PRIMARY KEY NOT NULL,
-    id_clss int REFERENCES clss(id_clss)
+    id_clss int REFERENCES clss(id_clss),
     name text,
     key text,
     match text,
@@ -59,7 +59,7 @@ CREATE TABLE "item" (
 
 /* productRetailer */
 CREATE TABLE "product" (
-    product_uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_uuid uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     item_uuid uuid REFERENCES "item" (item_uuid),
     source varchar(255) not null,
     product_id varchar(255) not null,
@@ -86,13 +86,12 @@ CREATE TABLE "product_image" (
 /* productRetailerAttribute */
 CREATE TABLE "product_attr" (
     id_product_attr serial PRIMARY KEY NOT NULL,
-    id_attr integer REFERENCES attribute(id_attribute),
+    id_attr integer REFERENCES attr(id_attr),
     product_uuid uuid REFERENCES product(product_uuid),
-    source character varying(255) REFERENCES retailer(key),
+    source character varying(255) REFERENCES source(key),
     value text,
     precision text,
-    last_modified timestamp,
-    source character varying(255) REFERENCES retailer(key)
+    last_modified timestamp
 );
 
 /* productRetailerCategory */
@@ -104,6 +103,7 @@ CREATE TABLE "product_category" (
 );
 
 /* Indexes */
+/*
 CREATE INDEX ON product (source);
 CREATE INDEX ON product (product_id);
 CREATE INDEX ON product (item_uuid);
@@ -113,3 +113,4 @@ CREATE INDEX ON clss (key);
 CREATE INDEX ON category (source);
 CREATE INDEX ON product_attr (product_uuid)
 CREATE INDEX ON product_category (product_uuid);
+*/

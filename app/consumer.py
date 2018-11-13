@@ -23,7 +23,11 @@ producer = RabbitEngine({
     blocking=True)
 
 # Cache variable
-cached_ps = None 
+cached_ps = {}
+
+# Product Acumulator
+pstack = []
+last_updt = datetime.datetime.utcnow()
 
 
 def process(new_item, reroute=True):
@@ -31,10 +35,10 @@ def process(new_item, reroute=True):
     """
     # Fetch Route key
     route_key = new_item['route_key']
-    logger.info('Evaluating: {}'.format(route_key))
+    logger.debug('Evaluating: {}'.format(route_key))
     # Reformat Prod Values
     _frmted = mpk.product(route_key, new_item)
-    logger.info('Formatted product!')
+    logger.debug('Formatted product!')
     p = Product(_frmted)
     # Verify if product in Cache
     prod_uuid = Product.puuid_from_cache(cached_ps, p)
@@ -45,23 +49,24 @@ def process(new_item, reroute=True):
             'source': p.source,
             }, limit=1)
     else:
-        logger.info("Got UUID from cache!")
+        logger.debug("Got UUID from cache!")
     # if exists
     if prod_uuid:
-        logger.info('Found product!')
+        logger.debug('Found product!')
         # Get product_uuid
         p.product_uuid = prod_uuid[0]['product_uuid']
         # If `item` update item
         if route_key == 'item':
-            logger.info('Found product, updating...')
-            p.save()
+            logger.debug('Found product, batch updating...') 
+            if not p.save(pcommit=True, _is_update=True, verified=True):
+                raise Exception("Could not update product!")
             logger.info('Updated ({}) product!'.format(p.product_uuid))
     else:
-        logger.info('Could not find product, creating new one..')
+        logger.debug('Could not find product, creating new one..')
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
-        if not p.save():
+        if not p.save(pcommit=True, verified=True):
             raise Exception('Unable to create new Product!')
         logger.info('Created product ({})'.format(p.product_uuid))
     if route_key == 'price':
@@ -69,20 +74,16 @@ def process(new_item, reroute=True):
         new_item.update({'product_uuid': p.product_uuid})
         if reroute:
             producer.send('routing', new_item)
-        logger.info("Rerouted back ({})".format(new_item['product_uuid']))
+            logger.debug("[price] Rerouted back ({})".format(new_item['product_uuid']))
     if not reroute:
         return new_item
 
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
     new_item = json.loads(body.decode('utf-8'))
-    logger.info("New incoming product..")
-    logger.debug(new_item)
-    try:
-        process(new_item)
-    except Exception as e:
-        logger.error(e)
-        logger.warning("Could not save product in DB!")
+    logger.debug("New incoming product..")
+    # Processing without try catch, to reset container in case of failure
+    process(new_item)
     try: 
         ch.basic_ack(delivery_tag = method.delivery_tag)
     except Exception as e:
@@ -93,7 +94,7 @@ def start():
     logger.info("Warming up caching IDS...")
     global cached_ps
     cached_ps = Product.create_cache_ids()
-    logger.debug("Done warmup, loaded {} values from {} sources"\
+    logger.info("Done warmup, loaded {} values from {} sources"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
     consumer.set_callback(callback)
