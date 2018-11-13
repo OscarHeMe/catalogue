@@ -32,6 +32,7 @@ SQL_PORT = os.getenv('SQL_PORT','5432')
 SRV_GEOLOCATION = os.getenv('SRV_GEOLOCATION', 'gate.byprice.com/geo')
 
 # Env dependent variables
+SQL_DB = SQL_DB+"_test" if TESTING else SQL_DB
 SQL_DB = SQL_DB+"_dev" if ENV.upper() == 'DEV' or ENV.upper() == 'DEVELOPMENT' else SQL_DB
 SRV_GEOLOCATION = "dev."+SRV_GEOLOCATION if ENV.upper() == 'DEV' else SRV_GEOLOCATION
 
@@ -42,5 +43,9 @@ STREAMER_PORT = os.getenv('STREAMER_PORT', '9092')
 STREAMER_EXCHANGE = os.getenv('STREAMER_EXCHANGE', 'data')
 STREAMER_EXCHANGE_TYPE = os.getenv('STREAMER_EXCHANGE_TYPE', 'direct')
 
-QUEUE_ROUTING = "bp_routing_us_dev" if ENV.upper() == 'DEV' else "bp_routing_us"
-QUEUE_CATALOGUE = 'bp_catalogue_us_dev' if ENV.upper() == 'DEV' else 'bp_catalogue_us'
+QUEUE_ROUTING = "bp_routing_dev" if ENV.upper() == 'DEV' else "bp_routing"
+QUEUE_CATALOGUE = 'bp_catalogue_dev' if ENV.upper() == 'DEV' else 'bp_catalogue'
+
+# Stack and Time Limit to Update Batch
+STACK_LIMIT = 20
+TIME_LIMIT = 200

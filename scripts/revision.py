@@ -38,7 +38,7 @@ if sys.argv[1] != 'empty_names':
     print('Gtin Retailers:', len(g_retailer))
 
 # Load Tables from  Items DB
-if sys.argv[1] != 'empty_names':
+if sys.argv[1] != 'empty_names' :
     i_retailer = load_db(SQL_ITEMS, M_SQL_USER, M_SQL_PASSWORD,
         ITEMS_DB, 'item_retailer', '*', SQL_ITEMS_PORT)
     print('Item Retailers:', len(i_retailer))
@@ -47,11 +47,11 @@ if sys.argv[1] != 'empty_names':
 item = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
     CATALOGUE_DB, 'item', 'item_uuid,name,gtin')
 product = load_db(SQL_HOST, SQL_USER, SQL_PASSWORD,
-    CATALOGUE_DB, 'product', 'product_uuid,item_uuid,product_id,name,source,gtin,last_modified')
+    CATALOGUE_DB, 'product', 'product_uuid,item_uuid,product_id,name,source,gtin,last_modified,description')
 print('Current Products:', len(product))
 
 # JOIN past tables (gtin_retailer + item_retailer = product)
-if sys.argv[1] != 'empty_names':
+if sys.argv[1] != 'empty_names' :
     past_product = pd.merge(g_retailer, i_retailer,
         on=['item_uuid', 'retailer'], how='outer')
     print('Past Products: ', len(past_product))
@@ -486,3 +486,279 @@ if len(sys.argv) > 1 and sys.argv[1] == 'empty_names':
             print(e)
     print('Updated {} products'.format(len(updated_ids)))
     print('Finished Updating Empty names in DB!')
+
+
+# -------------------
+# Wrond San Pablo UUIDs
+if len(sys.argv) > 1 and sys.argv[1] == 'wrong_sanpablo': 
+    # Separate Elements matched by name in proper DB
+    non_matched_sanpablo = product[(product.source == 'san_pablo') & (product.item_uuid.isnull())].copy()
+    matched_sanpablo = product[(product.source == 'san_pablo') & (~product.item_uuid.isnull())].copy()
+    # Merge products by name and keep not null item_uuid
+    del non_matched_sanpablo['item_uuid']
+    # Match by Product ID
+    matched_by_pid = pd.merge(non_matched_sanpablo, matched_sanpablo[['item_uuid','product_id']], on='product_id', how='left')
+    matched_by_pid = matched_by_pid[~matched_by_pid.item_uuid.isnull()]
+    print('Matched {} by Product ID'.format(len(matched_by_pid)))
+    non_matched_sanpablo = non_matched_sanpablo[(~non_matched_sanpablo.product_uuid.isin(matched_by_pid.product_uuid.tolist()))\
+        ]
+    # Matched by past Item id
+    ig_retailer = pd.merge(i_retailer[i_retailer.retailer == 'san_pablo'],
+        g_retailer[g_retailer.retailer == 'san_pablo'][['item_uuid','item_id']].rename(columns={'item_id':'product_id'}),
+        on='item_uuid', how = 'left')
+    matched_by_iid = pd.merge(non_matched_sanpablo, ig_retailer[['item_uuid', 'product_id']].dropna(), on='product_id', how='left')
+    matched_by_iid = matched_by_iid[~matched_by_iid.item_uuid.isnull()]
+    print('Matched {} by Past Item ID'.format(len(matched_by_iid)))
+    non_matched_sanpablo = non_matched_sanpablo[(~non_matched_sanpablo.product_uuid.isin(matched_by_iid.product_uuid.tolist()))
+        ]
+    # Match by Name
+    matched_by_name = pd.merge(non_matched_sanpablo.drop_duplicates('product_id'),
+        matched_sanpablo[['item_uuid','name']].drop_duplicates('item_uuid'), on='name', how='left')
+    matched_by_name = matched_by_name[~matched_by_name.item_uuid.isnull()].drop_duplicates('product_id')
+    print('Matched {} by Name'.format(len(matched_by_name)))
+    non_matched_sanpablo = non_matched_sanpablo[(~non_matched_sanpablo.product_uuid.isin(matched_by_name.product_uuid.tolist()))
+        ]
+    # Append all matches
+    _cols = ['item_uuid', 'product_id', 'product_uuid']
+    concat_matches = pd.concat([matched_by_pid[_cols], matched_by_iid[_cols], matched_by_name[_cols]])\
+        .drop_duplicates('product_id')
+    # Add gtin
+    concat_matches = pd.merge(concat_matches, item[['item_uuid', 'gtin']], on='item_uuid', how='left')
+    ## Update DB
+    _db = Pygres({
+            'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
+            'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
+        })
+    _m = _db.model('product', 'product_uuid')
+    updated_ids = []
+    print('To fix products:', len(concat_matches))
+    for sp in tqdm(concat_matches.to_dict(orient='records'), desc='Updated elements'):
+        try:
+            _m.product_uuid = sp['product_uuid']
+            _m.gtin = sp['gtin']
+            _m.item_uuid = sp['item_uuid']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+    print('Updated {} products'.format(len(updated_ids)))
+    print('Finished updated San Pablo Elements')
+
+# -------------------
+# Wrond Walmart UUIDs
+if len(sys.argv) > 1 and sys.argv[1] == 'wrong_walmart': 
+    # Separate Elements matched by name in proper DB
+    non_matched_walmart = product[(product.source == 'walmart') & (product.item_uuid.isnull())].copy()
+    matched_walmart = product[(product.source == 'walmart') & (~product.item_uuid.isnull())].copy()
+    # Merge products by name and keep not null item_uuid
+    del non_matched_walmart['item_uuid']
+    print('Matched', len(matched_walmart))
+    print('Non Matched', len(non_matched_walmart))
+    # Match by Product ID
+    matched_by_pid = pd.merge(non_matched_walmart, matched_walmart[['item_uuid','product_id']], on='product_id', how='left')
+    matched_by_pid = matched_by_pid[~matched_by_pid.item_uuid.isnull()]
+    print('Matched {} by Product ID'.format(len(matched_by_pid)))
+    non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_pid.product_uuid.tolist()))\
+        ]
+    # Matched by past Item id
+    ig_retailer = pd.merge(i_retailer[i_retailer.retailer == 'walmart'],
+        g_retailer[g_retailer.retailer == 'walmart'][['item_uuid','item_id']].rename(columns={'item_id':'product_id'}),
+        on='item_uuid', how = 'left')
+    matched_by_iid = pd.merge(non_matched_walmart, ig_retailer[['item_uuid', 'product_id']].dropna(), on='product_id', how='left')
+    matched_by_iid = matched_by_iid[~matched_by_iid.item_uuid.isnull()]
+    print('Matched {} by Past Item ID'.format(len(matched_by_iid)))
+    non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_iid.product_uuid.tolist()))
+        ]
+    # Match by Name
+    matched_by_name = pd.merge(non_matched_walmart.drop_duplicates('product_id'),
+        matched_walmart[['item_uuid','name']].drop_duplicates('item_uuid'), on='name', how='left')
+    matched_by_name = matched_by_name[~matched_by_name.item_uuid.isnull()].drop_duplicates('product_id')
+    print('Matched {} by Name'.format(len(matched_by_name)))
+    non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_name.product_uuid.tolist()))
+        ]
+    #######
+    # To review later
+    # Match Catalogue.product.product_id ~ IGRetailer.gtin
+    #matched_by_gtin = pd.merge(non_matched_walmart.drop_duplicates('product_id'),
+    #    matched_walmart[['item_uuid','gtin']].drop_duplicates('item_uuid'), left_on='name', how='left')
+    #matched_by_name = matched_by_name[~matched_by_name.item_uuid.isnull()].drop_duplicates('product_id')
+    #print('Matched {} by Name'.format(len(matched_by_name)))
+    #non_matched_walmart = non_matched_walmart[(~non_matched_walmart.product_uuid.isin(matched_by_name.product_uuid.tolist()))
+    #    ]
+    # Append all matches
+    _cols = ['item_uuid', 'product_id', 'product_uuid']
+    concat_matches = pd.concat([matched_by_pid[_cols], matched_by_iid[_cols], matched_by_name[_cols]])\
+        .drop_duplicates('product_id')
+    # Add gtin
+    concat_matches = pd.merge(concat_matches, item[['item_uuid', 'gtin']], on='item_uuid', how='left')
+    ## Update DB
+    _db = Pygres({
+            'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
+            'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
+        })
+    _m = _db.model('product', 'product_uuid')
+    updated_ids = []
+    print('To fix products:', len(concat_matches))
+    for sp in tqdm(concat_matches.to_dict(orient='records'), desc='Updated elements'):
+        try:
+            _m.product_uuid = sp['product_uuid']
+            _m.gtin = sp['gtin']
+            _m.item_uuid = sp['item_uuid']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+    print('Updated {} products'.format(len(updated_ids)))
+    print('Finished updated Walmart Elements')
+
+
+# -------------------
+# Missing Fresko Elements UUIDs
+if len(sys.argv) > 1 and sys.argv[1] == 'missing_fresko': 
+    # Elements in Identity.GtinRetailer
+    ig_fresko = g_retailer[g_retailer.retailer == 'fresko']
+    print('Total Fresko Gtin Retailers:', len(ig_fresko))
+    # Elements in Items.ItemRetailer
+    ir_fresko = i_retailer[i_retailer.retailer == 'fresko']
+    print('Total Fresko Item Retailers:', len(ir_fresko))
+    #### Fixing records
+    # How many records are not in Identity.GtinRetailer
+    print("How many records are not in Identity.GtinRetailer")
+    fresko_not_identity = ir_fresko[~ir_fresko.item_uuid.isin(ig_fresko.item_uuid.tolist())].copy()
+    print(len(fresko_not_identity))
+    print("\nFor those not in identity how many are in La Comer or City Market")   
+    fresko_missing_g = g_retailer[g_retailer.item_uuid.isin(fresko_not_identity.item_uuid) \
+        & ((g_retailer.retailer == 'city_market') | (g_retailer.retailer == 'la_comer'))].copy()
+    fresko_missing_i = i_retailer[i_retailer.item_uuid.isin(fresko_not_identity.item_uuid) \
+        & ((i_retailer.retailer == 'city_market') | (i_retailer.retailer == 'la_comer'))\
+        & ~(i_retailer.item_uuid.isin(fresko_missing_g.item_uuid))].copy()
+    print(fresko_missing_g[~fresko_missing_g.item_id.isnull()].drop_duplicates('item_uuid').groupby('retailer').item_id.count())
+    print(fresko_missing_i[~fresko_missing_i.gtin.isnull()].drop_duplicates('item_uuid').groupby('retailer').gtin.count())
+    # Set Missing fresko to the correct retailer
+    fresko_missing_g['retailer'] = 'fresko'
+    # Set missing fresko with correct retailer, drop dups, set gtin to item_id completed
+    fresko_missing_i = fresko_missing_i[['item_uuid','retailer','gtin']]\
+        .drop_duplicates('item_uuid').rename(columns={'gtin':'item_id'})
+    fresko_missing_i['retailer'] = 'fresko'
+    fresko_missing_i['item_id'] = fresko_missing_i['item_id'].apply(lambda x: str(x).zfill(20))
+    # Concat missing elements
+    fresko_total_missing = pd.concat([fresko_missing_i,fresko_missing_g]).drop_duplicates('item_uuid')
+    ## Update Identity DB
+    _db = Pygres({
+            'SQL_HOST': SQL_IDENTITY, 'SQL_PORT': SQL_IDENTITY_PORT, 'SQL_USER': M_SQL_USER,
+            'SQL_PASSWORD': M_SQL_PASSWORD, 'SQL_DB': IDENTITY_DB
+        })
+    _m = _db.model('gtin_retailer', 'id_gtin_retailer')
+    updated_ids = []
+    print('To fix products:', len(fresko_total_missing))
+    for sp in tqdm(fresko_total_missing.to_dict(orient='records'), desc='Updated GRetailer elements'):
+        try:
+            _m.item_uuid = sp['item_uuid']
+            _m.item_id = sp['item_id']
+            _m.item_id_type = 'id'
+            _m.retailer = sp['retailer']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+            break
+    print('Updated {} GtinRetailer records'.format(len(updated_ids)))
+    print('Finished updated Fresko Elements')
+
+
+# -------------------
+# Item Names Fix Names with Product UUIDs
+if len(sys.argv) > 1 and sys.argv[1] == 'fix_names': 
+    # Matched Products
+    prod_matched = product[product.item_uuid.notnull() & ~(product.source.isin(['plm','nielsen', 'gs1']))].copy()
+    prod_matched['name'] = prod_matched['name'].combine_first(prod_matched['description'])
+    prod_matched = prod_matched[prod_matched['name'] != '']
+    # Correspondant Items
+    item_assigned = item[item.item_uuid.isin(prod_matched.item_uuid)].copy()
+    # Group by function ( best name by )
+    def arg_median(z):
+        list_names = z['name'].dropna().tolist()
+        list_names = sorted(list_names, key=lambda y: len(y))
+        return list_names[int(len(list_names)/2)]
+    def arg_long(z):
+        list_names = z['name'].dropna().tolist()
+        list_names = list(filter(lambda f: len(f) < 300, list_names))
+        if not list_names:
+            list_names = z['name'].tolist()
+        list_names = sorted(list_names, key=lambda y: len(y))
+        return list_names[-1]
+    best_names = prod_matched.groupby('item_uuid')\
+        .apply(lambda x: arg_long(x)).to_frame()
+    best_names.reset_index(inplace=True)
+    best_names.rename(columns={0: 'right_name'}, inplace=True)
+    # Merge Results
+    fixed_names = pd.merge(item_assigned, best_names,
+                        on='item_uuid', how='left')
+    ## Update Catalogue.Item DB
+    _db = Pygres({
+            'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
+            'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
+        })
+    _m = _db.model('item', 'item_uuid')
+    updated_ids = []
+    print('To fix items:', len(fixed_names))
+    for sp in tqdm(fixed_names.to_dict(orient='records'), desc='Updated Item elements'):
+        try:
+            _m.item_uuid = sp['item_uuid']
+            _m.name = sp['right_name']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+            break
+    print('Updated {} Item records'.format(len(updated_ids)))
+    print('Finished updating Item Names to Fix')
+
+
+# -------------------
+# Item Fix Descriptions with Product UUIDs
+if len(sys.argv) > 1 and sys.argv[1] == 'fix_descs': 
+    # Matched Products
+    prod_matched = product[product.item_uuid.notnull() & ~(product.source.isin(['plm','nielsen', 'gs1']))].copy()
+    prod_matched = prod_matched[(prod_matched['description'] != '') & (prod_matched['description'].notnull())]
+    # Correspondant Items
+    item_assigned = item[item.item_uuid.isin(prod_matched.item_uuid)].copy()
+    # Group by function ( best name by )
+    def arg_median(z):
+        list_names = z['description'].dropna().tolist()
+        list_names = sorted(list_names, key=lambda y: len(y))
+        return list_names[int(len(list_names)/2)]
+    def arg_long(z):
+        list_names = z['description'].dropna().tolist()
+        list_names = list(filter(lambda f: len(f) < 500, list_names))
+        if not list_names:
+            list_names = z['description'].tolist()
+        list_names = sorted(list_names, key=lambda y: len(y))
+        return list_names[-1]
+    best_names = prod_matched.groupby('item_uuid')\
+        .apply(lambda x: arg_long(x)).to_frame()
+    best_names.reset_index(inplace=True)
+    best_names.rename(columns={0: 'right_desc'}, inplace=True)
+    # Merge Results
+    fixed_names = pd.merge(item_assigned, best_names,
+                        on='item_uuid', how='left')
+    ## Update Catalogue.Item DB
+    _db = Pygres({
+            'SQL_HOST': SQL_HOST, 'SQL_PORT': SQL_PORT, 'SQL_USER': SQL_USER,
+            'SQL_PASSWORD': SQL_PASSWORD, 'SQL_DB': SQL_DB
+        })
+    _m = _db.model('item', 'item_uuid')
+    updated_ids = []
+    print('To fix items:', len(fixed_names))
+    for sp in tqdm(fixed_names.to_dict(orient='records'), desc='Updated Item elements'):
+        try:
+            _m.item_uuid = sp['item_uuid']
+            _m.description = sp['right_desc']
+            _m.save()
+            updated_ids.append(_m.last_id)
+        except Exception as e:
+            print(e)
+            break
+    print('Updated {} Item records'.format(len(updated_ids)))
+    print('Finished updating Item Descriptions to Fix')
+

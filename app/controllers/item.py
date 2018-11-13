@@ -192,7 +192,7 @@ def elastic_items():
     _items = Item.get_elastic_items(params)
     return jsonify({
         "status": "OK",
-        "message": "Those are the item details :D",
+        "message": "Those are the elastic items :D",
         "items": _items
     })
 
@@ -241,25 +241,39 @@ def sitemap():
 
     '''
     # query text
-    size_ = request.args.get('size', '100')
-    from_ = request.args.get('from', '0')
+    size_ = request.args.get('size', None)
+    from_ = request.args.get('from', None)
     farma = request.args.get('farma', False)
-    if not size_.isdigit():
+    if not size_ and not from_:
+        is_count=True
+    else:
+        is_count=False
+    if not size_ or not size_.isdigit():
         size_ = '100'
 
-    if not from_.isdigit():
+    if not from_ or not from_.isdigit():
         from_ = '0'
 
-    df = Item.get_sitemap_items(size_, from_, farma)
-    items = df.to_dict(orient="records")
-    if df.empty:
-        logger.error("Df was empty!")
-        return jsonify({'code': 'not found'}), 404
+    df = Item.get_sitemap_items(size_, from_, farma, is_count)
 
-    response = {
-        "items": items,
-        "size": size_,
-        "from": from_
-    }
+    if is_count is False:
+        if df.empty:
+            logger.error("DB was empty!")
+            return jsonify({'code': 'not found'}), 404
+        items = df.to_dict(orient="records")
+        response = {
+            "items": items,
+            "size": size_,
+            "from": from_
+        }
+    else:
+        if df.empty:
+            logger.error("DB was empty!")
+            return jsonify({'code': 'not found'}), 404
+        response = {
+            "total": int(sum(df.count_)),
+            "items": int(sum(df[df.type_.isin(['items'])].count_)),
+            "products": int(sum(df[df.type_.isin(['products'])].count_))
+        }
     # print response...
     return jsonify(response)
