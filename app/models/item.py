@@ -654,8 +654,6 @@ class Item(object):
             brand = _normalized_attrs['brand']
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
-        if 'source' in df_rets.columns:
-            df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
         if df_rets.empty:
             raise errors.ApiError(70003, "Issues fetching elements in DB", 404)
         return {
@@ -845,8 +843,7 @@ class Item(object):
                     FROM item i 
                     INNER JOIN product p ON i.item_uuid=p.item_uuid
                     {qry_join_categories}
-                    WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
-                    AND p.item_uuid IS NOT NULL
+                    WHERE p.item_uuid IS NOT NULL
                     {qry_categories}
 
             UNION ALL
@@ -854,8 +851,7 @@ class Item(object):
             {qry_select_product}
                 FROM product p
                     {qry_join_categories}
-                    WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
-                    AND p.item_uuid IS NULL
+                    WHERE p.item_uuid IS NULL
                     {qry_categories}
                 {qry_group}
             OFFSET {from_}
