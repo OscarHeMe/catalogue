@@ -11,6 +11,8 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV FLASK_APP=app/__init__.py
 ENV APP_NAME="catalogue"
+ENV REGION="US"
+ENV ROUTE="bpcatalogue"
 
 # Python install and packages
 RUN apt-get install -y \
@@ -54,6 +56,7 @@ VOLUME /var/log/catalogue
 
 # Add Nginx configuration file
 ADD cfn/nginx/conf.d/ /etc/nginx/conf.d
+RUN bash bin/nginx_conf.sh
 RUN rm -rf /etc/nginx/sites-available/default && rm -rf /etc/nginx/sites-enabled/default
 
 ENTRYPOINT /bin/bash /catalogue/bin/run.sh
