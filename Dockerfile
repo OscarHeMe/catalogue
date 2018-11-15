@@ -13,6 +13,7 @@ ENV FLASK_APP=app/__init__.py
 ENV APP_NAME="catalogue"
 ENV REGION="US"
 ENV ROUTE="bpcatalogue"
+ENV MODE="SERVICE"
 
 # Python install and packages
 RUN apt-get install -y \
