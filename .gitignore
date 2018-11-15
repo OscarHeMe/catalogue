@@ -3,6 +3,7 @@ env/
 .envvars
 .dbvars
 *.pyc
+*.sock
 *.csv
 .vscode/
 .envvars
