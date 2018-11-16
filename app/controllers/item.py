@@ -263,3 +263,27 @@ def sitemap():
     }
     # print response...
     return jsonify(response)
+
+
+@mod.route('/filtered', methods=['POST'])
+@cross_origin(origin="*")
+def get_by_filters():
+    """
+        Get items given some filters
+    """
+    filters = request.get_json()
+    print(filters)
+    '''
+    filters = [
+        { "category" : "9406" },
+        { "category" : "9352" },
+        { "category" : "8865" },
+        { "retailer" : "walmart" },
+        { "retailer" : "superama" },
+        { "retailer" : "ims" },
+        { "item" : "67e8bc34-2e0d-460b-8ed0-72710b19f1b6" },
+        { "item" : "08cdcbaf-0101-440f-aab3-533e042afdc7" }
+    ]
+    '''
+    items = Item.get_by_filters(filters)
+    return jsonify(items)
