@@ -4,11 +4,11 @@ Service to query all item details, like images, ingredients, attributes and addi
 
 ## Concepts & Entities
 
-* Source: Data sources, it can be a retailer, data provider, laboratory, etc...
-* Item: Group of items gathered mostly by GTIN coincidence (previously item)
-* Product: Item representation on a retailer's catalogue, as attribute they have: product_id, source, item_uuid (previously item_retailer)
-* Clss: Class of attributes
-* Attr: Attribute, gathers anything related to a specific **item** (id, retailer)
+- Source: Data sources, it can be a retailer, data provider, laboratory, etc...
+- Item: Group of items gathered mostly by GTIN coincidence (previously item)
+- Product: Item representation on a retailer's catalogue, as attribute they have: product_id, source, item_uuid (previously item_retailer)
+- Clss: Class of attributes
+- Attr: Attribute, gathers anything related to a specific **item** (id, retailer)
 
 ## How to setup?
 
@@ -101,6 +101,22 @@ Set the environment variable `$MODE` to the test the consumer or the web service
 source bin/tests.sh
 ```
 
+## Build
+
+Before building the `Dockerfile` be sure
+the **REGION** and **ROUTE** parameters are correctly set for the environment you will push.
+
+```bash
+# Create Image
+docker build -t catalogue --no-cache .
+# Tag Image
+##
+# Tags are composed from <region>-<environment>  (e.g. us-dev)
+##
+docker tag catalogue <aws-ecr-prefix>/catalogue:<tag>
+# Push image
+docker push <aws-ecr-prefix>/catalogue:<tag>
+
 
 ## License
 
@@ -110,3 +126,4 @@ ByPrice Copyright (c) 2018
 
 - Populate Ingredients from Past DB of ByPrice
 - Populate Brands from Past DB of ByPrice
+```

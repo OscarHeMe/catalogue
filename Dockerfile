@@ -11,6 +11,9 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV FLASK_APP=app/__init__.py
 ENV APP_NAME="catalogue"
+ENV REGION="US"
+ENV ROUTE="bpcatalogue"
+ENV MODE="SERVICE"
 
 # Python install and packages
 RUN apt-get install -y \
@@ -18,11 +21,11 @@ RUN apt-get install -y \
     git \
     curl \
     nano \
-	libpq-dev \
+    libpq-dev \
     python3.4 \
     python3-dev \
     python3-pip \
-	postgresql-client \
+    postgresql-client \
     && apt-get autoremove \
     && apt-get clean
 
@@ -53,7 +56,8 @@ EXPOSE 80
 VOLUME /var/log/catalogue
 
 # Add Nginx configuration file
-ADD cfn/nginx/conf.d/ /etc/nginx/conf.d
+RUN bash bin/nginx_conf.sh
+RUN cp cfn/nginx/conf.d/default.conf /etc/nginx/conf.d/
 RUN rm -rf /etc/nginx/sites-available/default && rm -rf /etc/nginx/sites-enabled/default
 
 ENTRYPOINT /bin/bash /catalogue/bin/run.sh
