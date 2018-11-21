@@ -3,8 +3,8 @@ from config import *
 import datetime
 import json
 from .models.product import Product
-from .utils.rabbit_engine import RabbitEngine
-from .utils import applogger
+from ByHelpers.rabbit_engine import RabbitEngine
+from ByHelpers import applogger
 from .norm import map_product_keys as mpk
 import sys
 
@@ -73,7 +73,7 @@ def process(new_item, reroute=True):
         # If price, update product_uuid and reroute
         new_item.update({'product_uuid': p.product_uuid})
         if reroute:
-            producer.send('routing', new_item)
+            producer.send(new_item)
             logger.debug("[price] Rerouted back ({})".format(new_item['product_uuid']))
     if not reroute:
         return new_item

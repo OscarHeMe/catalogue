@@ -1,15 +1,14 @@
 from app.models.category import Category
 from app.models.attr import Attr
 from app.norm.normalize_text import key_format, tuplify
-from app.utils import errors, applogger
+from app.utils import errors
+from ByHelpers import applogger
 from config import *
 from flask import g
 import pandas as pd
 from sqlalchemy import create_engine, Text
 from sqlalchemy.dialects.postgresql import UUID
 import datetime
-import requests
-import ast
 import json
 
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
@@ -50,10 +49,10 @@ class Product(object):
             if self.product_id else None
         # Categories parsing
         if not isinstance(self.categories, str):
-            if not (self.categories is None):
+            if self.categories is not None:
                 try:
                     self.categories = ','.join(self.categories)
-                except Exception:
+                except Exception as e:
                     logger.error(e)
                     logger.warning("Categories with unvalid format!")
                     logger.debug(self.categories)

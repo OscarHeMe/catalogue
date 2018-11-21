@@ -1,8 +1,10 @@
 venv/
 env/
+*.local
 .envvars
 .dbvars
 *.pyc
+*.sock
 *.csv
 .vscode/
 .envvars
