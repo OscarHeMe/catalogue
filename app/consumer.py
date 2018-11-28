@@ -52,7 +52,7 @@ def process(new_item, reroute=True):
         logger.debug("Got UUID from cache!")
     # if exists
     if prod_uuid:
-        logger.debug('Found product!')
+        logger.debug('Found product ({} {})!'.format(p.source, p.product_uuid))
         # Get product_uuid
         p.product_uuid = prod_uuid[0]['product_uuid']
         # If `item` update item
@@ -60,15 +60,15 @@ def process(new_item, reroute=True):
             logger.debug('Found product, batch updating...') 
             if not p.save(pcommit=True, _is_update=True, verified=True):
                 raise Exception("Could not update product!")
-            logger.info('Updated ({}) product!'.format(p.product_uuid))
+            logger.info('Updated ({} {}) product!'.format(p.source, p.product_uuid))
     else:
         logger.debug('Could not find product, creating new one..')
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
         if not p.save(pcommit=True, verified=True):
-            raise Exception('Unable to create new Product!')
-        logger.info('Created product ({})'.format(p.product_uuid))
+            raise Exception('Unable to create new Product ({} {})!'.format(p.source, p.product_uuid))
+        logger.info('Created product ({} {})'.format(p.source, p.product_uuid))
     if route_key == 'price':
         # If price, update product_uuid and reroute
         new_item.update({'product_uuid': p.product_uuid})

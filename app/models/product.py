@@ -53,7 +53,7 @@ class Product(object):
             if not (self.categories is None):
                 try:
                     self.categories = ','.join(self.categories)
-                except Exception:
+                except Exception as e:
                     logger.error(e)
                     logger.warning("Categories with unvalid format!")
                     logger.debug(self.categories)
@@ -65,8 +65,8 @@ class Product(object):
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
-                logger.warning("Wrong DataType to serialize for Product!")
-                raise Exception("Wrong DataType to serialize for Product!")
+                logger.warning("Wrong DataType to serialize for Product ({} {})!".format(self.source, self.product_uuid))
+                raise Exception("Wrong DataType to serialize for Product ({} {})!".format(self.source, self.product_uuid))
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70005,
                     "Wrong DataType to serialize for Product!")
@@ -81,10 +81,10 @@ class Product(object):
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
-                logger.warning("Wrong DataType to save Product!")
-                raise Exception("Wrong DataType to save Product!")
+                logger.warning("Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
+                raise Exception("Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
             if APP_MODE == "SERVICE":
-                raise errors.ApiError(70005, "Wrong DataType to save Product!")
+                raise errors.ApiError(70005, "Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
 
     def save(self, pcommit=True, _is_update=False, verified=False):
         """ Class method to save Product record in DB
@@ -100,11 +100,11 @@ class Product(object):
             elif not Product.exists({'product_uuid': self.product_uuid}):
                 # If wants to update but wrong UUID, return Error
                 if APP_MODE == "CONSUMER":
-                    logger.error("Cannot update, UUID not in DB!")
+                    logger.error("Cannot update, UUID not in DB ({} {})!".format(self.source, self.product_uuid))
                     return False
                 if APP_MODE == "SERVICE":
                     raise errors.ApiError(70006,
-                                          "Cannot update, UUID not in DB!")
+                                          "Cannot update, UUID not in DB ({} {})!".format(self.source, self.product_uuid))
             _is_update = True
         # Verify for insert, if previously verified continue to save
         elif verified:
@@ -147,10 +147,10 @@ class Product(object):
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
-                logger.error("Issues saving in DB!")
+                logger.error("Issues saving in DB ({} {})!".format(self.source, self.product_uuid))
                 return False
             if APP_MODE == "SERVICE":
-                raise errors.ApiError(70002, "Issues saving in DB!")
+                raise errors.ApiError(70002, "Issues saving in DB ({} {})!".format(self.source, self.product_uuid))
         return True
 
     def save_extras(self, update=False, pcommit=True):
