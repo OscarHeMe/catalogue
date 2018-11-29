@@ -54,7 +54,8 @@ CREATE TABLE "item" (
     checksum integer,
     name varchar(255),
     description text,
-    last_modified timestamp
+    last_modified timestamp,
+    page_views integer DEFAULT 0
  );
 
 /* productRetailer */
@@ -80,7 +81,9 @@ CREATE TABLE "product" (
 CREATE TABLE "product_image" (
     id_product_image serial PRIMARY KEY,
     product_uuid uuid REFERENCES "product" (product_uuid),
-    image text
+    image text,
+    descriptor json,
+    last_modified timestamp
 );
 
 /* productRetailerAttribute */
@@ -99,8 +102,27 @@ CREATE TABLE "product_category" (
     id_product_category serial PRIMARY KEY NOT NULL,
     id_category int REFERENCES category(id_category),
     product_uuid uuid REFERENCES product(product_uuid),
+    deprecated  integer,
     last_modified timestamp
 );
+
+/* itemAttribute */
+CREATE TABLE "item_attr" (
+    id_item_attr serial PRIMARY KEY NOT NULL,
+    id_attr integer REFERENCES attr(id_attr),
+    item_uuid uuid REFERENCES item(item_uuid),
+    value text,
+    precision text,
+    last_modified timestamp
+);
+
+/* item Vademecum Info */
+CREATE TABLE "item_vademecum_info" (
+    item_uuid uuid,
+    data json,
+    blacklisted boolean
+);
+
 
 /* Indexes */
 /*
