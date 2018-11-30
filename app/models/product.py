@@ -1,5 +1,6 @@
 from app.models.category import Category
 from app.models.attr import Attr
+from app.models.image import ImageProduct
 from app.norm.normalize_text import key_format, tuplify
 from app.utils import errors
 from ByHelpers import applogger
@@ -45,17 +46,11 @@ class Product(object):
             self.__dict__[_k] = None
         # Args Aggregation
         self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
-        self.product_id = str(self.product_id).zfill(20)[-255:] \
-            if self.product_id else None
+        self.product_id = str(self.product_id)[-255:] if self.product_id else None
         # Categories parsing
-        if not isinstance(self.categories, str):
-            if self.categories is not None:
-                try:
-                    self.categories = ','.join(self.categories)
-                except Exception as e:
-                    logger.error(e)
+        if not isinstance(self.categories, list):
                     logger.warning("Categories with unvalid format!")
-                    logger.debug(self.categories)
+                    logger.debug(str(self.categories))
                     self.categories = None
         # Raw Product construction
         try:
@@ -71,19 +66,21 @@ class Product(object):
                     "Wrong DataType to serialize for Product!")
         # Args validation
         try:
-            assert isinstance(self.images, list) or (self.images is None)
-            assert isinstance(self.categories, str) \
-                or (self.categories is None)
-            assert isinstance(self.attributes, list) \
-                or (self.attributes is None)
-            assert isinstance(self.raw_html, str) or (self.raw_html is None)
-        except Exception as e:
-            logger.error(e)
+            if not (isinstance(self.images, list) or (self.images is None)):
+                raise TypeError("[images] {} instead of list or None".format(type(self.images)))
+            if not (isinstance(self.categories, list) or (self.categories is None)):
+                raise TypeError("[categories] {} instead of list or None".format(type(self.categories)))
+            if not (isinstance(self.attributes, dict) or (self.attributes is None)):
+                raise TypeError("[attributes] {} instead of dict or None".format(type(self.attributes)))
+            if not (isinstance(self.raw_html, str) or (self.raw_html is None)):
+                raise TypeError("[raw_html] {} instead of str or None".format(type(self.raw_html)))
+        except TypeError as te:
+            error_str = "WRONG DATATYPE: " + te + "({} {})".format(self.source, self.product_uuid)
+            logger.error(error_str)
             if APP_MODE == "CONSUMER":
-                logger.warning("Wrong DataType to save Product!")
-                raise Exception("Wrong DataType to save Product!")
+                raise Exception(error_str)
             if APP_MODE == "SERVICE":
-                raise errors.ApiError(70005, "Wrong DataType to save Product!")
+                raise errors.ApiError(70005, error_str)
 
     def save(self, pcommit=True, _is_update=False, verified=False):
         """ Class method to save Product record in DB
@@ -138,11 +135,12 @@ class Product(object):
             # Save product categories
             if self.categories:
                 self.save_categories(_is_update, pcommit=pcommit)
+            self.add_attributes()
             # Save product attrs
             if self.attributes:
                 self.save_attributes(_is_update, pcommit=pcommit)
             # Save category, brand and provider as attributes
-            self.save_extras(_is_update)
+
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
@@ -152,66 +150,65 @@ class Product(object):
                 raise errors.ApiError(70002, "Issues saving in DB!")
         return True
 
-    def save_extras(self, update=False, pcommit=True):
+    def add_attributes(self):
         """ Class method to save brand, provider and categs
             as attributes
         """
         self.attributes = []
         # Load all elements as Attributes
         if self.brand:
-            self.attributes.append({
-                'attr_name': self.brand,
-                'attr_key': key_format(self.brand),
-                'clss_name': 'Marca',
-                'clss_key': 'brand',
-                'clss_desc': 'Marca'
-            })
+            self.attributes['brand'] = {
+                'key': 'brand',
+                'name': 'Brand',
+                'order': None,
+                'qty    ': None,
+                'unit': None,
+                'value': self.brand
+            }
         if self.provider:
-            self.attributes.append({
-                'attr_name': self.provider,
-                'attr_key': key_format(self.provider),
-                'clss_name': 'Proveedor',
-                'clss_key': 'provider',
-                'clss_desc': 'Proveedor, Laboratorio, Manufacturador, etc.'
-            })
+            self.attributes['provider'] = {
+                'key': 'provider',
+                'name': 'Provider',
+                'order': None,
+                'qty    ': None,
+                'unit': None,
+                'value': self.provider
+            }
         if self.categories:
-            for _c in self.categories.split(','):
-                self.attributes.append({
-                    'attr_name': _c,
-                    'attr_key': key_format(_c),
-                    'clss_name': 'Categoría',
-                    'clss_key': 'category',
-                    'clss_desc': 'Categoría'
+            categories_attrs = []
+            for index, c in enumerate(self.categories):
+                categories_attrs.append({
+                    'key': 'category',
+                    'name': 'Category',
+                    'order': index,
+                    'qty    ': None,
+                    'unit': None,
+                    'value': c
                 })
-        self.save_attributes(update, pcommit=pcommit)
-        
+            self.attributes['category'] = categories_attrs
 
     def save_attributes(self, update=False, pcommit=True):
         """ Class method to save product attributes
         """
-        _nprs = {'attr_name', 'clss_name', 'attr_key', 'clss_key'}
-        for _attr in self.attributes:
+        _nprs = {'name', 'order', 'qty', 'unit', 'value'}
+        for key, _attr in self.attributes.items():
             # Validate attrs
             if not _nprs.issubset(_attr.keys()):
                 logger.warning("Cannot add product attribute, missing keys!")
                 continue
             # Verify if attr exists
-            id_attr = Attr.get_id(_attr['attr_name'], self.source)
+            id_attr = Attr.get_id(_attr['key'], _attr['value'], self.source)
             # If not, create attr
             if not id_attr:
                 attr = Attr({
-                    'name': _attr["attr_name"],
-                    "key": _attr["attr_key"],
-                    "has_value": 1 if "value" in _attr else 0,
-                    "source": self.source,
+                    "value": _attr["value"],
                     "clss": {
-                        "name_es": _attr["clss_name"],
-                        "key": _attr["clss_key"],
-                        "description": _attr["clss_desc"]
-                            if "clss_desc" in _attr else None,
-                        "source": self.source}
+                        "name": _attr["name"],
+                        "key": _attr["key"]
+                    }
                 })
                 id_attr = attr.save(commit=pcommit)
+
             # Verify if product_attr exists
             id_prod_attr = g._db.query("""SELECT id_product_attr
                                         FROM product_attr
@@ -248,39 +245,35 @@ class Product(object):
     def save_images(self, pcommit=True):
         """ Class method to save product images
         """
-        for _img in self.images:
+        prod = {
+            'product_uuid': self.product_uuid,
+            'images': self.images
+        }
+        images_sorted = ImageProduct.download_img(prod)
+        for image in images_sorted:
             try:
-                # Verify if prod image exists
+
                 _exist = g._db.query("""SELECT id_product_image FROM product_image
-                                        WHERE product_uuid = '{}'
-                                        AND image = '{}'"""
-                                     .format(self.product_uuid, _img))\
-                                .fetch()
+                                                                    WHERE product_uuid = '{}'
+                                                                    AND image = '{}'"""
+                                     .format(image.get('product_uuid'), image.get('image'))) \
+                    .fetch()
                 if _exist:
-                    Product.save_pimage(self.product_uuid, _img, _exist[0]['id_product_image'],pcommit=pcommit)
                     continue
-                # Load model
-                Product.save_pimage(self.product_uuid, _img, pcommit=pcommit)
+
+                feature = ImageProduct.generate_features(image['content'])
+
+                product_image = g._db.model('product_image', 'id_product_image')
+                product_image.descriptor = json.dumps(feature.tolist())
+                product_image.product_uuid = image.get('product_uuid')
+                product_image.image = image.get('image')
+                product_image.last_modified = str(datetime.datetime.utcnow())
+                product_image.save(commit=pcommit)
+                logger.debug("Product Image correctly saved! ({})"
+                             .format(product_image.last_id))
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product image!")
-        return True
-
-    @staticmethod
-    def save_pimage(p_uuid, _img, id_pim=None, descs=[], pcommit=False):
-        """ Static method to store in `product image`
-        """
-        m_prod_im = g._db.model('product_image', 'id_product_image')
-        if id_pim:
-            m_prod_im.id_product_image = id_pim
-        m_prod_im.product_uuid = p_uuid
-        m_prod_im.image = _img
-        if descs:
-            m_prod_im.descriptor = json.dumps(descs)
-        m_prod_im.last_modified = str(datetime.datetime.utcnow())
-        m_prod_im.save(commit=pcommit)
-        logger.debug("Product Image correctly saved! ({})"
-                    .format(m_prod_im.last_id))
         return True
 
     @staticmethod
@@ -993,7 +986,6 @@ class Product(object):
             'message': "Product ({}) correctly deleted!".format(p_uuid)
         }
 
-
     @staticmethod
     def upload_normalized(csvfile, _ifexists='replace'):
         """ Static method to batch load into
@@ -1045,7 +1037,6 @@ class Product(object):
         logger.debug("Finished upserting table")
         return {'status': 'OK',
                 'message': 'Correctly upserted normalized names!'}
-
 
     @staticmethod
     def intersection(**kwargs):

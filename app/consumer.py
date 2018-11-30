@@ -103,5 +103,3 @@ def start():
     except Exception as e:
         logger.error("Couldn't connect to Rabbit!!")
         logger.error(e)
-        
-            

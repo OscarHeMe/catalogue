@@ -36,8 +36,6 @@ class Attr(object):
         # Formatting needed params
         if not self.key:
             self.key = key_format(self.name)
-        if not self.match:
-            self.match = [self.key]
         # Verify Clss
         if not self.id_clss:
             if not self.clss:
@@ -107,7 +105,7 @@ class Attr(object):
         return exists
 
     @staticmethod
-    def get_id(_attr, _source):
+    def get_id(_attr, value):
         """ Fetch ID from attribute
 
             Params:
@@ -127,15 +125,11 @@ class Attr(object):
                     .query("""SELECT id_attr
                         FROM attr
                         WHERE key = '{}'
-                        AND source = '{}'
+                        AND value = '{}'
                         LIMIT 1"""\
-                        .format(key_format(_attr),
-                            _source))\
-                    .fetch()
+                        .format(_attr, value)).fetch()
             if _res:
                 return _res[0]['id_attr']
         except Exception as e:
             logger.error(e)
         return None
-
-    

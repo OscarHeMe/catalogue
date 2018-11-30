@@ -17,11 +17,11 @@ CREATE TABLE "source"(
 CREATE TABLE "clss" (
     id_clss serial PRIMARY KEY NOT NULL,
     name text,
-    name_es text,
-    match text,
     key text,
-    description text,
-    source varchar(255)
+    has_value int
+    has_qty int
+    has_order int
+    has_unit int
 );
 
 /* Attribute */
@@ -29,22 +29,17 @@ CREATE TABLE "clss" (
 CREATE TABLE "attr" (
     id_attr serial PRIMARY KEY NOT NULL,
     id_clss int REFERENCES clss(id_clss),
-    name text,
-    key text,
-    match text,
-    has_value int,
-    meta json,
-    source text
+    value text
 );
 
 /*Categories*/
 CREATE TABLE "category" (
     id_category serial PRIMARY KEY NOT NULL,
     id_parent int REFERENCES category(id_category),
-    source character varying(255) REFERENCES source(key),
+    source text REFERENCES source(key),
     name text,
     key text,
-    code varchar(255)
+    code text
 );
 
 /* Group: exact same products */
@@ -52,7 +47,7 @@ CREATE TABLE "item" (
     item_uuid uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     gtin varchar(14),
     checksum integer,
-    name varchar(255),
+    name text,
     description text,
     last_modified timestamp
  );
@@ -61,25 +56,26 @@ CREATE TABLE "item" (
 CREATE TABLE "product" (
     product_uuid uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     item_uuid uuid REFERENCES "item" (item_uuid),
-    source varchar(255) not null,
-    product_id varchar(255) not null,
+    source text not null,
+    product_id text not null,
     name varchar(255),
     gtin varchar(14),
     description text,
     raw_product json,
     raw_html text,
-    categories text,
-    ingredients text,
+    categories text[],
+    ingredients text[],
     brand text,
     provider text,
     url text,
-    images text,
+    images text[],
     last_modified timestamp
 );
 
 CREATE TABLE "product_image" (
     id_product_image serial PRIMARY KEY,
     product_uuid uuid REFERENCES "product" (product_uuid),
+    descriptor json,
     image text
 );
 
@@ -88,9 +84,10 @@ CREATE TABLE "product_attr" (
     id_product_attr serial PRIMARY KEY NOT NULL,
     id_attr integer REFERENCES attr(id_attr),
     product_uuid uuid REFERENCES product(product_uuid),
-    source character varying(255) REFERENCES source(key),
-    value text,
-    precision text,
+    source text REFERENCES source(key),
+    order int,
+    qty int,
+    unit text,
     last_modified timestamp
 );
 

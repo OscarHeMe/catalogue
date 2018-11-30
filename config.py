@@ -51,6 +51,9 @@ STREAMER_VIRTUAL_HOST = os.getenv('STREAMER_VIRTUAL_HOST', '')
 QUEUE_ROUTING = "routing_dev" if ENV.upper() == 'DEV' else "routing"
 QUEUE_CATALOGUE = 'catalogue_dev' if ENV.upper() == 'DEV' else 'catalogue'
 
+OXYLABS = os.getenv('OXYLABS', None)
+REGION = os.getenv('REGION', '')
+
 # Stack and Time Limit to Update Batch
 STACK_LIMIT = 20
 TIME_LIMIT = 200
