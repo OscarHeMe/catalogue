@@ -40,7 +40,10 @@ class Product(object):
         # Arguments verification and addition
         for _k in self.__attrs__:
             if _k in _args:
-                self.__dict__[_k] = _args[_k]
+                if _k == 'name' and _args[_k] and len(_args[_k]) > 255:
+                    self.__dict__[_k] = _args[_k][:250] + '...'
+                else:
+                    self.__dict__[_k] = _args[_k]
                 continue
             self.__dict__[_k] = None
         # Args Aggregation
