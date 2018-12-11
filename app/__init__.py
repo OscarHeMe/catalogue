@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify, g, session
 from flask_cors import CORS
 import json
 import config
+from app.scripts.add_new_retailer import populate_retailer
 from config import *
 import datetime
 from ByHelpers import applogger
@@ -24,7 +25,6 @@ logger = applogger.get_logger()
 @app.cli.command('new_retailer')
 def new_retailer_cmd():
     get_db()
-    from scripts.add_new_retailer import populate_retailer
     populate_retailer()
 
 @app.cli.command('consumer')
