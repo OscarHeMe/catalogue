@@ -14,8 +14,8 @@ class Clss(object):
     """ Model for fetching clsses
     """
 
-    __attrs__ = ['id_clss', 'name', 'name_es', 'match',
-        'key', 'description', 'source']
+    __attrs__ = ['id_clss', 'name', 'key',
+        'has_value', 'has_qty', 'has_order', 'has_unit']
 
     def __init__(self, _args):
         """ Clss constructor
@@ -33,14 +33,11 @@ class Clss(object):
             self.__dict__[_k] = None
         # Formatting needed params
         if not self.name:
-            if not self.name_es:
-                logger.error("Needs to specify at least one name in Clss!")
-                raise Exception("Needs to specify at least one name in Clss!")
-            self.name = self.name_es
+            logger.error("Needs to specify at least one name in Clss!")
+            raise Exception("Needs to specify at least one name in Clss!")
         if not self.key:
-            self.key = key_format(self.name)
-        if not self.match:
-            self.match = [self.key]
+            logger.error("Clss key wasn't denifed")
+            raise Exception("Needs to specify at least one name in Clss!")
 
     def save(self, commit=True):
         """ Class method to save Clss in DB
@@ -49,10 +46,10 @@ class Clss(object):
         if self.id_clss:
             if not Clss.exists({'id_clss': self.id_clss}):
                 raise errors.ApiError(70006, "Cannot update, Clss not in DB!")
-        elif Clss.exists({'key': self.key, 'source': self.source}):
+        elif Clss.exists({'key': self.key, 'name': self.name}):
             self.message = 'Clss already exists!'
             self.id_clss = Clss.get_id(self.key,
-                                        self.source)
+                                        self.name)
             return self.id_clss
         # Load model
         m_cls = g._db.model("clss", "id_clss")
@@ -90,17 +87,20 @@ class Clss(object):
         _where = ' AND '.join(["{}='{}'".format(*z) \
                             for z in list(k_param.items())])
         try:
-            exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM clss WHERE {})"""\
-                            .format(_where))\
-                        .fetch()[0]['exists']
+            query = """SELECT EXISTS (
+                            SELECT 1 FROM clss WHERE {})""".format(_where)
+            logger.debug("Query: " + query)
+            exists = g._db.query(query).fetch()
+            logger.debug("Exists" + str(exists))
+            exists = exists[0]['exists']
         except Exception as e:
-            logger.error(e)
+            logger.error(_where)
+            logger.error("Error in exists Clss: ".format(str(e)))
             return False
         return exists
     
     @staticmethod
-    def get_id(_key, _source):
+    def get_id(_key, name):
         """ Fetch ID from Clss by key
 
             Params:
@@ -120,10 +120,10 @@ class Clss(object):
                     .query("""SELECT id_clss
                         FROM clss
                         WHERE key = '{}'
-                        AND source = '{}'
+                        AND name = '{}'
                         LIMIT 1"""\
                         .format(_key,
-                            _source))\
+                                name))\
                     .fetch()
             if _res:
                 return _res[0]['id_clss']

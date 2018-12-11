@@ -18,9 +18,9 @@ CREATE TABLE "clss" (
     id_clss serial PRIMARY KEY NOT NULL,
     name text,
     key text,
-    has_value int
-    has_qty int
-    has_order int
+    has_value int,
+    has_qty int,
+    has_order int,
     has_unit int
 );
 
@@ -58,17 +58,17 @@ CREATE TABLE "product" (
     item_uuid uuid REFERENCES "item" (item_uuid),
     source text not null,
     product_id text not null,
-    name varchar(255),
+    name text,
     gtin varchar(14),
     description text,
     raw_product json,
     raw_html text,
-    categories text[],
-    ingredients text[],
+    categories text,
+    ingredients text,
     brand text,
     provider text,
     url text,
-    images text[],
+    images text,
     last_modified timestamp
 );
 
@@ -85,11 +85,30 @@ CREATE TABLE "product_attr" (
     id_attr integer REFERENCES attr(id_attr),
     product_uuid uuid REFERENCES product(product_uuid),
     source text REFERENCES source(key),
-    order int,
+    order_ int,
     qty int,
     unit text,
     last_modified timestamp
 );
+
+
+CREATE TABLE "nutriment" (
+    id_nutriment serial PRIMARY KEY NOT NULL,
+    name text,
+    key text,
+    last_modified timestamp
+);
+
+CREATE TABLE "product_nutriment" (
+    id_product_nutriment serial PRIMARY KEY NOT NULL,
+    id_nutriment int REFERENCES nutriment(id_nutriment),
+    product_uuid uuid REFERENCES product(product_uuid),
+    qty int,
+    source text,
+    unit text,
+    last_modified timestamp
+);
+
 
 /* productRetailerCategory */
 CREATE TABLE "product_category" (

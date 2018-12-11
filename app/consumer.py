@@ -37,10 +37,13 @@ def process(new_item, reroute=True):
     route_key = new_item['route_key']
     logger.debug('Evaluating: {}'.format(route_key))
     # Reformat Prod Values
+    logger.debug("New item: {}".format(str(new_item.get('nutriments'))))
     _frmted = mpk.product(route_key, new_item)
     logger.debug('Formatted product!')
+    logger.debug("formated item: {}".format(str(_frmted.get('nutriments'))))
     p = Product(_frmted)
     # Verify if product in Cache
+
     prod_uuid = Product.puuid_from_cache(cached_ps, p)
     if not prod_uuid:
         # Verify if product exists
@@ -101,5 +104,4 @@ def start():
     try:
         consumer.run()
     except Exception as e:
-        logger.error("Couldn't connect to Rabbit!!")
-        logger.error(e)
+        logger.error("Error in catalogue consumer: {}".format(str(e)))

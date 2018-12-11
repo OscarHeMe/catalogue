@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from config import *
-from models.kd_tree_distances import kd_tree, Query_Distance, Cosine_Measure_Dense
-from app.utils import applogger
+from ByHelpers import applogger
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import numpy as np
@@ -110,36 +109,39 @@ class ImageProduct(object):
             images : list
                 List of Image attributes (PUUID, content, etc.)
         """
-        # AWS S3 session
-        session = boto3.Session(
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY_ID
-        )
-        if not session:
-            return None
-        # Configure product Bucket
-        s3 = session.resource('s3')
-        bucket = s3.Bucket(AWS_PRODUCT_BUCKET)
-        # Delete all existant images in product path
-        for b in bucket.objects.filter(Prefix="{}/".format(images[0]['product_uuid'])):
-            try:
-                b.delete()
-            except Exception as e:
-                logger.debug(e)
-                pass
-        logger.debug("Deleted S3 old files..")
-        # Upload all files
-        _uplded = 0
-        for k, i in enumerate(images):
-            pth = 'products/{}/{}.png'.format(i['product_uuid'], k)
-            try:
-                image_io = cv2.imencode('.png', i['content'])[1].tobytes()
-                bucket.put_object(Key=pth, Body=image_io, ContentType='image/png')
-                _uplded += 1
-            except Exception as e:
-                logger.error(e)
-                pass
-        logger.info("Uploaded to S3,  {} new files!".format(_uplded))
+        try:
+            # AWS S3 session
+            session = boto3.Session(
+                aws_access_key_id=AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=AWS_SECRET_ACCESS_KEY_ID
+            )
+            if not session:
+                return None
+            # Configure product Bucket
+            s3 = session.resource('s3')
+            bucket = s3.Bucket(AWS_PRODUCT_BUCKET)
+            # Delete all existant images in product path
+            for b in bucket.objects.filter(Prefix="{}/".format(images[0]['product_uuid'])):
+                try:
+                    b.delete()
+                except Exception as e:
+                    logger.debug(e)
+                    pass
+            logger.debug("Deleted S3 old files..")
+            # Upload all files
+            _uplded = 0
+            for k, i in enumerate(images):
+                pth = 'products/{}/{}.png'.format(i['product_uuid'], k)
+                try:
+                    image_io = cv2.imencode('.png', i['content'])[1].tobytes()
+                    bucket.put_object(Key=pth, Body=image_io, ContentType='image/png')
+                    _uplded += 1
+                except Exception as e:
+                    logger.error(e)
+                    pass
+            logger.info("Uploaded to S3,  {} new files!".format(_uplded))
+        except Exception as e:
+            logger.error("Error uploading image to s3: {}".format(str(e)))
         return True
 
     @staticmethod
@@ -156,6 +158,7 @@ class ImageProduct(object):
             Rep :  np.array
                 Increased Array of Figures with features.
         """
+        logger.debug("Genetating img features...")
         # Background Removal
         try:
             ImageNoBack1, SigContour1 = ImageProduct.BackGroundSubstractor(Image)
@@ -374,44 +377,7 @@ class ImageProduct(object):
         significant.sort(key=lambda x: x[1])
         return [x[0] for x in significant]
 
-    @staticmethod
-    def get_image_tree(data):
-        """ Builds KD Tree upon a list of vectors
 
-            Params:
-            -----
-            data : pd.DataFrame
-                Image data
-
-            Returns:
-            -----
-            repr : np.array
-                Vector Representation of Image descriptors
-            tree : scipy.spatial.cKDTree
-                Loaded Image Tree
-            image_docs : list
-                Document UUIDs
-        """
-        _data, image_docs = [], []
-        for j, _row in data.iterrows():
-            for _im in _row.prod_images:
-                if not _im['descriptor']:
-                    continue
-                try:
-                    logger.debug("Unpacking descriptor: {} %".format(100.0 * int(j) * len(data)))
-                    _data.append(ImageProduct.compound_vector(_im['descriptor']))
-                    image_docs.append((_row.product_uuid, _im['image']))
-                    break
-                except Exception as e:
-                    logger.error(e)
-        if not _data:
-            logger.warning("Could not find any Product Images")
-            return np.array([[]]), None, []
-        logger.info("Fetched {} product images".format(len(_data)))
-        print('Shape', _data[0].shape)
-        _, m = _data[0].shape
-        X = np.array(_data).reshape(len(_data), m)
-        return X, kd_tree(X), image_docs
 
     @staticmethod
     def compound_vector(vec):

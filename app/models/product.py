@@ -1,5 +1,6 @@
 from app.models.category import Category
 from app.models.attr import Attr
+from app.models.nutriment import Nutriment
 from app.models.image import ImageProduct
 from app.norm.normalize_text import key_format, tuplify
 from app.utils import errors
@@ -25,7 +26,7 @@ class Product(object):
         'product_uuid', "product_id", "gtin", "item_uuid",
         "source", "name", "description", "images",
         "categories", "url", "brand", "provider", "attributes",
-        "ingredients", "raw_html", "raw_product"
+        "ingredients", "raw_html", "raw_product", "nutriments"
         ]
     __extras__ = ['prod_attrs', 'prod_images', 'prod_categs', 'normalized']
     __base_q = ['product_uuid', 'product_id', 'name', 'source']
@@ -38,49 +39,66 @@ class Product(object):
             _args : dict
                 All arguments to build a `Product` record
         """
+        logger.debug("Init product...")
+        logger.debug("product: {}".format(str(_args.get('nutriments'))))
         # Arguments verification and addition
-        for _k in self.__attrs__:
-            if _k in _args:
-                self.__dict__[_k] = _args[_k]
-                continue
-            self.__dict__[_k] = None
-        # Args Aggregation
-        self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
-        self.product_id = str(self.product_id)[-255:] if self.product_id else None
-        # Categories parsing
-        if not isinstance(self.categories, list):
-                    logger.warning("Categories with unvalid format!")
-                    logger.debug(str(self.categories))
-                    self.categories = None
-        # Raw Product construction
         try:
-            if not self.raw_product:
-                self.raw_product = json.dumps(_args)
+            for _k in self.__attrs__:
+                if _k in _args:
+                    self.__dict__[_k] = _args[_k]
+                    continue
+                self.__dict__[_k] = None
         except Exception as e:
-            logger.error(e)
-            if APP_MODE == "CONSUMER":
-                logger.warning("Wrong DataType to serialize for Product!")
-                raise Exception("Wrong DataType to serialize for Product!")
-            if APP_MODE == "SERVICE":
-                raise errors.ApiError(70005,
-                    "Wrong DataType to serialize for Product!")
-        # Args validation
+            logger.error("Error while creating __attrs__ dict: {}".format(str(e)))
+
+        logger.info("Nutriments!!!   {}".format(_args.get('nutriments')))
+        logger.debug("Args ....")
+        # Args Aggregation
         try:
-            if not (isinstance(self.images, list) or (self.images is None)):
-                raise TypeError("[images] {} instead of list or None".format(type(self.images)))
-            if not (isinstance(self.categories, list) or (self.categories is None)):
-                raise TypeError("[categories] {} instead of list or None".format(type(self.categories)))
-            if not (isinstance(self.attributes, dict) or (self.attributes is None)):
-                raise TypeError("[attributes] {} instead of dict or None".format(type(self.attributes)))
-            if not (isinstance(self.raw_html, str) or (self.raw_html is None)):
-                raise TypeError("[raw_html] {} instead of str or None".format(type(self.raw_html)))
-        except TypeError as te:
-            error_str = "WRONG DATATYPE: " + te + "({} {})".format(self.source, self.product_uuid)
+            self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
+            self.product_id = str(self.product_id)[-255:] if self.product_id else None
+        except Exception as e:
+            error_str = "Error while defining identifiers: {}".format(str(e))
             logger.error(error_str)
             if APP_MODE == "CONSUMER":
                 raise Exception(error_str)
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70005, error_str)
+        # Raw Product construction
+        logger.debug("Raw construciton ....")
+        try:
+            if not self.raw_product:
+                self.raw_product = json.dumps(_args)
+        except Exception as e:
+            logger.error("Cannot serialize product: " + str(e))
+            if APP_MODE == "CONSUMER":
+                logger.warning("Wrong DataType to serialize for Product!")
+                raise Exception("Wrong DataType to serialize for Product!")
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70005, "Wrong DataType to serialize for Product!")
+        # Args validation
+        logger.debug("Args validation....")
+        try:
+            if not (isinstance(self.images, list) or (self.images is None)):
+                raise Exception("[images] {} instead of list or None".format(type(self.images)))
+            if not (isinstance(self.ingredients, list) or (self.ingredients is None)):
+                raise Exception("[ingredients] {} instead of list or None".format(type(self.ingredients)))
+            if not (isinstance(self.categories, list) or (self.categories is None)):
+                raise Exception("[categories] {} instead of list or None".format(type(self.categories)))
+            if not (isinstance(self.attributes, dict) or (self.attributes is None)):
+                raise Exception("[attributes] {} instead of dict or None".format(type(self.attributes)))
+            if not (isinstance(self.nutriments, dict) or (self.nutriments is None)):
+                raise Exception("[nutriments] {} instead of dict or None".format(type(self.nutriments)))
+            if not (isinstance(self.raw_html, str) or (self.raw_html is None)):
+                raise Exception("[raw_html] {} instead of str or None".format(type(self.raw_html)))
+        except Exception as e:
+            error_str = "WRONG DATATYPE: " + str(e) + "({} {})".format(self.source, self.product_uuid)
+            logger.error(error_str)
+            if APP_MODE == "CONSUMER":
+                raise Exception(error_str)
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70005, error_str)
+        logger.debug("Product declaration finished!")
 
     def save(self, pcommit=True, _is_update=False, verified=False):
         """ Class method to save Product record in DB
@@ -96,11 +114,11 @@ class Product(object):
             elif not Product.exists({'product_uuid': self.product_uuid}):
                 # If wants to update but wrong UUID, return Error
                 if APP_MODE == "CONSUMER":
-                    logger.error("Cannot update, UUID not in DB!")
+                    logger.error("Cannot update [{}], UUID not in DB!".format(self.product_uuid))
                     return False
                 if APP_MODE == "SERVICE":
                     raise errors.ApiError(70006,
-                                          "Cannot update, UUID not in DB!")
+                                          "Cannot update [{}], UUID not in DB!".format(self.product_uuid))
             _is_update = True
         # Verify for insert, if previously verified continue to save
         elif verified:
@@ -115,46 +133,98 @@ class Product(object):
                         'source': self.source})[0]['product_uuid']
                 return True
         # Load model
+        logger.debug("Creating __attrs__ dict in product  ...")
         m_prod = g._db.model('product', 'product_uuid')
+        aux = {}
         for _k in self.__attrs__:
-            if _k != 'attributes' and self.__dict__[_k]:
+            if _k not in ['attributes', 'nutriments'] and self.__dict__[_k]:
                 m_prod.__dict__[_k] = self.__dict__[_k]
+
+        if m_prod.images:
+            m_prod.__dict__['images'] = ', '.join(m_prod.images)
+
+        if m_prod.ingredients:
+            m_prod.__dict__['ingredients'] = ', '.join(m_prod.ingredients)
+
+        if m_prod.categories:
+            m_prod.__dict__['categories'] = ', '.join(m_prod.categories)
         # Add date
         m_prod.last_modified = str(datetime.datetime.utcnow())
         # Always add what Item UUID is set
         m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
         try:
+
             res = m_prod.save(commit=True)
             self.message = "Correctly {} Product!"\
                 .format('updated' if self.product_uuid else 'stored')
             self.product_uuid = m_prod.last_id
             logger.debug(self.message)
             # Save product images
-            if self.images:
-                self.save_images(pcommit=pcommit)
-            # Save product categories
+        except Exception as e:
+            logger.error("Error saving product: {}".format(str(e)))
+            if APP_MODE == "CONSUMER":
+                logger.error("Issues saving product in DB!")
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70002, "Issues saving product in DB!")
+
+        # try:
+        #     if self.images:
+        #         self.save_images(pcommit=pcommit)
+        # except Exception as e:
+        #     if APP_MODE == "CONSUMER":
+        #         logger.error("Issues saving images in DB! {}".format(str(e)))
+        #         return False
+        #     if APP_MODE == "SERVICE":
+        #         raise errors.ApiError(70002, "Issues saving images in DB! {}".format(str(e)))
+
+        try:
             if self.categories:
                 self.save_categories(_is_update, pcommit=pcommit)
-            self.add_attributes()
-            # Save product attrs
-            if self.attributes:
-                self.save_attributes(_is_update, pcommit=pcommit)
-            # Save category, brand and provider as attributes
-
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
-                logger.error("Issues saving in DB!")
+                logger.error("Issues saving categories in DB! {}".format(str(e)))
                 return False
             if APP_MODE == "SERVICE":
-                raise errors.ApiError(70002, "Issues saving in DB!")
+                raise errors.ApiError(70002, "Issues saving categories in DB! {}".format(str(e)))
+
+
+        try:
+            self.add_attributes()
+            if self.attributes:
+                self.save_attributes(_is_update, pcommit=pcommit)
+        except Exception as e:
+            logger.error(e)
+            if APP_MODE == "CONSUMER":
+                logger.error("Issues saving attributes in DB! {}".format(str(e)))
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70002, "Issues saving attributes in DB! {}".format(str(e)))
+
+        try:
+            logger.debug("Nutriments: " + str(self.nutriments))
+            if self.nutriments:
+                self.save_nutriments(_is_update, pcommit=pcommit)
+        except Exception as e:
+            logger.error(e)
+            if APP_MODE == "CONSUMER":
+                logger.error("Issues saving nutriments in DB! {}".format(str(e)))
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70002, "Issues saving nutriments in DB! {}".format(str(e)))
+
+
+
         return True
 
     def add_attributes(self):
         """ Class method to save brand, provider and categs
             as attributes
         """
-        self.attributes = []
+        logger.debug("Adding attributes...")
+        if not self.attributes:
+            self.attributes = {}
         # Load all elements as Attributes
         if self.brand:
             self.attributes['brand'] = {
@@ -186,61 +256,132 @@ class Product(object):
                     'value': c
                 })
             self.attributes['category'] = categories_attrs
+        logger.debug("Adding attributes finished... ")
 
     def save_attributes(self, update=False, pcommit=True):
         """ Class method to save product attributes
         """
-        _nprs = {'name', 'order', 'qty', 'unit', 'value'}
-        for key, _attr in self.attributes.items():
-            # Validate attrs
-            if not _nprs.issubset(_attr.keys()):
-                logger.warning("Cannot add product attribute, missing keys!")
-                continue
-            # Verify if attr exists
-            id_attr = Attr.get_id(_attr['key'], _attr['value'], self.source)
-            # If not, create attr
-            if not id_attr:
-                attr = Attr({
-                    "value": _attr["value"],
-                    "clss": {
-                        "name": _attr["name"],
-                        "key": _attr["key"]
-                    }
-                })
-                id_attr = attr.save(commit=pcommit)
+        logger.debug("Saving attributes...")
+        _nprs = {'key', 'name', 'order', 'qty', 'unit', 'value'}
+        logger.debug("Attributes found: {}".format(list(self.attributes.keys())))
+        for key, _attrs in self.attributes.items():
+            logger.debug("Iterating attributes dict..")
+            for _attr in _attrs:
+                logger.debug("Iterating attrs list..")
+                # Verify if attr exists
+                id_attr = Attr.get_id(_attr['key'], _attr['value'], is_key=True)
+                # If not, create attr
+                logger.debug("Id found: {}".format(id_attr))
+                if not id_attr:
+                    attr = Attr({
+                        "value": _attr["value"],
+                        "clss": {
+                            "name": _attr["name"],
+                            "key": _attr["key"]
+                        }
+                    })
+                    logger.debug("attr object created...")
+                    id_attr = attr.save(commit=pcommit)
 
-            # Verify if product_attr exists
-            id_prod_attr = g._db.query("""SELECT id_product_attr
-                                        FROM product_attr
-                                        WHERE product_uuid = '{}'
-                                        AND id_attr = {} LIMIT 1"""
-                                .format(self.product_uuid, id_attr))\
-                            .fetch()
-            # If not create product_attr
-            if id_prod_attr:
-                if not update:
-                    logger.debug("Product Attr already in DB!")
-                    continue
-                id_prod_attr = id_prod_attr[0]['id_product_attr']
-            # Load model
-            try:
-                m_prod_at = g._db.model('product_attr', 'id_product_attr')
+                logger.debug("attr saved")
+                # Verify if product_attr exists
+                id_prod_attr = g._db.query("""SELECT id_product_attr
+                                            FROM product_attr
+                                            WHERE product_uuid = '{}'
+                                            AND id_attr = {} LIMIT 1"""
+                                    .format(self.product_uuid, id_attr))\
+                                .fetch()
+                # If not create product_attr
                 if id_prod_attr:
-                    m_prod_at.id_product_attr = id_prod_attr
-                m_prod_at.product_uuid = self.product_uuid
-                m_prod_at.id_attr = id_attr
-                if 'value' in _attr:
-                    m_prod_at.value = _attr['value']
-                if 'precision' in _attr:
-                    m_prod_at.precision = _attr['precision']
-                m_prod_at.last_modified = str(datetime.datetime.utcnow())
-                m_prod_at.save(commit=pcommit)
-                logger.debug("Product Attr correctly saved! ({})"
-                            .format(m_prod_at.last_id))
-            except Exception as e:
-                logger.error(e)
-                logger.warning("Could not save Product attr!")
+                    if not update:
+                        logger.debug("Product Attr already in DB!")
+                        continue
+                    id_prod_attr = id_prod_attr[0]['id_product_attr']
+                # Load model
+                try:
+                    m_prod_at = g._db.model('product_attr', 'id_product_attr')
+                    if id_prod_attr:
+                        m_prod_at.id_product_attr = id_prod_attr
+                    m_prod_at.product_uuid = self.product_uuid
+                    m_prod_at.id_attr = id_attr
+                    if 'qty' in _attr:
+                        m_prod_at.value = _attr['qty']
+                    if 'unit' in _attr:
+                        m_prod_at.unit = _attr['unit']
+                    if 'order' in _attr:
+                        m_prod_at.order_ = _attr['order']
+                    m_prod_at.source = self.source
+                    m_prod_at.last_modified = str(datetime.datetime.utcnow())
+                    m_prod_at.save(commit=pcommit)
+                    logger.debug("Product Attr correctly saved! ({})"
+                                .format(m_prod_at.last_id))
+                except Exception as e:
+                    logger.error(e)
+                    logger.warning("Could not save Product attr!")
+                logger.debug("Saving attributes finished...")
         return True
+
+
+    def save_nutriments(self, update=False, pcommit=True):
+        """ Class method to save product nutriments
+        """
+        logger.debug("Saving nutriments...")
+        _nprs = {'key', 'name', 'qty', 'unit'}
+        logger.debug("Nutriments found: {}".format(list(self.nutriments.keys())))
+        for key, nutrs in self.nutriments.items():
+            logger.debug("Iterating nutriments dict..")
+            for nutr in nutrs:
+                logger.debug("Iterating nutriment list..")
+                # Verify if attr exists
+                id_nutriment = Nutriment.get_id(key)
+                # If not, create attr
+                logger.debug("Id found: {}".format(id_nutriment))
+                if not id_nutriment:
+                    nutriment = Nutriment({
+                        "key": nutr["key"],
+                        "name": nutr["name"]
+                    })
+                    logger.debug("nutriment object created...")
+                    id_nutriment = nutriment.save(commit=pcommit)
+
+                logger.debug("nutriment saved")
+                # Verify if product_nutriment exists
+                id_product_nutriment = g._db.query("""SELECT id_product_nutriment
+                                            FROM product_nutriment
+                                            WHERE product_uuid = '{}'
+                                            AND id_nutriment = {} LIMIT 1"""
+                                    .format(self.product_uuid, id_nutriment))\
+                                .fetch()
+                # If not create product_nutriment
+                if id_product_nutriment:
+                    if not update:
+                        logger.debug("Product nutriment already in DB!")
+                        continue
+                    else:
+                        id_product_nutriment = id_product_nutriment[0]['id_product_nutriment']
+
+                # Load model
+                try:
+                    m_prod_nutr = g._db.model('product_nutriment', 'id_product_nutriment')
+                    if id_product_nutriment:
+                        m_prod_nutr.id_product_nutriment = id_product_nutriment
+                    m_prod_nutr.product_uuid = self.product_uuid
+                    m_prod_nutr.id_nutriment = id_nutriment
+                    if 'qty' in nutr:
+                        m_prod_nutr.qty = nutr['qty']
+                    if 'unit' in nutr:
+                        m_prod_nutr.unit = nutr['unit']
+                    m_prod_nutr.source = self.source
+                    m_prod_nutr.last_modified = str(datetime.datetime.utcnow())
+                    m_prod_nutr.save(commit=pcommit)
+                    logger.debug("Product Nutriment correctly saved! ({})"
+                                .format(m_prod_nutr.last_id))
+                except Exception as e:
+                    logger.error(e)
+                    logger.warning("Could not save Product Nutriments!")
+                logger.debug("Saving Nutriments finished...")
+        return True
+
 
     def save_images(self, pcommit=True):
         """ Class method to save product images
@@ -262,7 +403,7 @@ class Product(object):
                     continue
 
                 feature = ImageProduct.generate_features(image['content'])
-
+                logger.debug("Feature obtained [{}]".format(type(feature)))
                 product_image = g._db.model('product_image', 'id_product_image')
                 product_image.descriptor = json.dumps(feature.tolist())
                 product_image.product_uuid = image.get('product_uuid')
@@ -272,8 +413,8 @@ class Product(object):
                 logger.debug("Product Image correctly saved! ({})"
                              .format(product_image.last_id))
             except Exception as e:
-                logger.error(e)
-                logger.warning("Could not save Product image!")
+                logger.error("Could't save Product image: {}".format(str(e)))
+                continue
         return True
 
     @staticmethod
@@ -337,37 +478,35 @@ class Product(object):
             if APP_MODE == "SERVICE":
                 raise errors\
                     .ApiError(70004, "Could not apply transaction in DB")
-                return {
-                    'status': "ERROR",
-                    "message": "Could not apply transaction in DB"
-                    }
-    
+
     def save_categories(self, update=False, pcommit=True):
         """ Class method to save product categories
         """
+        logger.debug("Saving categories...")
         _parent = None
-        for _cat in self.categories.split(','):
+        id_parent = None
+        for _cat in self.categories:
             try:
                 # Get ID if exists, otherwise create category
                 id_cat = Category.get_id(_cat, self.source)
                 if not id_cat:
                     categ = Category({
                         'source': self.source,
-                        'id_parent': Category.get_id(_cat,
-                                                     self.source,
-                                                     'id_parent'),
+                        'id_parent': id_parent,
                         'name': _cat
                         })
-                    id_cat = categ.save(commit=pcommit)
+                    id_parent = categ.save(commit=pcommit)
                     # Emergency skip
-                    if not id_cat:
-                        continue
+                    if not id_parent:
+                        raise Exception("Cannot get id while saving category")
+                else:
+                    id_parent = id_cat
                 # Verify product category does not exist
                 id_prod_categ = g._db.query("""SELECT id_product_category
                                             FROM product_category
                                             WHERE id_category = {}
                                             AND product_uuid = '{}' LIMIT 1"""
-                                            .format(id_cat,
+                                            .format(id_parent,
                                                     self.product_uuid))\
                                     .fetch()
                 if id_prod_categ:
@@ -380,7 +519,7 @@ class Product(object):
                 if id_prod_categ:
                     m_prod_cat.id_product_category = id_prod_categ
                 m_prod_cat.product_uuid = self.product_uuid
-                m_prod_cat.id_category = id_cat
+                m_prod_cat.id_category = id_parent
                 m_prod_cat.last_modified = str(datetime.datetime.utcnow())
                 m_prod_cat.save(commit=pcommit)
                 logger.debug("Product Category correctly saved! ({})"
@@ -388,6 +527,7 @@ class Product(object):
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product category!")
+        logger.debug("Saving categories finished...")
         return True
 
     @staticmethod

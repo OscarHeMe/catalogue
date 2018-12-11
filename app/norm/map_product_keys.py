@@ -75,7 +75,7 @@ def item(data):
     # Remap keys without modification
     re_map = {'url': 'url', 'retailer': 'source',
               'provider': 'provider', 'brand': 'brand', 'name': 'name',
-              'description': 'description', 'raw_html': 'raw_html',
+              'description': 'description', 'raw_html': 'raw_html', 'nutriments': 'nutriments',
               'id': 'product_id'}
     for _old, _new in re_map.items():
         if _old in data:
@@ -91,31 +91,17 @@ def item(data):
                 fdata['name'] = fdata['description'] if fdata['description'] else ''
     # Reformat specific cols
     if 'categories' in data:
-        fdata['categories'] = list_to_str(data['categories'])
+        fdata['categories'] = data['categories']
     if 'match' in data:
         if 'gtin' in data['match']:
             fdata['gtin'] = data['match']['gtin']
+    elif 'gtin' in data:
+        fdata['gtin'] = data['gtin']
     fdata['attributes'] = []
     if 'attributes' in data:
-        if isinstance(data['attributes'], list):
-            _fatrs = []
-            _nparams = {'attr_name', 'attr_key', 'clss_name', 'clss_key'}
-            for _atts in data['attributes']:
-                if _nparams.issubset(_atts):
-                    _fatrs.append(_atts)
-            fdata['attributes'] = _fatrs
-    if 'ingredients' in data:
-        if isinstance(data['ingredients'], list):
-            _fing = []
-            for _ing in data['ingredients']:
-                if _ing:
-                    _fing.append({
-                        "attr_name": _ing,
-                        "attr_key": key_format(_ing),
-                        "clss_name": "Ingrediente",
-                        "clss_key": "ingredient",
-                    })
-            fdata['attributes'] += _fing
+        fdata['attributes'] = data['attributes']
+    if 'nutriments' in data:
+        fdata['nutriments'] = data['nutriments']
     # Set raw data
     try:
         fdata['raw_product'] = json.dumps(data)

@@ -3,15 +3,16 @@ from pygres import Pygres
 import config
 from config import * 
 import os
-import logging
+from ByHelpers import applogger
 
-logger = logging.getLogger(APP_NAME)
+logger = applogger.get_logger()
 
 # Database creation
 def initdb():
     ''' Initialize the db '''
     # Define schema
     _schema = 'schema.sql' if not TESTING else 'schema.sql'
+    logger.info("Connecting to db user: {}, host: {}, port: {}".format(SQL_USER, SQL_HOST, SQL_PORT))
     try:
         db_init = Pygres(dict(
             SQL_DB='postgres',

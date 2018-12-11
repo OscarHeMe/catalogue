@@ -57,3 +57,10 @@ REGION = os.getenv('REGION', '')
 # Stack and Time Limit to Update Batch
 STACK_LIMIT = 20
 TIME_LIMIT = 200
+
+
+# AWS S3 CREDENTIALS
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID','')
+AWS_SECRET_ACCESS_KEY_ID = os.getenv('AWS_SECRET_ACCESS_KEY_ID','')
+AWS_PRODUCT_BUCKET = os.getenv('AWS_PRODUCT_BUCKET','byprice-us-images')
+AWS_ITEM_BUCKET = os.getenv('AWS_ITEM_BUCKET','byprice-us-images')
