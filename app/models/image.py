@@ -51,9 +51,13 @@ class ImageProduct(object):
             logger.debug('Fetching: {}'.format(_im))
             try:
                 if 'kroger' in _im:
-                    img_content = br.get(_im, headers=headers_kroger).content
+                    img_content = br.get(_im, headers=headers_kroger)
                 else:
-                    img_content = br.get(_im).content
+                    img_content = br.get(_im)
+                if img_content:
+                    img_content = img_content.content
+                else:
+                    raise ("Cannot obtain img_response")
                 if img_content:
                     _blob = cv2.imdecode(
                         np.asarray(
