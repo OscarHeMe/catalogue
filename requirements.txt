@@ -70,7 +70,7 @@ mistune==0.8.3
 sklearn==0.0
 testpath==0.3.1
 decorator==4.3.0
-fake-useragent==0.1.10
+fake-useragent==0.1.11
 nltk==3.2.5
 six==1.11.0
 isort==4.3.4
@@ -84,7 +84,7 @@ beautifulsoup4==4.6.0
 jupyter-console==5.2.0
 nbformat==4.4.0
 widgetsnbextension==3.2.1
-ByRequests==1.1.4
+ByRequests==1.1.5
 nbconvert==5.3.1
 Jinja2==2.10
 cycler==0.10.0
