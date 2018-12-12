@@ -168,15 +168,15 @@ class Product(object):
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70002, "Issues saving product in DB!")
 
-        # try:
-        #     if self.images:
-        #         self.save_images(pcommit=pcommit)
-        # except Exception as e:
-        #     if APP_MODE == "CONSUMER":
-        #         logger.error("Issues saving images in DB! {}".format(str(e)))
-        #         return False
-        #     if APP_MODE == "SERVICE":
-        #         raise errors.ApiError(70002, "Issues saving images in DB! {}".format(str(e)))
+        try:
+            if self.images:
+                self.save_images(pcommit=pcommit)
+        except Exception as e:
+            if APP_MODE == "CONSUMER":
+                logger.error("Issues saving images in DB! {}".format(str(e)))
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70002, "Issues saving images in DB! {}".format(str(e)))
 
         try:
             if self.categories:
