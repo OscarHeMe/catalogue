@@ -391,30 +391,33 @@ class Product(object):
             'images': self.images
         }
         images_sorted = ImageProduct.download_img(prod)
-        for image in images_sorted:
-            try:
+        if images_sorted:
+            for image in images_sorted:
+                try:
 
-                _exist = g._db.query("""SELECT id_product_image FROM product_image
-                                                                    WHERE product_uuid = '{}'
-                                                                    AND image = '{}'"""
-                                     .format(image.get('product_uuid'), image.get('image'))) \
-                    .fetch()
-                if _exist:
+                    _exist = g._db.query("""SELECT id_product_image FROM product_image
+                                                                        WHERE product_uuid = '{}'
+                                                                        AND image = '{}'"""
+                                         .format(image.get('product_uuid'), image.get('image'))) \
+                        .fetch()
+                    if _exist:
+                        continue
+
+                    feature = ImageProduct.generate_features(image['content'])
+                    logger.debug("Feature obtained [{}]".format(type(feature)))
+                    product_image = g._db.model('product_image', 'id_product_image')
+                    product_image.descriptor = json.dumps(feature.tolist())
+                    product_image.product_uuid = image.get('product_uuid')
+                    product_image.image = image.get('image')
+                    product_image.last_modified = str(datetime.datetime.utcnow())
+                    product_image.save(commit=pcommit)
+                    logger.debug("Product Image correctly saved! ({})"
+                                 .format(product_image.last_id))
+                except Exception as e:
+                    logger.error("Could't save Product image: {}".format(str(e)))
                     continue
-
-                feature = ImageProduct.generate_features(image['content'])
-                logger.debug("Feature obtained [{}]".format(type(feature)))
-                product_image = g._db.model('product_image', 'id_product_image')
-                product_image.descriptor = json.dumps(feature.tolist())
-                product_image.product_uuid = image.get('product_uuid')
-                product_image.image = image.get('image')
-                product_image.last_modified = str(datetime.datetime.utcnow())
-                product_image.save(commit=pcommit)
-                logger.debug("Product Image correctly saved! ({})"
-                             .format(product_image.last_id))
-            except Exception as e:
-                logger.error("Could't save Product image: {}".format(str(e)))
-                continue
+        else:
+            logger.warning("Cannot download any image from {}".format(self.product_uuid))
         return True
 
     @staticmethod
