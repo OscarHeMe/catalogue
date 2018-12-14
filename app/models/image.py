@@ -57,7 +57,7 @@ class ImageProduct(object):
                 if img_content:
                     img_content = img_content.content
                 else:
-                    raise ("Cannot obtain img_response")
+                    raise Exception("Cannot obtain img_response")
                 if img_content:
                     _blob = cv2.imdecode(
                         np.asarray(
@@ -83,8 +83,7 @@ class ImageProduct(object):
                 if retries < MAX_RETRIES:
                     return ImageProduct.download_img(prod, retries=retries + 1)
             except Exception as e:
-                logger.error(e)
-                logger.warning(_im)
+                logger.error("Error getting image: {} {}".format(str(e), _im))
                 # Verify image existance
         if not _im_objs:
             logger.debug('Could not find any downloadable image!')
