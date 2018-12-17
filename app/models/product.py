@@ -264,62 +264,65 @@ class Product(object):
         logger.debug("Saving attributes...")
         _nprs = {'key', 'name', 'order', 'qty', 'unit', 'value'}
         logger.debug("Attributes found: {}".format(list(self.attributes.keys())))
-        for key, _attrs in self.attributes.items():
-            logger.debug("Iterating attributes dict..")
-            for _attr in _attrs:
-                logger.debug("Iterating attrs list..")
-                # Verify if attr exists
-                id_attr = Attr.get_id(_attr['key'], _attr['value'], is_key=True)
-                # If not, create attr
-                logger.debug("Id found: {}".format(id_attr))
-                if not id_attr:
-                    attr = Attr({
-                        "value": _attr["value"],
-                        "clss": {
-                            "name": _attr["name"],
-                            "key": _attr["key"]
-                        }
-                    })
-                    logger.debug("attr object created...")
-                    id_attr = attr.save(commit=pcommit)
+        try:
+            for key, _attrs in self.attributes.items():
+                logger.debug("Iterating attributes dict..")
+                for _attr in _attrs:
+                    logger.debug("Iterating attrs list..")
+                    # Verify if attr exists
+                    id_attr = Attr.get_id(_attr['key'], _attr['value'], is_key=True)
+                    # If not, create attr
+                    logger.debug("Id found: {}".format(id_attr))
+                    if not id_attr:
+                        attr = Attr({
+                            "value": _attr["value"],
+                            "clss": {
+                                "name": _attr["name"],
+                                "key": _attr["key"]
+                            }
+                        })
+                        logger.debug("attr object created...")
+                        id_attr = attr.save(commit=pcommit)
 
-                logger.debug("attr saved")
-                # Verify if product_attr exists
-                id_prod_attr = g._db.query("""SELECT id_product_attr
-                                            FROM product_attr
-                                            WHERE product_uuid = '{}'
-                                            AND id_attr = {} LIMIT 1"""
-                                    .format(self.product_uuid, id_attr))\
-                                .fetch()
-                # If not create product_attr
-                if id_prod_attr:
-                    if not update:
-                        logger.debug("Product Attr already in DB!")
-                        continue
-                    id_prod_attr = id_prod_attr[0]['id_product_attr']
-                # Load model
-                try:
-                    m_prod_at = g._db.model('product_attr', 'id_product_attr')
+                    logger.debug("attr saved")
+                    # Verify if product_attr exists
+                    id_prod_attr = g._db.query("""SELECT id_product_attr
+                                                FROM product_attr
+                                                WHERE product_uuid = '{}'
+                                                AND id_attr = {} LIMIT 1"""
+                                        .format(self.product_uuid, id_attr))\
+                                    .fetch()
+                    # If not create product_attr
                     if id_prod_attr:
-                        m_prod_at.id_product_attr = id_prod_attr
-                    m_prod_at.product_uuid = self.product_uuid
-                    m_prod_at.id_attr = id_attr
-                    if 'qty' in _attr:
-                        m_prod_at.value = _attr['qty']
-                    if 'unit' in _attr:
-                        m_prod_at.unit = _attr['unit']
-                    if 'order' in _attr:
-                        m_prod_at.order_ = _attr['order']
-                    m_prod_at.source = self.source
-                    m_prod_at.last_modified = str(datetime.datetime.utcnow())
-                    m_prod_at.save(commit=pcommit)
-                    logger.debug("Product Attr correctly saved! ({})"
-                                .format(m_prod_at.last_id))
-                except Exception as e:
-                    logger.error(e)
-                    logger.warning("Could not save Product attr!")
-                logger.debug("Saving attributes finished...")
-        return True
+                        if not update:
+                            logger.debug("Product Attr already in DB!")
+                            continue
+                        id_prod_attr = id_prod_attr[0]['id_product_attr']
+                    # Load model
+                    try:
+                        m_prod_at = g._db.model('product_attr', 'id_product_attr')
+                        if id_prod_attr:
+                            m_prod_at.id_product_attr = id_prod_attr
+                        m_prod_at.product_uuid = self.product_uuid
+                        m_prod_at.id_attr = id_attr
+                        if 'qty' in _attr:
+                            m_prod_at.value = _attr['qty']
+                        if 'unit' in _attr:
+                            m_prod_at.unit = _attr['unit']
+                        if 'order' in _attr:
+                            m_prod_at.order_ = _attr['order']
+                        m_prod_at.source = self.source
+                        m_prod_at.last_modified = str(datetime.datetime.utcnow())
+                        m_prod_at.save(commit=pcommit)
+                        logger.debug("Product Attr correctly saved! ({})"
+                                    .format(m_prod_at.last_id))
+                    except Exception as e:
+                        logger.error("Error saving attribute in model: {}".format(e))
+                        logger.warning("Could not save Product attr!")
+                    logger.debug("Saving attributes finished...")
+            return True
+        except Exception as e:
+            raise Exception("Error in save attributes: {}".format(str(e)))
 
 
     def save_nutriments(self, update=False, pcommit=True):
