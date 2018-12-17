@@ -1,10 +1,7 @@
-
-FROM ubuntu:14.04
+FROM byprice-base-serv
 
 MAINTAINER ByPrice
 
-# Update & upgrade apt-get
-RUN apt-get update && apt-get upgrade -y
 
 # Environment variables
 ENV LC_ALL=C.UTF-8
@@ -15,29 +12,10 @@ ENV REGION="US"
 ENV ROUTE="bpcatalogue"
 ENV MODE="SERVICE"
 
-# Python install and packages
-RUN apt-get install -y \
-    tar \
-    git \
-    curl \
-    nano \
-    libpq-dev \
-    python3.4 \
-    python3-dev \
-    python3-pip \
-    postgresql-client \
-    && apt-get autoremove \
-    && apt-get clean
-
-# Python 3.4 and pip3 as default
-RUN easy_install3 pip && update-alternatives --install /usr/bin/python python /usr/bin/python3.4 1
-
-# Install server stuff
-RUN apt-get install -y  nginx \
-    && pip install \
-    virtualenv \
-    gunicorn \
-    flask
+RUN apt-get update
+RUN apt-get install -y python3-tk --force-yes
+RUN apt-get install -y libglib2.0-0 --force-yes
+RUN apt-get install -y libsm6 libxext6 --force-yes
 
 # Copy Repo content
 COPY ./ /catalogue/
