@@ -641,11 +641,12 @@ def create_categories_in_db():
         {
             "SQL_HOST": os.getenv("SQL_HOST"),
             "SQL_PORT": os.getenv("SQL_PORT"),
-            "SQL_DB": os.getenv("SQL_DB"),
+            "SQL_DB": os.getenv("SQL_DB") + '_dev' if (os.getenv('ENV', '').lower() == 'dev' and 'dev' not in os.getenv("SQL_DB")) else os.getenv("SQL_DB"),
             "SQL_USER": os.getenv("SQL_USER"),
             "SQL_PASSWORD": os.getenv("SQL_PASSWORD")
         }
     )
+    if
     bp_farma = pd.read_sql("select * from category where source='byprice_farma'", db.conn)
     bp_all = pd.read_sql("select id_category from category where source='byprice'", db.conn)
     bp_source = pd.read_sql("select * from source where key='byprice_farma'", db.conn)
