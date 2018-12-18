@@ -227,23 +227,23 @@ class Product(object):
             self.attributes = {}
         # Load all elements as Attributes
         if self.brand:
-            self.attributes['brand'] = {
+            self.attributes['brand'] = [{
                 'key': 'brand',
                 'name': 'Brand',
                 'order': None,
                 'qty    ': None,
                 'unit': None,
                 'value': self.brand
-            }
+            }]
         if self.provider:
-            self.attributes['provider'] = {
+            self.attributes['provider'] = [{
                 'key': 'provider',
                 'name': 'Provider',
                 'order': None,
                 'qty    ': None,
                 'unit': None,
                 'value': self.provider
-            }
+            }]
         if self.categories:
             categories_attrs = []
             for index, c in enumerate(self.categories):
@@ -322,6 +322,7 @@ class Product(object):
                     logger.debug("Saving attributes finished...")
             return True
         except Exception as e:
+            logger.error(self.attributes)
             raise Exception("Error in save attributes: {}".format(str(e)))
 
 

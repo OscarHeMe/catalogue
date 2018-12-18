@@ -87,15 +87,16 @@ class Clss(object):
         _where = ' AND '.join(["{}='{}'".format(*z) \
                             for z in list(k_param.items())])
         try:
-            query = """SELECT EXISTS (
-                            SELECT 1 FROM clss WHERE {})""".format(_where)
-            logger.debug("Query: " + query)
-            exists = g._db.query(query).fetch()
+            query_str = """SELECT EXISTS (SELECT 1 FROM clss WHERE {})""".format(_where)
+            logger.debug("Query: " + query_str)
+            exists = g._db.query(query_str)
+            logger.debug(exists)
+            exists = exists.fetch()
             logger.debug("Exists" + str(exists))
             exists = exists[0]['exists']
         except Exception as e:
             logger.error(_where)
-            logger.error("Error in exists Clss: ".format(str(e)))
+            logger.error("Error in exists Clss: {}".format(str(e)))
             return False
         return exists
     
@@ -116,6 +117,7 @@ class Clss(object):
                 Clss ID
         """        
         try:
+            logger.debug("Getting id clss...")
             _res = g._db\
                     .query("""SELECT id_clss
                         FROM clss
@@ -128,6 +130,6 @@ class Clss(object):
             if _res:
                 return _res[0]['id_clss']
         except Exception as e:
-            logger.error(e)
+            logger.error("Error getting id clss: {}".format(str(e)))
         return None
     

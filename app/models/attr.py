@@ -122,24 +122,22 @@ class Attr(object):
         """        
         try:
             if is_key is True:
-                _res = g._db\
-                    .query("""SELECT id_attr
+                qry_string = """SELECT id_attr
                         FROM attr a
                         INNER JOIN clss c on c.id_clss=a.id_clss                  
                         WHERE c.key = '{}'
                         AND a.value = '{}'
-                        LIMIT 1"""\
-                        .format(id_clss, value)).fetch()
+                        LIMIT 1""".format(id_clss, value)
             else:
-                _res = g._db\
-                    .query("""SELECT id_attr
+                qry_string = """SELECT id_attr
                         FROM attr                   
                         WHERE id_clss = {}
                         AND value = '{}'
-                        LIMIT 1"""\
-                        .format(id_clss, value)).fetch()
+                        LIMIT 1""".format(id_clss, value)
+            logger.debug("Getting attr id: {}".format(qry_string))
+            _res = g._db.query(qry_string).fetch()
             if _res:
                 return _res[0]['id_attr']
         except Exception as e:
-            logger.error(e)
+            logger.error("Error getting attr id: {}".format(str(e)))
         return None
