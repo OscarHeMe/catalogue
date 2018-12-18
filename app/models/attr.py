@@ -127,13 +127,13 @@ class Attr(object):
                         INNER JOIN clss c on c.id_clss=a.id_clss                  
                         WHERE c.key = '{}'
                         AND a.value = '{}'
-                        LIMIT 1""".format(id_clss, value)
+                        LIMIT 1""".format(id_clss, value.replace("'", "''"))
             else:
                 qry_string = """SELECT id_attr
                         FROM attr                   
                         WHERE id_clss = {}
                         AND value = '{}'
-                        LIMIT 1""".format(id_clss, value)
+                        LIMIT 1""".format(id_clss, value.replace("'", "''"))
             logger.debug("Getting attr id: {}".format(qry_string))
             _res = g._db.query(qry_string).fetch()
             if _res:
