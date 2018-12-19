@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import datetime
 import json
 
-geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
+geo_stores_url = 'http://' + SRV_GEOLOCATION + '/store/retailer?key=%s'
 logger = applogger.get_logger()
 
 
@@ -27,7 +27,7 @@ class Product(object):
         "source", "name", "description", "images",
         "categories", "url", "brand", "provider", "attributes",
         "ingredients", "raw_html", "raw_product", "nutriments"
-        ]
+    ]
     __extras__ = ['prod_attrs', 'prod_images', 'prod_categs', 'normalized']
     __base_q = ['product_uuid', 'product_id', 'name', 'source']
 
@@ -126,11 +126,11 @@ class Product(object):
         else:
             # If not verified, check if not already in DB
             if Product.exists({'product_id': self.product_id,
-                             'source': self.source}):
+                               'source': self.source}):
                 self.message = 'Product already exists!'
-                self.product_uuid = Product\
+                self.product_uuid = Product \
                     .get({'product_id': self.product_id,
-                        'source': self.source})[0]['product_uuid']
+                          'source': self.source})[0]['product_uuid']
                 return True
         # Load model
         logger.debug("Creating __attrs__ dict in product  ...")
@@ -155,7 +155,7 @@ class Product(object):
         try:
 
             res = m_prod.save(commit=True)
-            self.message = "Correctly {} Product!"\
+            self.message = "Correctly {} Product!" \
                 .format('updated' if self.product_uuid else 'stored')
             self.product_uuid = m_prod.last_id
             logger.debug(self.message)
@@ -189,7 +189,6 @@ class Product(object):
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70002, "Issues saving categories in DB! {}".format(str(e)))
 
-
         try:
             self.add_attributes()
             if self.attributes:
@@ -213,8 +212,6 @@ class Product(object):
                 return False
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70002, "Issues saving nutriments in DB! {}".format(str(e)))
-
-
 
         return True
 
@@ -291,8 +288,8 @@ class Product(object):
                                                 FROM product_attr
                                                 WHERE product_uuid = '{}'
                                                 AND id_attr = {} LIMIT 1"""
-                                        .format(self.product_uuid, id_attr))\
-                                    .fetch()
+                                               .format(self.product_uuid, id_attr)) \
+                        .fetch()
                     # If not create product_attr
                     if id_prod_attr:
                         if not update:
@@ -318,7 +315,7 @@ class Product(object):
                         m_prod_at.last_modified = str(datetime.datetime.utcnow())
                         m_prod_at.save(commit=pcommit)
                         logger.debug("Product Attr correctly saved! ({})"
-                                    .format(m_prod_at.last_id))
+                                     .format(m_prod_at.last_id))
                     except Exception as e:
                         logger.error("Error saving attribute in model: {}".format(e))
                         logger.warning("Could not save Product attr!")
@@ -327,7 +324,6 @@ class Product(object):
         except Exception as e:
             logger.error(self.attributes)
             raise Exception("Error in save attributes: {}".format(str(e)))
-
 
     def save_nutriments(self, update=False, pcommit=True):
         """ Class method to save product nutriments
@@ -357,8 +353,8 @@ class Product(object):
                                             FROM product_nutriment
                                             WHERE product_uuid = '{}'
                                             AND id_nutriment = {} LIMIT 1"""
-                                    .format(self.product_uuid, id_nutriment))\
-                                .fetch()
+                                                   .format(self.product_uuid, id_nutriment)) \
+                    .fetch()
                 # If not create product_nutriment
                 if id_product_nutriment:
                     if not update:
@@ -376,11 +372,13 @@ class Product(object):
                     m_prod_nutr.id_nutriment = id_nutriment
                     if 'qty' in nutr:
                         try:
-                            m_prod_nutr.qty = int(nutr['qty'])
+                            if nutr['qty'] is None:
+                                m_prod_nutr.qty = None
+                            else:
+                                m_prod_nutr.qty = int(nutr['qty'])
                         except Exception as e:
                             logger.error("Error in qty nutriment: {}".format(str(e)))
                             raise Exception("Error casting qty nutriment")
-
 
                     if 'unit' in nutr:
                         m_prod_nutr.unit = nutr['unit']
@@ -388,13 +386,12 @@ class Product(object):
                     m_prod_nutr.last_modified = str(datetime.datetime.utcnow())
                     m_prod_nutr.save(commit=pcommit)
                     logger.debug("Product Nutriment correctly saved! ({})"
-                                .format(m_prod_nutr.last_id))
+                                 .format(m_prod_nutr.last_id))
                 except Exception as e:
                     logger.error(e)
                     logger.warning("Could not save Product Nutriments!")
                 logger.debug("Saving Nutriments finished...")
         return True
-
 
     def save_images(self, pcommit=True):
         """ Class method to save product images
@@ -450,7 +447,7 @@ class Product(object):
         except Exception as e:
             logger.error(e)
             raise errors.ApiError(70003, "Issues updating elements in DB")
-    
+
     @staticmethod
     def update_image(p_obj, or_create=False):
         """ Static method to update a product image
@@ -466,8 +463,8 @@ class Product(object):
                     FROM product_image
                     WHERE product_uuid = '{}'
                     AND image = '{}'
-                    LIMIT 1"""\
-                    .format(p_obj['product_uuid'], p_obj['image']))\
+                    LIMIT 1""" \
+                                  .format(p_obj['product_uuid'], p_obj['image'])) \
                 .fetch()
             if not id_pimg:
                 if not or_create:
@@ -475,7 +472,7 @@ class Product(object):
                     if APP_MODE == "CONSUMER":
                         return False
                     if APP_MODE == "SERVICE":
-                        raise errors\
+                        raise errors \
                             .ApiError(70006, "Cannot update, image not in DB!")
                 id_pimg = None
             id_pimg = id_pimg[0]['id_product_image']
@@ -492,7 +489,7 @@ class Product(object):
             if APP_MODE == "CONSUMER":
                 return False
             if APP_MODE == "SERVICE":
-                raise errors\
+                raise errors \
                     .ApiError(70004, "Could not apply transaction in DB")
 
     def save_categories(self, update=False, pcommit=True):
@@ -510,7 +507,7 @@ class Product(object):
                         'source': self.source,
                         'id_parent': id_parent,
                         'name': _cat
-                        })
+                    })
                     id_parent = categ.save(commit=pcommit)
                     # Emergency skip
                     if not id_parent:
@@ -523,8 +520,8 @@ class Product(object):
                                             WHERE id_category = {}
                                             AND product_uuid = '{}' LIMIT 1"""
                                             .format(id_parent,
-                                                    self.product_uuid))\
-                                    .fetch()
+                                                    self.product_uuid)) \
+                    .fetch()
                 if id_prod_categ:
                     if not update:
                         logger.info("Category already assigned to Product!")
@@ -539,7 +536,7 @@ class Product(object):
                 m_prod_cat.last_modified = str(datetime.datetime.utcnow())
                 m_prod_cat.save(commit=pcommit)
                 logger.debug("Product Category correctly saved! ({})"
-                            .format(m_prod_cat.last_id))
+                             .format(m_prod_cat.last_id))
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product category!")
@@ -564,10 +561,10 @@ class Product(object):
         _where = ' AND '.join(["{}='{}'".format(*z)
                                for z in list(k_param.items())])
         try:
-            _q = """SELECT EXISTS (SELECT 1 FROM product WHERE {} LIMIT 1)"""\
-                 .format(_where)
+            _q = """SELECT EXISTS (SELECT 1 FROM product WHERE {} LIMIT 1)""" \
+                .format(_where)
             logger.debug("Query: {}".format(_q))
-            exists = g._db.query(_q)\
+            exists = g._db.query(_q) \
                 .fetch()[0]['exists']
         except Exception as e:
             logger.error(e)
@@ -593,7 +590,7 @@ class Product(object):
             if _p.product_id in cached_ps[_p.source]:
                 return [{'product_uuid': cached_ps[_p.source][_p.product_id]}]
         return None
-    
+
     @staticmethod
     def create_cache_ids():
         """ Static method to initialize cache ids
@@ -603,18 +600,18 @@ class Product(object):
             cache_ids : dict
                 Nested dict by source and product_id to product_uuid map
         """
-        _df = pd\
+        _df = pd \
             .read_sql("""SELECT product_uuid, source, product_id
                     FROM product WHERE source NOT IN ('ims','plm','nielsen','gs1')""",
-                    g._db.conn)
+                      g._db.conn)
         cache_ids = {}
         for y, gdf in _df.groupby('source'):
-            cache_ids[y] = gdf[['product_uuid','product_id']]\
-                            .set_index('product_id')\
-                            .to_dict()['product_uuid']
+            cache_ids[y] = gdf[['product_uuid', 'product_id']] \
+                .set_index('product_id') \
+                .to_dict()['product_uuid']
         # Clean GC
         del _df
-        return cache_ids        
+        return cache_ids
 
     @staticmethod
     def get(_by, _cols=['product_uuid'], limit=None):
@@ -637,9 +634,9 @@ class Product(object):
         _cols = ','.join(_cols) if _cols else 'product_uuid'
         _where = ' AND '.join(["{} IN {}"
                               .format(z[0], tuplify(z[1]))
-                              for z in _by.items()])
+                               for z in _by.items()])
         logger.debug("Fetching products...")
-        _query = "SELECT {} FROM product WHERE {}"\
+        _query = "SELECT {} FROM product WHERE {}" \
             .format(_cols, _where)
         if limit:
             _query += ' LIMIT {}'.format(limit)
@@ -668,7 +665,7 @@ class Product(object):
         for i in q:
             logger.debug('Product UUID: ' + str(i['product_uuid']))
         return {'msg': 'Postgres Items One Working!'}
-    
+
     @staticmethod
     def query(_by, **kwargs):
         """ Static method to query by defined column values
@@ -690,11 +687,11 @@ class Product(object):
         # Format columns
         if kwargs['cols']:
             _cols = ','.join([x for x in \
-                            (kwargs['cols'].split(',') \
-                            + Product.__base_q) \
-                        if x in Product.__attrs__])
+                              (kwargs['cols'].split(',') \
+                               + Product.__base_q) \
+                              if x in Product.__attrs__])
         else:
-            _cols = ','.join([x for x in Product.__base_q ])
+            _cols = ','.join([x for x in Product.__base_q])
         # Format querying keys
         if kwargs['keys']:
             _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
@@ -705,7 +702,7 @@ class Product(object):
                 _keys = ''
         # Format paginators
         _p = int(kwargs['p'])
-        if _p < 1 :
+        if _p < 1:
             _p = 1
         _ipp = int(kwargs['ipp'])
         if _ipp > 10000:
@@ -718,8 +715,8 @@ class Product(object):
         if _orderby not in Product.__base_q:
             _orderby = 'product_uuid'
         # Build query
-        _qry = """SELECT {} FROM product {} ORDER BY {} OFFSET {} LIMIT {} """\
-            .format(_cols, _keys, _orderby, (_p - 1)*_ipp, _ipp)
+        _qry = """SELECT {} FROM product {} ORDER BY {} OFFSET {} LIMIT {} """ \
+            .format(_cols, _keys, _orderby, (_p - 1) * _ipp, _ipp)
         logger.debug(_qry)
         # Query DB
         try:
@@ -734,7 +731,7 @@ class Product(object):
                 raise errors.ApiError(70003, "Issues fetching elements in DB")
         # Verify for additional cols
         extra_cols = [x for x in (set(kwargs['cols'].split(',')) \
-                        -  set(_cols)) if x in Product.__extras__]
+                                  - set(_cols)) if x in Product.__extras__]
         if extra_cols and _resp:
             p_uuids = [_u['product_uuid'] for _u in _resp]
             _extras = Product.fetch_extras(p_uuids, extra_cols)
@@ -743,11 +740,11 @@ class Product(object):
             _tmp_extras = {}
             for _ex in extra_cols:
                 _tmp_extras.update({
-                    _ex : _extras[_r['product_uuid']][_ex]
+                    _ex: _extras[_r['product_uuid']][_ex]
                 })
             _resp[_i].update(_tmp_extras)
         return _resp
-    
+
     @staticmethod
     def fetch_extras(p_uuids, _cols):
         """ Static method to retrieve foreign references
@@ -795,7 +792,7 @@ class Product(object):
         # Initialize prod_ext dict
         _prod_ext, p_extrs = {}, {}
         for z in p_uuids:
-            _prod_ext[z]= {w:[] for w in _cols}
+            _prod_ext[z] = {w: [] for w in _cols}
         if 'prod_attrs' in _cols:
             # Fetch Product Attrs
             logger.debug('Retrieving Product Attrs...')
@@ -869,7 +866,7 @@ class Product(object):
         logger.debug('Found {} attributes'.format(len(p_attrs)))
         logger.debug(p_attrs)
         return p_attrs
-    
+
     @staticmethod
     def query_normed(p_uuids):
         """ Fetch all normalized text by Prod UUID
@@ -885,11 +882,11 @@ class Product(object):
                 Product Normalized text hashed by Product UUID
         """
         p_norm = {}
-        for i in range(0,len(p_uuids), 1000):
+        for i in range(0, len(p_uuids), 1000):
             _qry = """SELECT product_uuid, normalized
                 FROM product_normalized
                 WHERE product_uuid IN {}
-                """.format(tuplify(p_uuids[i: i+1000]))
+                """.format(tuplify(p_uuids[i: i + 1000]))
             logger.debug(_qry)
             try:
                 resp_norm = g._db.query(_qry).fetch()
@@ -944,7 +941,7 @@ class Product(object):
         logger.debug('Found {} images'.format(len(p_imgs)))
         logger.debug(p_imgs)
         return p_imgs
-    
+
     @staticmethod
     def query_categs(p_uuids):
         """ Fetch all catgories by Prod UUID
@@ -1009,28 +1006,28 @@ class Product(object):
         # Format querying keys
         if kwargs['keys']:
             _keys = ' WHERE ' + field + ' IN ' \
-                + str(tuplify([key_format(z)
-                               for z in kwargs['keys'].split(',')]))
+                    + str(tuplify([key_format(z)
+                                   for z in kwargs['keys'].split(',')]))
         else:
             _keys = ' WHERE {} IS NULL'.format(_by)
         # Format values if available
         if kwargs['vals']:
             _vals = ' AND ' + valu + ' IN ' \
-                + str(tuplify([y for y in kwargs['vals'].split(',')]))
+                    + str(tuplify([y for y in kwargs['vals'].split(',')]))
         else:
             _vals = ''
         # Format retailers if available
         if kwargs['rets']:
             _rets = ' AND ' + field.split('.')[0] \
-                + '.source IN ' \
-                + str(tuplify([y for y in kwargs['rets'].split(',')]))
+                    + '.source IN ' \
+                    + str(tuplify([y for y in kwargs['rets'].split(',')]))
         else:
             _rets = ''
         # Build filter query
         f_query = """SELECT {ref_table}.product_uuid FROM {table}
             INNER JOIN {ref_table}
             ON ({table}.id_{table} = {ref_table}.id_{table})
-            {keys} {vals} {rets} """\
+            {keys} {vals} {rets} """ \
             .format(table=field.split('.')[0],
                     ref_table=valu.split('.')[0],
                     keys=_keys,
@@ -1042,7 +1039,7 @@ class Product(object):
             if not _fres:
                 return []
             logger.debug("Found {} prods by filters"
-                        .format(len(_fres)))
+                         .format(len(_fres)))
         except Exception as e:
             logger.error(e)
             logger.warning("Could not fetch Filters!")
@@ -1050,7 +1047,7 @@ class Product(object):
         # Return Product query response
         kwargs.update({
             'keys': ','.join([_o['product_uuid'] for _o in _fres])
-            })
+        })
         return Product.query('product_uuid', **kwargs)
 
     @staticmethod
@@ -1079,8 +1076,8 @@ class Product(object):
                                     )"""
                                   .format(table=_table,
                                           uuid=_uuid,
-                                          _id=_id))\
-                                .fetch()[0]['exists']
+                                          _id=_id)) \
+                .fetch()[0]['exists']
             if not _exists:
                 return {
                     'message': "Product Image ID not in DB!"
@@ -1134,7 +1131,7 @@ class Product(object):
         except Exception as e:
             logger.error(e)
             if APP_MODE == 'SERVICE':
-                raise errors\
+                raise errors \
                     .ApiError(70004, "Could not apply transaction in DB")
             else:
                 return False
@@ -1168,7 +1165,7 @@ class Product(object):
             logger.warning("Could not read CSV file")
             raise errors.ApiError(70008, "Could not read attached file")
         # Validate columns
-        if not set({'product_uuid', 'normalized'})\
+        if not set({'product_uuid', 'normalized'}) \
                 .issubset(set(df.columns.tolist())):
             logger.debug(df.columns.tolist())
             logger.warning("Missing columns!")
@@ -1181,11 +1178,11 @@ class Product(object):
                                          SQL_PORT,
                                          SQL_DB))
             logger.info("Storing {} products..".format(len(df)))
-            df[['product_uuid', 'normalized']]\
-                .set_index('product_uuid')\
-                .to_sql('product_normalized', _eng, 
-                    dtype={'product_uuid': UUID, 'normalized': Text},
-                    if_exists=_ifexists, chunksize=5000)
+            df[['product_uuid', 'normalized']] \
+                .set_index('product_uuid') \
+                .to_sql('product_normalized', _eng,
+                        dtype={'product_uuid': UUID, 'normalized': Text},
+                        if_exists=_ifexists, chunksize=5000)
         except Exception as e:
             logger.error(e)
             return {'status': 'ERROR',
@@ -1213,7 +1210,7 @@ class Product(object):
         where = []
         where_qry = """ """
         for k, vals in kwargs.items():
-            where.append(" {} IN ({}) ".format(k, vals) )
+            where.append(" {} IN ({}) ".format(k, vals))
 
         if where:
             where_qry = """ where {}""".format(""" and """.join(where))
