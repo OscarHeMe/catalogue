@@ -92,7 +92,7 @@ class Attr(object):
                 Existance flag
         """
         logger.debug("Verifying Attr existance...")
-        _where = ' AND '.join(["{}='{}'".format(*z) \
+        _where = ' AND '.join(["{}='{}'".format(z[0], z[1].format("'", "''")) \
                             for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (
