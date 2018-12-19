@@ -102,6 +102,9 @@ def item(data):
         fdata['attributes'] = data['attributes']
     if 'nutriments' in data:
         fdata['nutriments'] = data['nutriments']
+    if not fdata.get('nutriments') and isinstance(data.get('nutrimental_info'), dict):
+        fdata['nutriments'] = data['nutrimental_info']
+
     # Set raw data
     try:
         fdata['raw_product'] = json.dumps(data)

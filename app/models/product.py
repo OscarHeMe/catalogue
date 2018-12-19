@@ -283,7 +283,8 @@ class Product(object):
                         })
                         logger.debug("attr object created...")
                         id_attr = attr.save(commit=pcommit)
-
+                    else:
+                        logger.debug("attr already saved")
                     logger.debug("attr saved")
                     # Verify if product_attr exists
                     id_prod_attr = g._db.query("""SELECT id_product_attr
@@ -374,7 +375,13 @@ class Product(object):
                     m_prod_nutr.product_uuid = self.product_uuid
                     m_prod_nutr.id_nutriment = id_nutriment
                     if 'qty' in nutr:
-                        m_prod_nutr.qty = nutr['qty']
+                        try:
+                            m_prod_nutr.qty = int(nutr['qty'])
+                        except Exception as e:
+                            logger.error("Error in qty nutriment: {}".format(str(e)))
+                            raise Exception("Error casting qty nutriment")
+
+
                     if 'unit' in nutr:
                         m_prod_nutr.unit = nutr['unit']
                     m_prod_nutr.source = self.source

@@ -29,7 +29,8 @@ CREATE TABLE "clss" (
 CREATE TABLE "attr" (
     id_attr serial PRIMARY KEY NOT NULL,
     id_clss int REFERENCES clss(id_clss),
-    key text
+    key text,
+    value text
 );
 
 /*Categories*/
@@ -96,8 +97,7 @@ CREATE TABLE "product_attr" (
 CREATE TABLE "nutriment" (
     id_nutriment serial PRIMARY KEY NOT NULL,
     name text,
-    key text,
-    last_modified timestamp
+    key text
 );
 
 CREATE TABLE "product_nutriment" (
