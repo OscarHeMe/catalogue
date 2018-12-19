@@ -9,7 +9,10 @@ para keys a base de datos
 def key_format(data):
     if not isinstance(data, str):
         return None
-    return ''.join(x for x in unicodedata.normalize('NFKD', data) if x in string.ascii_letters or x == " ").lower().replace(" ","_").replace("_y_","_").replace("_e_","_")
+    data_frmtd = ''.join(x for x in unicodedata.normalize('NFKD', data) if x in string.ascii_letters or x == " " or x in string.digits).lower()
+    data_frmtd = re.sub(r'\s+', ' ', data_frmtd).strip()
+    return data_frmtd
+
 
 def simple_format(data):
     if not isinstance(data, str):

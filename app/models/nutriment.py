@@ -82,7 +82,7 @@ class Nutriment(object):
                 Existance flag
         """
         logger.debug("Verifying Attr existance...")
-        _where = ' AND '.join(["{}='{}'".format(z[0], z[1].replace("'", "''")) \
+        _where = ' AND '.join(["{}='{}'".format(z[0], str(z[1]).replace("'", "''")) \
                                for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (

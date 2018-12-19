@@ -246,14 +246,14 @@ class Product(object):
             }]
         if self.categories:
             categories_attrs = []
-            for index, c in enumerate(self.categories):
+            for index, category in enumerate(self.categories):
                 categories_attrs.append({
                     'key': 'category',
                     'name': 'Category',
                     'order': index,
                     'qty    ': None,
                     'unit': None,
-                    'value': c
+                    'value': category
                 })
             self.attributes['category'] = categories_attrs
         logger.debug("Adding attributes finished... ")
@@ -306,11 +306,13 @@ class Product(object):
                         m_prod_at.product_uuid = self.product_uuid
                         m_prod_at.id_attr = id_attr
                         if 'qty' in _attr:
-                            m_prod_at.value = _attr['qty']
+                            m_prod_at.qty = _attr['qty']
                         if 'unit' in _attr:
                             m_prod_at.unit = _attr['unit']
                         if 'order' in _attr:
                             m_prod_at.order_ = _attr['order']
+                        if 'value' in _attr:
+                            m_prod_at.value = _attr['value']
                         m_prod_at.source = self.source
                         m_prod_at.last_modified = str(datetime.datetime.utcnow())
                         m_prod_at.save(commit=pcommit)

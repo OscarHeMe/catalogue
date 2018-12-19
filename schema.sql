@@ -29,7 +29,7 @@ CREATE TABLE "clss" (
 CREATE TABLE "attr" (
     id_attr serial PRIMARY KEY NOT NULL,
     id_clss int REFERENCES clss(id_clss),
-    value text
+    key text
 );
 
 /*Categories*/
@@ -85,6 +85,7 @@ CREATE TABLE "product_attr" (
     id_attr integer REFERENCES attr(id_attr),
     product_uuid uuid REFERENCES product(product_uuid),
     source text REFERENCES source(key),
+    value text,
     order_ int,
     qty int,
     unit text,

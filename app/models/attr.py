@@ -16,7 +16,7 @@ class Attr(object):
     """ Model for fetching attributes
     """
 
-    __attrs__ = ['id_attr', 'id_clss', 'value', 'clss']
+    __attrs__ = ['id_attr', 'id_clss', 'key', 'value', 'clss']
 
     def __init__(self, _args):
         """ Attr Constructor
@@ -34,6 +34,9 @@ class Attr(object):
                 continue
             self.__dict__[_k] = None
         # Formatting needed params
+        if not self.__dict__['key'] and self.__dict__['value']:
+            self.__dict__['key'] = key_format(self.__dict__['value'])
+
 
         # Verify Clss
         logger.debug("Verify Clss ...")
@@ -55,9 +58,9 @@ class Attr(object):
         if self.id_attr:
             if not Attr.exists({'id_attr': self.id_attr}):
                 raise errors.ApiError(70006, "Cannot update, Attr not in DB!")
-        elif Attr.exists({'id_clss': self.id_clss, 'value': self.value}):
+        elif Attr.exists({'id_clss': self.id_clss, 'key': self.key}):
             self.message = 'Attr already exists!'
-            self.id_attr = Attr.get_id(self.id_clss, self.value)
+            self.id_attr = Attr.get_id(self.id_clss, self.key)
             return self.id_attr
         # Load model
         m_atr = g._db.model("attr", "id_attr")
@@ -92,7 +95,7 @@ class Attr(object):
                 Existance flag
         """
         logger.debug("Verifying Attr existance...")
-        _where = ' AND '.join(["{}='{}'".format(z[0], z[1].format("'", "''")) \
+        _where = ' AND '.join(["{}='{}'".format(z[0], str(z[1]).format("'", "''")) \
                             for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (
@@ -105,7 +108,7 @@ class Attr(object):
         return exists
 
     @staticmethod
-    def get_id(id_clss, value, is_key=False):
+    def get_id(id_clss, key, is_key=False):
         """ Fetch ID from attribute
 
             Params:
@@ -121,19 +124,21 @@ class Attr(object):
                 Attr ID
         """        
         try:
+            if key:
+                key = key_format(key)
             if is_key is True:
                 qry_string = """SELECT id_attr
                         FROM attr a
                         INNER JOIN clss c on c.id_clss=a.id_clss                  
                         WHERE c.key = '{}'
-                        AND a.value = '{}'
-                        LIMIT 1""".format(id_clss, value.replace("'", "''"))
+                        AND a.key = '{}'
+                        LIMIT 1""".format(id_clss, key)
             else:
                 qry_string = """SELECT id_attr
                         FROM attr                   
                         WHERE id_clss = {}
-                        AND value = '{}'
-                        LIMIT 1""".format(id_clss, value.replace("'", "''"))
+                        AND key = '{}'
+                        LIMIT 1""".format(id_clss, key)
             logger.debug("Getting attr id: {}".format(qry_string))
             _res = g._db.query(qry_string).fetch()
             if _res:
