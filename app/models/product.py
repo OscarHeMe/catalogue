@@ -104,54 +104,63 @@ class Product(object):
         """ Class method to save Product record in DB
             with product_image, product_attr and product_category
         """
-        logger.debug("Saving Product...")
-        _is_update = False
-        # Verify for update
-        if self.product_uuid:
-            # If already validated for updated, dont do it again
-            if _is_update:
+        try:
+            logger.debug("Saving Product...")
+            _is_update = False
+            # Verify for update
+            if self.product_uuid:
+                # If already validated for updated, dont do it again
+                if _is_update:
+                    pass
+                elif not Product.exists({'product_uuid': self.product_uuid}):
+                    # If wants to update but wrong UUID, return Error
+                    if APP_MODE == "CONSUMER":
+                        logger.error("Cannot update [{}], UUID not in DB!".format(self.product_uuid))
+                        return False
+                    if APP_MODE == "SERVICE":
+                        raise errors.ApiError(70006,
+                                              "Cannot update [{}], UUID not in DB!".format(self.product_uuid))
+                _is_update = True
+            # Verify for insert, if previously verified continue to save
+            elif verified:
                 pass
-            elif not Product.exists({'product_uuid': self.product_uuid}):
-                # If wants to update but wrong UUID, return Error
-                if APP_MODE == "CONSUMER":
-                    logger.error("Cannot update [{}], UUID not in DB!".format(self.product_uuid))
-                    return False
-                if APP_MODE == "SERVICE":
-                    raise errors.ApiError(70006,
-                                          "Cannot update [{}], UUID not in DB!".format(self.product_uuid))
-            _is_update = True
-        # Verify for insert, if previously verified continue to save
-        elif verified:
-            pass
-        else:
-            # If not verified, check if not already in DB
-            if Product.exists({'product_id': self.product_id,
-                               'source': self.source}):
-                self.message = 'Product already exists!'
-                self.product_uuid = Product \
-                    .get({'product_id': self.product_id,
-                          'source': self.source})[0]['product_uuid']
-                return True
-        # Load model
-        logger.debug("Creating __attrs__ dict in product  ...")
-        m_prod = g._db.model('product', 'product_uuid')
-        aux = {}
-        for _k in self.__attrs__:
-            if _k not in ['attributes', 'nutriments'] and self.__dict__[_k]:
-                m_prod.__dict__[_k] = self.__dict__[_k]
+            else:
+                # If not verified, check if not already in DB
+                if Product.exists({'product_id': self.product_id,
+                                   'source': self.source}):
+                    self.message = 'Product already exists!'
+                    self.product_uuid = Product \
+                        .get({'product_id': self.product_id,
+                              'source': self.source})[0]['product_uuid']
+                    return True
+            # Load model
+            logger.debug("Creating __attrs__ dict in product  ...")
+            m_prod = g._db.model('product', 'product_uuid')
+            aux = {}
+            for _k in self.__attrs__:
+                if _k not in ['attributes', 'nutriments'] and self.__dict__[_k]:
+                    m_prod.__dict__[_k] = self.__dict__[_k]
 
-        if m_prod.images:
-            m_prod.__dict__['images'] = ', '.join(m_prod.images)
+            if m_prod.images:
+                m_prod.__dict__['images'] = ', '.join(m_prod.images)
 
-        if m_prod.ingredients:
-            m_prod.__dict__['ingredients'] = ', '.join(m_prod.ingredients)
+            if m_prod.ingredients:
+                m_prod.__dict__['ingredients'] = ', '.join(m_prod.ingredients)
 
-        if m_prod.categories:
-            m_prod.__dict__['categories'] = ', '.join(m_prod.categories)
-        # Add date
-        m_prod.last_modified = str(datetime.datetime.utcnow())
-        # Always add what Item UUID is set
-        m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
+            if m_prod.categories:
+                m_prod.__dict__['categories'] = ', '.join(m_prod.categories)
+            # Add date
+            m_prod.last_modified = str(datetime.datetime.utcnow())
+            # Always add what Item UUID is set
+            m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
+        except Exception as e:
+            logger.error("Error saving product main_process: {}".format(str(e)))
+            if APP_MODE == "CONSUMER":
+                logger.error("Issues saving product")
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70002, "Issues saving product")
+
         try:
 
             res = m_prod.save(commit=True)

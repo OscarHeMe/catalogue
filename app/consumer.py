@@ -83,15 +83,21 @@ def process(new_item, reroute=True):
 
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
-    new_item = json.loads(body.decode('utf-8'))
-    logger.debug("New incoming product..")
-    # Processing without try catch, to reset container in case of failure
-    process(new_item)
+    try:
+        new_item = json.loads(body.decode('utf-8'))
+    except Exception as e:
+        logger.error("Error reading json in callback: {}".format(str(e)))
+
+    try:
+        logger.debug("New incoming product..")
+        process(new_item)
+    except Exception as e:
+        logger.error("Error processing item: {}".format(str(e)))
+
     try: 
         ch.basic_ack(delivery_tag = method.delivery_tag)
     except Exception as e:
-        logger.error("Error with the Delivery tag, method. [Basic Acknowledgment]")
-        logger.error(e)
+        logger.error("Error with the Delivery tag, method. [Basic Acknowledgment]: {}".format(str(e)))
 
 def start():
     logger.info("Warming up caching IDS...")
