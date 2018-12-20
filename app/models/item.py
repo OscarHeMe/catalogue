@@ -576,7 +576,7 @@ class Item(object):
                 _qry = """SELECT i.name, i.gtin, p.description,
                     p.product_uuid,
                     p.images, p.ingredients, p.source,
-                    s.hierarchy, s.name as r_name
+                    s.hierarchy, s.retailer as show_label, s.name as r_name
                     FROM product p 
                     INNER JOIN source s 
                     ON (p.source = s.key)
@@ -588,7 +588,7 @@ class Item(object):
                 _qry = """SELECT p.name, p.gtin, p.description,
                     p.product_uuid,
                     p.images, p.ingredients, p.source,
-                    s.hierarchy, s.name as r_name
+                    s.hierarchy, s.retailer as show_label, s.name as r_name
                     FROM product p 
                     INNER JOIN source s 
                     ON (p.source = s.key)
@@ -651,6 +651,7 @@ class Item(object):
         df_rets = pd.DataFrame(info_rets)
         if 'source' in df_rets.columns:
             df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
+            df_rets = df_rets[~df_rets.show_label == 1]
         if df_rets.empty:
             raise errors.ApiError(70003, "Issues fetching elements in DB", 404)
         return {
