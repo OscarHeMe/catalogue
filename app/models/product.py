@@ -162,7 +162,6 @@ class Product(object):
                 raise errors.ApiError(70002, "Issues saving product")
 
         try:
-
             res = m_prod.save(commit=True)
             self.message = "Correctly {} Product!" \
                 .format('updated' if self.product_uuid else 'stored')
@@ -405,6 +404,7 @@ class Product(object):
     def save_images(self, pcommit=True):
         """ Class method to save product images
         """
+        logger.debug("Saving images")
         prod = {
             'product_uuid': self.product_uuid,
             'images': self.images
