@@ -3,6 +3,7 @@ env/
 .envvars
 */*.pyc
 __pycache__
+*.p
 *.pid
 *.log
 *.rdb
