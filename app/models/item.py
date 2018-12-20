@@ -582,7 +582,7 @@ class Item(object):
                 _qry = """SELECT i.name, i.gtin, p.description,
                     p.product_uuid,
                     p.images, p.ingredients, p.source,
-                    s.hierarchy, s.name as r_name
+                    s.hierarchy, s.retailer as show_label, s.name as r_name
                     FROM product p 
                     INNER JOIN source s 
                     ON (p.source = s.key)
@@ -594,7 +594,8 @@ class Item(object):
                 _qry = """SELECT p.name, p.gtin, p.description,
                     p.product_uuid,
                     p.images, p.ingredients, p.source,
-                    s.hierarchy, s.name as r_name
+                    s.hierarchy, s.retailer as show_label,
+                    s.name as r_name
                     FROM product p 
                     INNER JOIN source s 
                     ON (p.source = s.key)
@@ -655,6 +656,7 @@ class Item(object):
             brand = _normalized_attrs['brand']
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
+        df_rets = df_rets[df_rets.show_label == 1]
         if df_rets.empty:
             raise errors.ApiError(70003, "Issues fetching elements in DB", 404)
         return {
