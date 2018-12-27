@@ -128,15 +128,20 @@ class ImageProduct(object):
                 try:
                     b.delete()
                 except Exception as e:
-                    logger.debug(e)
+                    logger.debug("Error deleting image: ".format(str(e)))
                     pass
             logger.debug("Deleted S3 old files..")
             # Upload all files
             _uplded = 0
             for k, i in enumerate(images):
+                logger.debug("Processing image [{}]".format(k))
                 pth = 'products/{}/{}.png'.format(i['product_uuid'], k)
                 try:
-                    image_io = cv2.imencode('.png', i['content'])[1].tobytes()
+                    logger.debug("cv2 imencode [{}] ...".format(k))
+                    image_io = cv2.imencode('.png', i['content'])
+                    logger.debug("converting to bytes [{}]".format(k))
+                    image_io = image_io[1].tobytes()
+                    logger.debug("Saving image in s3 [{}]".format(k))
                     bucket.put_object(Key=pth, Body=image_io, ContentType='image/png')
                     _uplded += 1
                 except Exception as e:
@@ -379,8 +384,6 @@ class ImageProduct(object):
         # Sort by key
         significant.sort(key=lambda x: x[1])
         return [x[0] for x in significant]
-
-
 
     @staticmethod
     def compound_vector(vec):

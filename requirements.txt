@@ -1,5 +1,5 @@
 python-dateutil==2.7.3
-ByHelpers==0.1.0
+ByHelpers==0.1.1
 kiwisolver==1.0.1
 jsonschema==2.6.0
 pika==0.10.0
