@@ -197,6 +197,95 @@ class Item(object):
             raise errors.ApiError(70003, "Issues fetching elements in DB")
         return _items
 
+
+    @staticmethod
+    def get_by_gtin(gitns,  _cols=['item_uuid']):
+        """ Static method to get Items by gtins
+            Params:
+            -----
+            gtins : list of gtins
+                Values to compare
+            _cols : list
+                Columns to retrieve
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        valid = []
+        # Variations of gtin
+        for gtin in gtins:
+            try:
+                code = str(int(gtin))
+                valid.append(gtin)
+            except Exception as e:
+                logger.error("Not a valid gtin format")
+                continue
+         
+         if not valid:
+            raise Exception("No valid gtins")             
+    
+        try:
+            iqry = """
+                SELECT gtin, item_uuid 
+                FROM item WHERE gtin IN ({})
+            """.format(",".join(valid))
+            logger.debug(iqry)
+            items = g._db.query(iqry).fetch()
+            return items
+        except Exception as e:
+            logger.error(e)
+            return []
+
+
+    @staticmethod
+    def get_by_category(id_categoty,  _cols=['item_uuid']):
+        """ Static method to get Items by gtins
+            Params:
+            -----
+            gtins : list of gtins
+                Values to compare
+            _cols : list
+                Columns to retrieve
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        # Get category details
+        rc = g._db.query("""
+            select * from category
+            where id_category = %
+        """,(id_category,)).fetch()
+        if not cat:
+            raise Exception("No category found")
+
+        try:
+            cat = rc[0]
+            items = g._db.query("""
+                select {}
+                from item 
+                where item_uuid in (
+                    select item_uuid 
+                    from product 
+                    where product_uuid in (
+                        select product_uuid 
+                        from product_category 
+                        where id_category  = %s
+                    ) 
+                )
+            """,(str(_cols),id_category)).fetch()      
+        except Exception as e:
+            logger.error(e)
+            raise Exception(e)
+
+        _resp = {
+            "category" : cat,
+            "items" : items
+        }
+        return _resp
+
+
     @staticmethod
     def delete(i_uuid):
         """ Static method to delete Item
