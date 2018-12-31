@@ -502,17 +502,15 @@ class Item(object):
         # Query
         _qry = """SELECT
             pa.value, a.key as attr_key, 
-            a.name as attr,
-            c.name_es as class,
+            a.value as attr,
+            c.name as class,
             c.key as class_key,
-            p.source
+            pa.source
             FROM product_attr pa
             LEFT OUTER JOIN attr a 
             ON (pa.id_attr = a.id_attr)
             LEFT OUTER JOIN clss c
             ON (a.id_clss = c.id_clss)
-            INNER JOIN product p
-            ON (p.product_uuid = pa.product_uuid)
             WHERE pa.product_uuid IN {}
             ORDER BY class
         """.format(tuplify(puuids))
@@ -558,7 +556,9 @@ class Item(object):
         except Exception as e:
             logger.error(e)
             return []
-        return [b['name'] for b in bp_categs]
+        if bp_categs:
+            return [b['name'] for b in bp_categs]
+        return []
 
     @staticmethod
     def details(u_type, _uuid):
@@ -602,7 +602,7 @@ class Item(object):
                     WHERE p.{} = '{}'
                 """.format(u_type, _uuid)
             logger.debug(_qry)
-            info_rets = g._db.query(_qry).fetch()
+            info_rets = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(info_rets)
             if not info_rets:
                 raise errors.ApiError(70008, "Not existing elements in DB!")
@@ -645,7 +645,6 @@ class Item(object):
                     categ_options.append(k['attr'])
             else:
                 attrs.append(k)
-        # Fetch from categories table
         # Fetch Attributes
         if info_rets:
             categs += Item.fetch_categs([str(z['product_uuid']) for z in info_rets ])
@@ -701,10 +700,9 @@ class Item(object):
             _qry = """SELECT bpa.name, bpa.key, bpa.type
                 FROM item_attr iat
                 INNER JOIN 
-                    (SELECT attr.id_attr, attr.name, attr.key, cl.key as type
+                    (SELECT attr.id_attr, attr.value as name, attr.key, cl.key as type
                     FROM attr, clss cl
-                    WHERE attr.id_clss = cl.id_clss
-                    AND attr.source = 'byprice') AS bpa
+                    WHERE attr.id_clss = cl.id_clss) AS bpa
                 ON (bpa.id_attr = iat.id_attr)
                 WHERE iat.item_uuid = '{}'
                 AND (bpa.type = 'ingredient' OR bpa.type = 'brand')
@@ -713,10 +711,9 @@ class Item(object):
             _qry = """SELECT bpa.name, bpa.key, bpa.type
                 FROM item_attr iat
                 INNER JOIN 
-                    (SELECT attr.id_attr, attr.name, attr.key, cl.key as type
+                    (SELECT attr.id_attr, attr.value as name, attr.key, cl.key as type
                     FROM attr, clss cl
-                    WHERE attr.id_clss = cl.id_clss
-                    AND attr.source = 'byprice') AS bpa
+                    WHERE attr.id_clss = cl.id_clss) AS bpa
                 ON (bpa.id_attr = iat.id_attr)
                 WHERE iat.item_uuid 
                 IN (SELECT item_uuid FROM product WHERE product_uuid = '{}' LIMIT 1)
@@ -728,8 +725,6 @@ class Item(object):
         # Request elements
         try:
             df_nattrs = pd.read_sql(_qry, g._db.conn)
-            print('DF SQL')
-            print(df_nattrs)
             if df_nattrs.empty:
                 return n_attrs
             if not df_nattrs[df_nattrs['type'] == 'ingredient'].empty:

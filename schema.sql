@@ -77,7 +77,8 @@ CREATE TABLE "product_image" (
     id_product_image serial PRIMARY KEY,
     product_uuid uuid REFERENCES "product" (product_uuid),
     descriptor json,
-    image text
+    image text,
+    last_modified timestamp
 );
 
 /* productRetailerAttribute */
@@ -86,6 +87,18 @@ CREATE TABLE "product_attr" (
     id_attr integer REFERENCES attr(id_attr),
     product_uuid uuid REFERENCES product(product_uuid),
     source text REFERENCES source(key),
+    value text,
+    order_ int,
+    qty int,
+    unit text,
+    last_modified timestamp
+);
+
+/* itemRetailerAttribute */
+CREATE TABLE "item_attr" (
+    id_item_attr serial PRIMARY KEY NOT NULL,
+    id_attr integer REFERENCES attr(id_attr),
+    item_uuid uuid REFERENCES item(item_uuid),
     value text,
     order_ int,
     qty int,
@@ -117,6 +130,11 @@ CREATE TABLE "product_category" (
     id_category int REFERENCES category(id_category),
     product_uuid uuid REFERENCES product(product_uuid),
     last_modified timestamp
+);
+
+CREATE TABLE "product_normalized" (
+    product_uuid uuid REFERENCES product(product_uuid),
+    normalized text
 );
 
 /* Indexes */

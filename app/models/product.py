@@ -847,10 +847,10 @@ class Product(object):
         _qry = """SELECT pat.product_uuid, 
             pat.id_product_attr as id_p_attr, pat.value,
             to_char(pat.last_modified, 'YYYY-MM-DD HH24:00:00') as last_mod, 
-            att.name as attr, att.name_es as clss 
+            att.name as attr, att.clase as clss 
             FROM product_attr pat 
             LEFT OUTER JOIN (
-                SELECT id_attr, attr.name, clss.name_es
+                SELECT id_attr, attr.value as name, clss.name as clase
                 FROM attr INNER JOIN clss
                 ON (clss.id_clss = attr.id_clss)) AS att
             ON (att.id_attr = pat.id_attr)
