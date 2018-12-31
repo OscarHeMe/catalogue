@@ -2,7 +2,7 @@
 from config import *
 from ByHelpers import applogger
 from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import requests
@@ -208,13 +208,13 @@ class ImageProduct(object):
         # Generate a list of representations
         _, magic_number = Desc.shape
         logger.debug("Number Descriptors %i" % len(nkps))
-        if PLOT_IMG:
-            edge_image = cv2.drawKeypoints(EdgeImage1, nkps, None)
-            plt.figure()
-            plt.imshow(edge_image, cmap='gray')
-            plt.show(block=False)
-            input('Press [Enter] to contine ...')
-            plt.close('all')
+        #if False: #PLOT_IMG:
+        #    edge_image = cv2.drawKeypoints(EdgeImage1, nkps, None)
+        #    plt.figure()
+        #    plt.imshow(edge_image, cmap='gray')
+        #    plt.show(block=False)
+        #    input('Press [Enter] to contine ...')
+        #    plt.close('all')
         if len(nkps) == 0:  # Case no descriptors where found
             return np.array([[]])
         if len(nkps) < nclusters:  # Case one not enough for clustering
