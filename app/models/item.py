@@ -261,7 +261,7 @@ class Item(object):
                 df = pd.read_sql(qry_item_uuids, g._db.conn)
                 qry_product_uuids = """
                     SELECT p.product_uuid, p.item_uuid, p.description, p.name name2, p.source, c.name class_name, 
-                        c.key class_key,a.key attr_key,  a.name attr_name, pa.value
+                        c.key class_key,a.key attr_key, pa.value attr_value, pn.qty n_qty, pn.unit n_unit, n.key n_key
                             FROM product p
                             LEFT JOIN product_attr pa
                                 ON p.product_uuid = pa.product_uuid
@@ -269,6 +269,12 @@ class Item(object):
                                 ON a.id_attr = pa.id_attr
                             LEFT JOIN clss c
                                 ON a.id_clss = c.id_clss
+                                                    LEFT JOIN clss c
+                            ON a.id_clss = c.id_clss
+                            LEFT JOIN product_nutriment pn
+                                ON p.product_uuid = pn.product_uuid
+                            LEFT JOIN nutriment n
+                                ON pn.id_nutriment = n.id_nutriment
                         where p.item_uuid IN {}
                     """.format(tuplify(items))
                 #print(qry_product_uuids)
@@ -289,33 +295,33 @@ class Item(object):
             try:
                 # All fields of df2 have to be declared as None in d1 in order to insert them
                 df['names'], df['description'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
-                df['ingredients'], df['providers'], df['categories_raw'] = None, None, None, None, None, None, None, None, None, None
+                df['ingredients'], df['providers'], df['categories_raw'], df['nutriments']  = None, None, None, None,\
+                    None, None, None, None, None, None, None
                 for index, row in df.iterrows():
                     row['names'] = list(df2[df2.item_uuid == row.item_uuid]["name2"].drop_duplicates())
                     row['description'] = list(df2[df2.item_uuid == row.item_uuid]["description"].drop_duplicates())
                     row['retailers'] = list(df2[df2.item_uuid == row.item_uuid]["source"].drop_duplicates())
                     row['product_uuids'] = list(df2[df2.item_uuid == row.item_uuid]["product_uuid"].drop_duplicates())
-                    row['attributes'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
-                                                 ['class_name', 'class_key', 'attr_key', 'attr_name',
-                                                  'value']].T.to_dict().values())
-                    row['brands'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
-                        'attr_key').attr_name)
+                    row['attributes'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull())][
+                                                 ['class_name', 'class_key', 'attr_key', 'attr_value',
+                                                  'value']].drop_duplicates().T.to_dict().values())
+                    row['nutriments'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.n_key.isnull())][
+                                                 ['n_qty', 'n_unit', 'n_key']].drop_duplicates().T.to_dict().values())
+
+                    row['brands'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & df2.class_key.str.contains('brand')].drop_duplicates(
+                        'attr_key').attr_value)
                     # All Categories Raw
                     row['categories_raw'] = list(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
-                        (~df_categories.source.isin(["byprice", "byprice_farma"]))].name_category)
+                        (~df_categories.source.isin(["byprice"]))].name_category)
                     # All Categories
                     row['categories'] = list(set(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
                         (df_categories.source.isin(["byprice"]))].name_category))
-                    row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
-                        'attr_key').attr_name)
-                    row['providers'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
-                        'attr_key').attr_name)
-                    row['tags'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('tag')].drop_duplicates(
-                        'attr_key').attr_name)
+                    row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & df2.class_key.str.contains('ingredient')].drop_duplicates(
+                        'attr_key').attr_value)
+                    row['providers'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & df2.class_key.str.contains('provider')].drop_duplicates(
+                        'attr_key').attr_value)
+                    row['tags'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & df2.class_key.str.contains('tag')].drop_duplicates(
+                        'attr_key').attr_value)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
             except Exception as e:
@@ -325,7 +331,7 @@ class Item(object):
             try:
                 qry_product_uuids = """
                     SELECT p.product_uuid, p.gtin, p.description, p.item_uuid, p.name best_name, p.source, c.name class_name, 
-                    c.key class_key,a.key attr_key,  a.name attr_name, pa.value
+                    c.key class_key,a.key attr_key, pa.value attr_value, pn.qty n_qty, pn.unit n_unit, n.key n_key
                         FROM product p
                         LEFT JOIN product_attr pa
                             ON p.product_uuid = pa.product_uuid
@@ -333,6 +339,10 @@ class Item(object):
                             ON a.id_attr = pa.id_attr
                         LEFT JOIN clss c
                             ON a.id_clss = c.id_clss
+                        LEFT JOIN product_nutriment pn
+                            ON p.product_uuid = pn.product_uuid
+                        LEFT JOIN nutriment n
+                            ON pn.id_nutriment = n.id_nutriment
                     WHERE p.product_uuid IN {}
                     """.format(tuplify(items))
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
@@ -351,32 +361,31 @@ class Item(object):
             try:
                 df = df2.drop_duplicates('product_uuid')[['product_uuid', 'best_name', 'source', 'description', 'gtin']]
                 df['names'], df['retailers'], df['product_uuids'], df['attributes'], df['brands'], df['categories'], \
-                df['ingredients'], df['providers'], df['categories_raw'] = None, None, None, None, None, None, None, None, None
+                df['ingredients'], df['providers'], df['categories_raw'], df['nutriments'] = None, None, None, None, \
+                    None, None, None, None, None, None
                 for index, row in df.iterrows():
                     row['names'] = [row.best_name]
                     row['retailers'] = [row.source]
                     row['product_uuids'] = [row.product_uuid]
-                    row['attributes'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_key.isnull()) & (~df2.attr_name.isnull())][
-                                                ['class_name', 'class_key', 'attr_key', 'attr_name',
-                                                 'value']].T.to_dict().values())
-                    row['brands'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('brand')].drop_duplicates(
-                        'attr_key').attr_name)
+                    row['attributes'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.attr_value.isnull())][
+                                                ['class_name', 'class_key', 'attr_key', 'attr_value']].drop_duplicates().T.to_dict().values())
+                    row['nutriments'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (~df2.n_key.isnull())][
+                                                 ['n_qty', 'n_unit', 'n_key']].drop_duplicates().T.to_dict().values())
+
+                    row['brands'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & df2.class_key.str.contains('brand')].drop_duplicates(
+                        'attr_key').attr_value)
                     # Raw Categories
                     row['categories_raw'] = list(df_categories[df_categories.product_uuid.isin([row.product_uuid]) &
-                        (~df_categories.source.isin(["byprice", "byprice_farma"]))].name_category)
+                        (~df_categories.source.isin(["byprice"]))].name_category)
                     # Categories ByPrice
                     row['categories'] = list(set(df_categories[df_categories.product_uuid.isin([row.product_uuid]) &
                         (df_categories.source.isin(["byprice"]))].name_category))
-                    row['ingredients'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
-                        'attr_key').attr_name)
-                    row['providers'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('provider')].drop_duplicates(
-                        'attr_key').attr_name)
-                    row['tags'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
-                        ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('tag')].drop_duplicates(
-                        'attr_key').attr_name)
+                    row['ingredients'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & df2.class_key.str.contains('ingredient')].drop_duplicates(
+                        'attr_key').attr_value)
+                    row['providers'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & df2.class_key.str.contains('provider')].drop_duplicates(
+                        'attr_key').attr_value)
+                    row['tags'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & df2.class_key.str.contains('tag')].drop_duplicates(
+                        'attr_key').attr_value)
                     df.loc[index] = row
                 items = list(df.T.to_dict().values())
             except Exception as e:
@@ -493,7 +502,7 @@ class Item(object):
                 List of attributes
             >>> [{
                     'class_name' : str,
-                    'attr_name' : str,
+                    'attr_value' : str,
                     'attr_key' : str,
                     'value': str
                 }
