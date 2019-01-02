@@ -253,7 +253,7 @@ class Item(object):
         if type_ == "item_uuid":
             try:
                 qry_item_uuids = """
-                    SELECT item_uuid, gtin, name as best_name, page_views
+                    SELECT item_uuid, gtin, name as best_name
                         FROM item 
                         WHERE item_uuid IN {}
                     """.format(tuplify(items))
@@ -269,8 +269,6 @@ class Item(object):
                                 ON a.id_attr = pa.id_attr
                             LEFT JOIN clss c
                                 ON a.id_clss = c.id_clss
-                                                    LEFT JOIN clss c
-                            ON a.id_clss = c.id_clss
                             LEFT JOIN product_nutriment pn
                                 ON p.product_uuid = pn.product_uuid
                             LEFT JOIN nutriment n
@@ -303,8 +301,7 @@ class Item(object):
                     row['retailers'] = list(df2[df2.item_uuid == row.item_uuid]["source"].drop_duplicates())
                     row['product_uuids'] = list(df2[df2.item_uuid == row.item_uuid]["product_uuid"].drop_duplicates())
                     row['attributes'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.attr_key.isnull())][
-                                                 ['class_name', 'class_key', 'attr_key', 'attr_value',
-                                                  'value']].drop_duplicates().T.to_dict().values())
+                                                 ['class_name', 'class_key', 'attr_key', 'attr_value']].drop_duplicates().T.to_dict().values())
                     row['nutriments'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (~df2.n_key.isnull())][
                                                  ['n_qty', 'n_unit', 'n_key']].drop_duplicates().T.to_dict().values())
 
