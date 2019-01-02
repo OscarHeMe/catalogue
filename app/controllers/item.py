@@ -5,7 +5,7 @@ from app import errors, logger
 from flask import Response, stream_with_context
 import json
 from flask_cors import CORS, cross_origin
-
+from uuid import UUID as ConstructUUID
 mod = Blueprint('item', __name__, url_prefix="/item")
 
 
@@ -127,6 +127,10 @@ def details_item():
     uuid_type = 'item_uuid'
     if not Item.exists({'item_uuid': params['uuid']}):
         uuid_type = 'product_uuid'
+    try:
+        assert ConstructUUID(params['uuid'])
+    except:
+        raise errors.ApiError(70005, "Wrong UUID type!")
     _resp = Item.details(uuid_type, params['uuid'])
     logger.debug(_resp)
     return jsonify(_resp)
