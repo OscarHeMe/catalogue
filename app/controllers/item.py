@@ -54,6 +54,9 @@ def get_bygtin():
 
         @Response:
             - resp: items list
+
+        @Example:
+            /by/gtin?gtins=07501034691224,07501284858385
     """
     logger.info("Searching by gtin")
     params = request.args
@@ -66,14 +69,18 @@ def get_bygtin():
     if not _needed_params.issubset(params.keys()):
         raise errors.ApiError(70001, "Missing required key params")
 
+    # Get columns
     if 'cols' not in params:
         cols = ['item_uuid', 'gtin', 'name', 'description']
+    else:
+        cols = list(set( ['item_uuid, gtin'] + params['cols'].split(",") )) 
 
     # Call to delete Item
     gtins = params['gtins'].split(",")
     try:
         _resp = Item.get_by_gtin(gtins, _cols=cols)
     except Exception as e:
+        logger.error(e)
         raise errors.ApiError(70001, "Could not query items by gtin")
         
     return jsonify({
@@ -92,6 +99,9 @@ def query_by(by):
 
         @Response:
             - resp: items list
+        
+        @Example:
+            /query/gtin?keys=07501034691224,07501284858385
     """
     logger.info("Query Items by Item UUID...")
     params = request.args.to_dict()
@@ -122,9 +132,12 @@ def get_bycategory():
 
         @Response:
             - resp: items list
+
+        @Example:
+            /by/category?id_category=3618&p=3&ipp=5
     """
-    logger.info("Searching by gtin")
-    params = request.args
+    logger.info("Searching by category")
+    params = request.args.to_dict()
     # Validation
     if not params:
         raise errors.ApiError(70001, "Missing required key params")
@@ -142,14 +155,14 @@ def get_bycategory():
             params[_o] = _dft
 
     try:
-        id_cat = params['id_category']
         _resp = Item.get_by_category(
-            id_category, 
+            params['id_category'], 
             _cols=cols, 
-            p=params['p'], 
-           ipp=params['ipp'])
+            p=int(params['p']), 
+           ipp=int(params['ipp']))
     except Exception as e:
-        raise errors.ApiError(70001, "Could not query items by gtin")
+        logger.error(e)
+        raise errors.ApiError(70001, "Could not query items by category")
         
     return jsonify({
         "status": "OK",

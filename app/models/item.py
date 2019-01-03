@@ -199,7 +199,7 @@ class Item(object):
 
 
     @staticmethod
-    def get_by_gtin(gitns,  _cols=['item_uuid']):
+    def get_by_gtin(gtins,  _cols=['item_uuid']):
         """ Static method to get Items by gtins
             Params:
             -----
@@ -222,14 +222,17 @@ class Item(object):
                 logger.error("Not a valid gtin format")
                 continue
          
-         if not valid:
+        if not valid:
             raise Exception("No valid gtins")             
     
         try:
             iqry = """
-                SELECT gtin, item_uuid 
+                SELECT {}
                 FROM item WHERE gtin IN ({})
-            """.format(",".join(valid))
+            """.format(
+                ",".join(_cols),
+                ",".join( [ """'{}'""".format(v) for v in valid ] )
+            )
             logger.debug(iqry)
             items = g._db.query(iqry).fetch()
             return items
@@ -239,7 +242,7 @@ class Item(object):
 
 
     @staticmethod
-    def get_by_category(id_categoty,  _cols=['item_uuid']):
+    def get_by_category(id_category,  _cols=['item_uuid'], p=1, ipp=200):
         """ Static method to get Items by gtins
             Params:
             -----
@@ -255,14 +258,14 @@ class Item(object):
         # Get category details
         rc = g._db.query("""
             select * from category
-            where id_category = %
+            where id_category = %s
         """,(id_category,)).fetch()
-        if not cat:
+        if not rc:
             raise Exception("No category found")
 
         try:
             cat = rc[0]
-            items = g._db.query("""
+            qry = """
                 select {}
                 from item 
                 where item_uuid in (
@@ -271,10 +274,18 @@ class Item(object):
                     where product_uuid in (
                         select product_uuid 
                         from product_category 
-                        where id_category  = %s
+                        where id_category  = {}
                     ) 
                 )
-            """,(str(_cols),id_category)).fetch()      
+                offset {} limit {}
+            """.format(
+                ",".join(_cols),
+                id_category,
+                (p - 1)*ipp, 
+                ipp            
+            )
+            print(qry)
+            items = g._db.query(qry).fetch()      
         except Exception as e:
             logger.error(e)
             raise Exception(e)
