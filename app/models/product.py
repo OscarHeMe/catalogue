@@ -1,7 +1,8 @@
 from app.models.category import Category
 from app.models.attr import Attr
 from app.norm.normalize_text import key_format, tuplify
-from app.utils import errors, applogger
+from app.utils import errors
+from ByHelpers import applogger
 from config import *
 from flask import g
 import pandas as pd
