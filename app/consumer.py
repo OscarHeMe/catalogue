@@ -4,7 +4,7 @@ import datetime
 import json
 from .models.product import Product
 from ByHelpers.rabbit_engine import RabbitEngine
-from .utils import applogger
+from ByHelpers import applogger
 from .norm import map_product_keys as mpk
 import sys
 
