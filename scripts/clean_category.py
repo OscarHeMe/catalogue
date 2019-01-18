@@ -37,7 +37,7 @@ def to_key(categories):
 
 # SPECIAL TOKENS
 entretenimiento  = ['novela', 'drama', 'terror', 'miedo', 'ciencia ficcion', 'pelicula', 'cd', 'dvd', 'blu ray',
-                    'musica', 'video', 'fotografia', 'camara', 'libro', 'television', 'radio', 'literatura', 'cuento',
+                    'musica', 'video', 'fotografia', 'camara', 'libro', 'radio', 'literatura', 'cuento',
                     'revista']
 
 farmacia = ['cardiobascular', 'bacteria', 'infeccion', 'antiseptico', 'moreton', 'cortadura', 'inmuno',
@@ -206,8 +206,7 @@ ferreteria_jarceria_t = ['ferreteria', 'jarceria', 'herramienta', 'truper', 'mar
                          ]
 ferreteria_jarceria_b = ['farmacia', 'deporte', 'perro', 'gato', 'ropa', 'balon', 'electrodomestico', 'aceite', 'llanta'
                          'papeleria', 'acuarela', 'playa', 'balon', 'parabrisas', 'juguete', 'playera',
-                         'camiseta', 'maleta', 'alberca', 'neumatico', 'anticongelante'
-                         ] + entretenimiento
+                         'camiseta', 'maleta', 'alberca', 'neumatico', 'anticongelante'] + entretenimiento
 
 
 mascotas_t = ['mascota', 'perro', 'peces', 'gato', 'pajaro', 'tortuga', 'cachorro', 'antipulga', 'morder', 'carnaza',
@@ -327,6 +326,79 @@ cerveza_vinos_licores_b = ['farmacia', 'etilico', 'sin', 'sidral'] + entretenimi
 ropa_zapatos_accesorios_t = ropa_zapatos_accesorios
 ropa_zapatos_accesorios_b = ['farmacia', 'perro', 'gato', 'mascota', 'carne', 'alimento', 'panaderia',
                              'tortilla', 'pulga', 'alimento', 'bikini', 'juguete', 'nenuco'] + entretenimiento + oficina_papeleria_t
+
+
+tecnologia_t = ['tecnologia', 'impresora', 'electronico', 'celular', 'telefono', 'computo', 'computadora', 'pc',
+                 'teclado', 'monitor', 'pantalla', 'bocina', 'cargador', 'usb', 'game', 'estereo', 'laptop',
+                 'gps', 'phone', 'huawei', 'sony', 'samsung', 'panasonic', 'microsoft', 'smartwatch',
+                 'software', 'lenovo', 'kingston', 'dell', 'thoshiba', 'intel', 'toshiba', 'bocina',
+                 'estereo', 'display', 'mouse', 'inalambrico', 'nvidia', 'audifonos', 'television', 'proyector'
+                ]
+tecnologia_b = ['farmacia', 'mickey', 'mascota', 'maskingtape', 'ferreteria', 'jarceria', 'silla',
+                'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa', 'maleta'
+                         ] + entretenimiento
+
+cocina_t = ['cocina', 'mesa', 'plato', 'cubierto', 'cubiertos', 'taza', 'vajilla', 'olla', 'refractario',
+            'cuchara', 'cucharon', 'cuchillo', 'tazon', 'tupper', 'mantel', 'copa', 'sarten', 'tfal', 'exprimidor', 'ekco',
+            'parrilla', 'hermetico', 'popit', 'vaso', 'jarra', 'tefal', 'kitchen', 'espatula', 'pelador', 'pelapapas',
+            'salero', 'receta', 'licuadora'
+            ]
+cocina_b = ['farmacia', 'mascota', 'perro', 'gato', 'carro', 'auto', 'perfume', 'locion', 'abarrote', 'despensa',
+           'desechable', 'verdura', 'fruta', 'alimento', 'bebida', 'juguete', 'bebe', 'panaderia', 'mochila',
+           'salchichoneria', 'globo', 'alcohol', 'cerveza', 'nino', 'aderezo', 'congelado', 'boligrafo',
+           'lapiz', 'lapices', 'cuaderno', 'carbon', 'folder', 'hockey', 'futbolito', 'billar', 'estuchera',
+           'rompecabezas', 'destreza', 'candado', 'herramienta', 'martillo', 'truper', 'taladro', 'calculadora', 'manguera',
+           'cartas', 'bolsa', 'vela', 'bebible', 'lacteo', 'yogur', 'enlatado', 'higiene', 'sexual', 'intimo', 'pingpong',
+           'disfraz', 'disfraces', 'globo', 'mascara', 'unicel', 'higienico', 'marcador', 'cuaderno',
+           'papeleria', 'calculadora', 'ligas', 'insecticida', 'boligrafo',
+           'libreta', 'geometria', 'marcador', 'fertilizante', 'abono'
+           ] + entretenimiento
+
+fotografia_t = ['fotografia', 'lente', 'camara', 'videocamara', 'fotografica', 'tripie', 'monopie', 'gopro', 'nikon',
+                'cybershot', 'canon']
+fotografia_b = ['contacto', 'ropa', 'sol', 'anteojos', 'gafas', 'recamara', 'hombre', 'mujer', 'gucci', 'armani',
+                'prada', 'silhouette', 'polo', 'ralph', 'frendi', 'guess', 'nike', 'kate', 'spade', 'vogue', 'hawkers',
+                'rayban', 'vans', 'deportiv']
+
+videojuegos_t = ['ps4', 'ps3', 'xbox', '3ds', 'nintendo switch', 'wii', 'videojuego', 'gaming', 'gamer', 'headset']
+videojuegos_b = ['farmacia', 'sarten', 'desechable', 'olla', 'herramienta', 'ferreteria', 'jarceria', 'hogar',
+                     'electrodomestico', 'alimento', 'bebida', 'peluche', 'cerveza', 'vino', 'alcohol', 'agua', 'lacteos',
+                     'jugo', 'sexual', 'consolador']
+
+electrodomesticos_t = ['electrodomesticos', 'horno', 'microondas', 'licuadora', 'estufa', 'refrigerador', 'cafetera',
+                       'lavadora', 'aspiradora', 'calentador', 'batidora', 'plancha', 'tostadora', 'regulador', 'nobreak',
+                       'podadora', 'ventilador', 'frigobar', 'sandwichera', 'television', 'lavasecadora', 'secadora',
+                       'whirlpool', 'mabe', 'alaciadora']
+electrodomesticos_b = ['ropa', 'shampoo', 'acondicionador'] + entretenimiento
+
+pantallas_t = ['television', 'pantalla', 'tv', 'monitor']
+pantallas_b = ['celular', 'phone', 'reloj', 'pc', 'bebe', 'farmacia', 'mickey', 'mascota', 'maskingtape', 'ferreteria',
+               'jarceria', 'silla', 'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa',
+               'maleta', 'solar'] + entretenimiento
+
+celulares_t = ['celular', 'smartphone', 'phone']
+celulares_b = ['farmacia']
+
+refrigeradores_t = ['refrigerador', 'frigobar']
+refrigeradores_b = []
+
+lavadoras_t = ['lavadora', 'lavasecadora', 'secadora']
+lavadoras_b = ['auto', 'cabello', 'cepillo']
+
+computadoras_t = ['computadora', 'laptop', 'pc', 'software', 'teclado', 'monitor', 'impresora', 'bocinas', 'headset',
+                  'usb', 'harddrive', 'ssd', 'memoria', 'gabinete']
+computadoras_b = ['juguete', 'mesa', 'bebe', 'farmacia', 'hogar', 'cocina'] + entretenimiento
+
+bano_t = ['bano', 'higienico', 'destapacano', 'aromatizante', 'trapeador', 'retrete', 'shampo', 'champu', 'shampu',
+          'cepillo', 'jabon', 'esponja', 'regadera', 'inodoro', 'lavamanos', 'banera', 'ducha', 'mingitorio', 'lavabo',
+          'bide', 'urinario', 'detergente', 'cloro', 'glade', 'airwick', 'microfibra', 'cloralex', 'brasso', 'lysol',
+          'ajax']
+bano_b = ['perro', 'farmacia', 'mascota', 'patio', 'jardin', 'auto', 'carro', 'plato', 'trastes', 'cocina', 'papeleria',
+          'cigarro', 'alcohol', 'bebida']
+
+cafeteras_t = ['cafetera', 'cafe', 'capuchino', 'splenda', 'canderel', 'stevia', 'coffee', 'cremora', 'lyncott', 'termo']
+cafeteras_b = ['color', 'papeleria', 'farmacia', 'pintura', 'maquillaje', 'cosmetico', 'tinte', 'juguete', 'perro',
+               'gato', 'helado', 'dulceria', 'chatarra', 'dinamico', 'ropa', 'termal', 'termostato', 'termometro'] + entretenimiento
 
 
 #DEPARTMENTS
@@ -573,6 +645,97 @@ categories_json = {
                     "subcats": [],
                     "tokens": oficina_papeleria_t,
                     "banned": oficina_papeleria_b
+                }
+            },
+            {
+                "Tecnología": {
+                    "subcats": [],
+                    "tokens": tecnologia_t,
+                    "banned": tecnologia_b
+                }
+            },
+            {
+                "Cocina": {
+                    "subcats": [],
+                    "tokens": cocina_t,
+                    "banned": cocina_b
+                }
+            },
+            {
+                "Fotografía": {
+                    "subcats": [],
+                    "tokens": fotografia_t,
+                    "banned": fotografia_b
+                }
+            },
+            {
+                "Videojuegos": {
+                    "subcats": [],
+                    "tokens": videojuegos_t,
+                    "banned": videojuegos_b
+                }
+            },
+            {
+                "Electrodomésticos": {
+                    "subcats": [],
+                    "tokens": electrodomesticos_t,
+                    "banned": electrodomesticos_b
+                }
+            },
+            {
+                "Pantallas": {
+                    "subcats": [],
+                    "tokens": pantallas_t,
+                    "banned": pantallas_b
+                }
+            },
+            {
+                "Celulares": {
+                    "subcats": [],
+                    "tokens": celulares_t,
+                    "banned": celulares_b
+                }
+            },
+            {
+                "Refrigeradores": {
+                    "subcats": [],
+                    "tokens": refrigeradores_t,
+                    "banned": refrigeradores_b
+                }
+            },
+            {
+                "Lavadoras": {
+                    "subcats": [],
+                    "tokens": lavadoras_t,
+                    "banned": lavadoras_b
+                }
+            },
+            {
+                "Tecnología": {
+                    "subcats": [],
+                    "tokens": tecnologia_t,
+                    "banned": tecnologia_b
+                }
+            },
+            {
+                "Computadoras": {
+                    "subcats": [],
+                    "tokens": computadoras_t,
+                    "banned": computadoras_b
+                }
+            },
+            {
+                "Baño": {
+                    "subcats": [],
+                    "tokens": bano_t,
+                    "banned": bano_b
+                }
+            },
+            {
+                "Cafeteras": {
+                    "subcats": [],
+                    "tokens": cafeteras_t,
+                    "banned": cafeteras_b
                 }
             }
         ],
