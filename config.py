@@ -43,8 +43,8 @@ STREAMER_PORT = os.getenv('STREAMER_PORT', '9092')
 STREAMER_EXCHANGE = os.getenv('STREAMER_EXCHANGE', 'data')
 STREAMER_EXCHANGE_TYPE = os.getenv('STREAMER_EXCHANGE_TYPE', 'direct')
 
-QUEUE_ROUTING = os.getenv('QUEUE_ROUTING', "routing")
-QUEUE_CATALOGUE = os.getenv('QUEUE_CATALOGUE', "catalogue")
+QUEUE_ROUTING = os.getenv('QUEUE_ROUTING', "bp_routing")
+QUEUE_CATALOGUE = os.getenv('QUEUE_CATALOGUE', "bp_catalogue")
 
 
 QUEUE_ROUTING = QUEUE_ROUTING + "_dev" \

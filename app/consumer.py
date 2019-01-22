@@ -93,7 +93,7 @@ def callback(ch, method, properties, body):
 def start():
     logger.info("Warming up caching IDS...")
     global cached_ps
-    #cached_ps = Product.create_cache_ids()
+    cached_ps = Product.create_cache_ids()
     logger.info("Done warmup, loaded {} values from {} sources"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
