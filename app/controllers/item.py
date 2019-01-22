@@ -255,6 +255,7 @@ def details_item():
         uuid_type = 'product_uuid'
     _resp = Item.details(uuid_type, params['uuid'])
     logger.debug(_resp)
+    logger.info("Delivering response: {}".format(params['uuid']))
     return jsonify(_resp)
         
 

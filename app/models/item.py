@@ -5,7 +5,6 @@ from ByHelpers import applogger
 from config import *
 import pandas as pd
 import requests
-from pprint import pformat as pf
 import ast
 import json
 from app.norm.normalize_text import key_format, tuplify
@@ -285,7 +284,6 @@ class Item(object):
                 (p - 1)*ipp, 
                 ipp            
             )
-            print(qry)
             items = g._db.query(qry).fetch()      
         except Exception as e:
             logger.error(e)
@@ -600,20 +598,18 @@ class Item(object):
             a.name as attr,
             c.name_es as class,
             c.key as class_key,
-            p.source
+            a.source
             FROM product_attr pa
             LEFT OUTER JOIN attr a 
             ON (pa.id_attr = a.id_attr)
             LEFT OUTER JOIN clss c
             ON (a.id_clss = c.id_clss)
-            INNER JOIN product p
-            ON (p.product_uuid = pa.product_uuid)
             WHERE pa.product_uuid IN {}
             ORDER BY class
         """.format(tuplify(puuids))
         try:
             logger.debug(_qry)
-            _respattrs = g._db.query(_qry).fetch()
+            _respattrs = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(_respattrs)
         except Exception as e:
             logger.error(e)
@@ -640,7 +636,7 @@ class Item(object):
             FROM category 
             WHERE id_category
             IN (
-                SELECT DISTINCT(id_category)
+                SELECT id_category
                 FROM product_category
                 WHERE product_uuid IN {}
             )
@@ -648,7 +644,7 @@ class Item(object):
         """.format(tuplify(puuids))
         try:
             logger.debug(_qry)
-            bp_categs = g._db.query(_qry).fetch()
+            bp_categs = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(bp_categs)
         except Exception as e:
             logger.error(e)
@@ -696,7 +692,7 @@ class Item(object):
                     WHERE p.{} = '{}'
                 """.format(u_type, _uuid)
             logger.debug(_qry)
-            info_rets = g._db.query(_qry).fetch()
+            info_rets = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(info_rets)
             if not info_rets:
                 raise errors.ApiError(70008, "Not existing elements in DB!")
@@ -738,8 +734,7 @@ class Item(object):
                 else:
                     categ_options.append(k['attr'])
             else:
-                attrs.append(k)
-        # Fetch from categories table
+                attrs.append(k)        
         # Fetch Attributes
         if info_rets:
             categs += Item.fetch_categs([str(z['product_uuid']) for z in info_rets ])
@@ -752,7 +747,7 @@ class Item(object):
         df_rets = pd.DataFrame(info_rets)
         if 'source' in df_rets.columns:
             df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
-            df_rets = df_rets[~df_rets.show_label == 1]
+            df_rets = df_rets[df_rets.show_label == 1]
         if df_rets.empty:
             raise errors.ApiError(70003, "Issues fetching elements in DB", 404)
         return {
@@ -824,14 +819,11 @@ class Item(object):
         # Request elements
         try:
             df_nattrs = pd.read_sql(_qry, g._db.conn)
-            print('DF SQL')
-            print(df_nattrs)
             if df_nattrs.empty:
                 return n_attrs
             if not df_nattrs[df_nattrs['type'] == 'ingredient'].empty:
                 n_attrs['ingredients'] = df_nattrs[df_nattrs['type'] == 'ingredient']['name'].tolist()
             if not df_nattrs[df_nattrs['type'] == 'brand'].empty:
-                print('To Dict Records', df_nattrs[df_nattrs['type'] == 'brand'].to_dict(orient='records'))
                 n_attrs['brand'] = df_nattrs[df_nattrs['type'] == 'brand']\
                                         [['name','key']].to_dict(orient='records')[0]
             logger.debug(n_attrs)
