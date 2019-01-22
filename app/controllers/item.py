@@ -44,6 +44,132 @@ def get_byitem():
         })
 
 
+@mod.route('/by/gtin', methods=['GET'])
+def get_bygtin():
+    """ Endpoint to get details of given items
+
+        @Params:
+            - gtins: <str> list of values
+            - cols: <str> can be item_uuid, gtin, name, description
+
+        @Response:
+            - resp: items list
+
+        @Example:
+            /by/gtin?gtins=07501034691224,07501284858385
+    """
+    logger.info("Searching by gtin")
+    params = request.args
+    # Validation
+    if not params:
+        raise errors.ApiError(70001, "Missing required key params")
+
+    # Verify needed key-values
+    _needed_params = {'gtins'}
+    if not _needed_params.issubset(params.keys()):
+        raise errors.ApiError(70001, "Missing required key params")
+
+    # Get columns
+    if 'cols' not in params:
+        cols = ['item_uuid', 'gtin', 'name', 'description']
+    else:
+        cols = list(set( ['item_uuid, gtin'] + params['cols'].split(",") )) 
+
+    # Call to delete Item
+    gtins = params['gtins'].split(",")
+    try:
+        _resp = Item.get_by_gtin(gtins, _cols=cols)
+    except Exception as e:
+        logger.error(e)
+        raise errors.ApiError(70001, "Could not query items by gtin")
+        
+    return jsonify({
+        "status": "OK",
+        "items": _resp
+    })
+
+
+@mod.route('/query/<by>', methods=['GET'])
+def query_by(by):
+    """ Endpoint to query items table by given values
+
+        @Params:
+            - by: <str> column to compare values with
+            - keys: <str> can be item_uuid, gtin, name, description
+
+        @Response:
+            - resp: items list
+        
+        @Example:
+            /query/gtin?keys=07501034691224,07501284858385
+    """
+    logger.info("Query Items by Item UUID...")
+    params = request.args.to_dict()
+    logger.debug(params)
+    # Validate required params
+    _needed_params = {'keys'}
+    if not _needed_params.issubset(params):
+        raise errors.ApiError(70001, "Missing required key params")
+    # Complement optional params, and set default if needed
+    _opt_params = {'cols': '', 'p':1, 'ipp': 50}
+    for _o, _dft  in _opt_params.items():
+        if _o not in params:
+            params[_o] = _dft
+    _items = Item.query(by, **params)
+    return jsonify({
+        'status': 'OK',
+        'items': _items
+    })
+
+
+@mod.route('/by/category', methods=['GET'])
+def get_bycategory():
+    """ Endpoint to get details of given items
+
+        @Params:
+            - id_category: <str> list of values
+            - cols: <str> can be item_uuid, gtin, name, description
+
+        @Response:
+            - resp: items list
+
+        @Example:
+            /by/category?id_category=3618&p=3&ipp=5
+    """
+    logger.info("Searching by category")
+    params = request.args.to_dict()
+    # Validation
+    if not params:
+        raise errors.ApiError(70001, "Missing required key params")
+
+    # Verify needed key-values
+    _needed_params = {'id_category'}
+    if not _needed_params.issubset(params.keys()):
+        raise errors.ApiError(70001, "Missing required key params")
+
+    # Optional parameters
+    cols = ['item_uuid', 'gtin', 'name', 'description']
+    _opt_params = {'cols': cols, 'p':1, 'ipp': 50}
+    for _o, _dft  in _opt_params.items():
+        if _o not in params:
+            params[_o] = _dft
+
+    try:
+        _resp = Item.get_by_category(
+            params['id_category'], 
+            _cols=cols, 
+            p=int(params['p']), 
+           ipp=int(params['ipp']))
+    except Exception as e:
+        logger.error(e)
+        raise errors.ApiError(70001, "Could not query items by category")
+        
+    return jsonify({
+        "status": "OK",
+        "items": _resp
+    })
+
+
 @mod.route('/add', methods=['POST'])
 def add_item():
     """ Endpoint to add a new `Item`
@@ -137,7 +263,7 @@ def details_info():
     """ Endpoint to get details of given items
 
         @Params:
-            - values: <str> list of item_uuids comma separated
+            - values: <str> list of values
             - by: <str> field which the values are queried against
                 (WHERE <by> = <value>)
             - cols: <str> can be item_uuid, gtin, name, description
@@ -165,7 +291,6 @@ def details_info():
     _resp = Item.get(values, by=by, _cols=cols)
     return jsonify({
         "status": "OK",
-        "message": _resp['message'],
         "items": _resp
     })
 

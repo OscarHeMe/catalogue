@@ -1,7 +1,8 @@
 from app.models.category import Category
 from app.models.attr import Attr
 from app.norm.normalize_text import key_format, tuplify
-from app.utils import errors, applogger
+from app.utils import errors
+from ByHelpers import applogger
 from config import *
 from flask import g
 import pandas as pd
@@ -249,21 +250,31 @@ class Product(object):
     def save_images(self, pcommit=True):
         """ Class method to save product images
         """
+        print('All images bby')
+        print(self.images)
         for _img in self.images:
+            
             try:
                 # Verify if prod image exists
-                _exist = g._db.query("""SELECT id_product_image FROM product_image
-                                        WHERE product_uuid = '{}'
-                                        AND image = '{}'"""
-                                     .format(self.product_uuid, _img))\
-                                .fetch()
-                if _exist:
+                #qry_txt = """SELECT id_product_image FROM product_image
+                #                        WHERE product_uuid = '{}'
+                #                        AND image = '{}'""".format(self.product_uuid, _img)
+                qry_txt = """SELECT id_product_image FROM product_image
+                                        WHERE product_uuid = %s
+                                        AND image = %s"""
+                # if '%' in qry_txt:
+                #     g_qry = g._db.query(qry_txt.replace('%','%%'))    
+                # else:
+                g_qry = g._db.query(qry_txt, (self.product_uuid, _img))         
+                _exist = g_qry.fetch()             
+                if len(_exist) > 0:
                     Product.save_pimage(self.product_uuid, _img, _exist[0]['id_product_image'],pcommit=pcommit)
                     continue
                 # Load model
                 Product.save_pimage(self.product_uuid, _img, pcommit=pcommit)
             except Exception as e:
                 logger.error(e)
+                logger.error(_img)
                 logger.warning("Could not save Product image!")
         return True
 

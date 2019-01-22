@@ -23,7 +23,7 @@ LOG_PORT = os.getenv('LOG_PORT', 27971)
 
 # DB vars
 SQL_HOST = os.getenv('SQL_HOST','127.0.0.1')
-SQL_DB = os.getenv('SQL_DB','catalogue_us')
+SQL_DB = os.getenv('SQL_DB','catalogue')
 SQL_USER = os.getenv('SQL_USER','postgres')
 SQL_PASSWORD = os.getenv('SQL_PASSWORD','')
 SQL_PORT = os.getenv('SQL_PORT','5432')
@@ -43,8 +43,16 @@ STREAMER_PORT = os.getenv('STREAMER_PORT', '9092')
 STREAMER_EXCHANGE = os.getenv('STREAMER_EXCHANGE', 'data')
 STREAMER_EXCHANGE_TYPE = os.getenv('STREAMER_EXCHANGE_TYPE', 'direct')
 
-QUEUE_ROUTING = "bp_routing_dev" if ENV.upper() == 'DEV' else "bp_routing"
-QUEUE_CATALOGUE = 'bp_catalogue_dev' if ENV.upper() == 'DEV' else 'bp_catalogue'
+QUEUE_ROUTING = os.getenv('QUEUE_ROUTING', "routing")
+QUEUE_CATALOGUE = os.getenv('QUEUE_CATALOGUE', "catalogue")
+
+
+QUEUE_ROUTING = QUEUE_ROUTING + "_dev" \
+    if ENV.upper() in ['DEV','LOCAL'] else QUEUE_ROUTING
+
+QUEUE_CATALOGUE = QUEUE_CATALOGUE + '_dev' \
+    if ENV.upper() in ['DEV','LOCAL'] else QUEUE_CATALOGUE
+
 
 # Stack and Time Limit to Update Batch
 STACK_LIMIT = 20

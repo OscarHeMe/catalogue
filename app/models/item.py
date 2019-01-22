@@ -1,6 +1,7 @@
 import datetime
 from flask import g
-from app.utils import errors, applogger
+from app.utils import errors
+from ByHelpers import applogger
 from config import *
 import pandas as pd
 import requests
@@ -196,6 +197,106 @@ class Item(object):
             logger.error(e)
             raise errors.ApiError(70003, "Issues fetching elements in DB")
         return _items
+
+
+    @staticmethod
+    def get_by_gtin(gtins,  _cols=['item_uuid']):
+        """ Static method to get Items by gtins
+            Params:
+            -----
+            gtins : list of gtins
+                Values to compare
+            _cols : list
+                Columns to retrieve
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        valid = []
+        # Variations of gtin
+        for gtin in gtins:
+            try:
+                code = str(int(gtin))
+                valid.append(gtin)
+            except Exception as e:
+                logger.error("Not a valid gtin format")
+                continue
+         
+        if not valid:
+            raise Exception("No valid gtins")             
+    
+        try:
+            iqry = """
+                SELECT {}
+                FROM item WHERE gtin IN ({})
+            """.format(
+                ",".join(_cols),
+                ",".join( [ """'{}'""".format(v) for v in valid ] )
+            )
+            logger.debug(iqry)
+            items = g._db.query(iqry).fetch()
+            return items
+        except Exception as e:
+            logger.error(e)
+            return []
+
+
+    @staticmethod
+    def get_by_category(id_category,  _cols=['item_uuid'], p=1, ipp=200):
+        """ Static method to get Items by gtins
+            Params:
+            -----
+            gtins : list of gtins
+                Values to compare
+            _cols : list
+                Columns to retrieve
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        # Get category details
+        rc = g._db.query("""
+            select * from category
+            where id_category = %s
+        """,(id_category,)).fetch()
+        if not rc:
+            raise Exception("No category found")
+
+        try:
+            cat = rc[0]
+            qry = """
+                select {}
+                from item 
+                where item_uuid in (
+                    select item_uuid 
+                    from product 
+                    where product_uuid in (
+                        select product_uuid 
+                        from product_category 
+                        where id_category  = {}
+                    ) 
+                )
+                offset {} limit {}
+            """.format(
+                ",".join(_cols),
+                id_category,
+                (p - 1)*ipp, 
+                ipp            
+            )
+            print(qry)
+            items = g._db.query(qry).fetch()      
+        except Exception as e:
+            logger.error(e)
+            raise Exception(e)
+
+        _resp = {
+            "category" : cat,
+            "items" : items
+        }
+        return _resp
+
 
     @staticmethod
     def delete(i_uuid):
