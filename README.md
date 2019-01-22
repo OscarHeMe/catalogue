@@ -1,4 +1,4 @@
-# Byprice Item Service (US Version)
+# Byprice Catalogue Service (MX Version)
 
 Service to query all item details, like images, ingredients, attributes and additional info.
 
