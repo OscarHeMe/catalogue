@@ -41,6 +41,9 @@ def process(new_item, reroute=True):
     logger.debug('Formatted product!')
     p = Product(_frmted)
     # Verify if product in Cache
+    if p.product_id is None:
+        logger.warning("Incomming product has no Product ID: [{}]".format(p.source))
+        return
     prod_uuid = Product.puuid_from_cache(cached_ps, p)
     if not prod_uuid:
         # Verify if product exists
@@ -74,13 +77,9 @@ def process(new_item, reroute=True):
         new_item.update({'product_uuid': p.product_uuid})
         if reroute:
             producer.send(new_item)
-            logger.debug("[price] Rerouted back ({})".format(new_item['product_uuid']))
+            logger.info("[price] Rerouted back ({})".format(new_item['product_uuid']))
     if not reroute:
         return new_item
-    ###
-    print("TEST exit")
-    import sys
-    sys.exit()
 
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
@@ -97,14 +96,11 @@ def callback(ch, method, properties, body):
 def start():
     logger.info("Warming up caching IDS...")
     global cached_ps
-    #cached_ps = Product.create_cache_ids()
+    cached_ps = Product.create_cache_ids()
     logger.info("Done warmup, loaded {} values from {} sources"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
     consumer.set_callback(callback)
-    print('---')
-    print(consumer)
-    print('---')
     try:
         consumer.run()
     except Exception as e:
