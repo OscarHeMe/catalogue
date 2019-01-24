@@ -477,7 +477,7 @@ class Product(object):
                             .to_dict()['product_uuid']
         # Clean GC
         del _df
-        return cache_ids        
+        return cache_ids
 
     @staticmethod
     def get(_by, _cols=['product_uuid'], limit=None):
