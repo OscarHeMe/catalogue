@@ -246,7 +246,6 @@ class Item(object):
         """
         items = params.get("items")
         type_ = params.get("type")
-        print("Type {}".format(type_))
         if not items:
             logger.error("No items defined in params")
             return False
@@ -549,7 +548,7 @@ class Item(object):
             FROM category 
             WHERE id_category
             IN (
-                SELECT DISTINCT(id_category)
+                SELECT id_category
                 FROM product_category
                 WHERE product_uuid IN {}
             )
@@ -557,13 +556,14 @@ class Item(object):
         """.format(tuplify(puuids))
         try:
             logger.debug(_qry)
-            bp_categs = g._db.query(_qry).fetch()
+            bp_categs = pd.read_sql(_qry, g._db.conn)\
+                            .drop_duplicates('name')
             logger.debug(bp_categs)
         except Exception as e:
             logger.error(e)
             return []
-        if bp_categs:
-            return [b['name'] for b in bp_categs]
+        if not bp_categs.empty:
+            return bp_categs['name'].tolist()
         return []
 
     @staticmethod
@@ -736,7 +736,6 @@ class Item(object):
             if not df_nattrs[df_nattrs['type'] == 'ingredient'].empty:
                 n_attrs['ingredients'] = df_nattrs[df_nattrs['type'] == 'ingredient']['name'].tolist()
             if not df_nattrs[df_nattrs['type'] == 'brand'].empty:
-                print('To Dict Records', df_nattrs[df_nattrs['type'] == 'brand'].to_dict(orient='records'))
                 n_attrs['brand'] = df_nattrs[df_nattrs['type'] == 'brand']\
                                         [['name','key']].to_dict(orient='records')[0]
             logger.debug(n_attrs)
