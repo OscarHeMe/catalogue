@@ -41,6 +41,9 @@ def process(new_item, reroute=True):
     logger.debug('Formatted product!')
     p = Product(_frmted)
     # Verify if product in Cache
+    if p.product_id is None:
+        logger.warning("Incomming product has no Product ID: [{}]".format(p.source))
+        return
     prod_uuid = Product.puuid_from_cache(cached_ps, p)
     if not prod_uuid:
         # Verify if product exists
@@ -74,7 +77,7 @@ def process(new_item, reroute=True):
         new_item.update({'product_uuid': p.product_uuid})
         if reroute:
             producer.send(new_item)
-            logger.debug("[price] Rerouted back ({})".format(new_item['product_uuid']))
+            logger.info("[price] Rerouted back ({})".format(new_item['product_uuid']))
     if not reroute:
         return new_item
 
