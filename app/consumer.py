@@ -12,15 +12,19 @@ import sys
 logger = applogger.get_logger()
 
 # Rabbit instances
+producer = None
 consumer = RabbitEngine({
     'queue':QUEUE_CATALOGUE,
     'routing_key': QUEUE_CATALOGUE},
     blocking=False)
 
-producer = RabbitEngine({
-    'queue':QUEUE_ROUTING,
-    'routing_key': QUEUE_ROUTING},
-    blocking=True)
+def connect_producer():
+    global producer
+    if producer is None:
+        producer = RabbitEngine({
+            'queue':QUEUE_ROUTING,
+            'routing_key': QUEUE_ROUTING},
+          blocking=True)
 
 # Cache variable
 cached_ps = {}
@@ -33,6 +37,7 @@ last_updt = datetime.datetime.utcnow()
 def process(new_item, reroute=True):
     """ Method that processes all elements with defined rules
     """
+    global producer
     # Fetch Route key
     route_key = new_item['route_key']
     logger.debug('Evaluating: {}'.format(route_key))
@@ -43,7 +48,6 @@ def process(new_item, reroute=True):
     logger.debug("formated item: {}".format(str(_frmted.get('nutriments'))))
     p = Product(_frmted)
     # Verify if product in Cache
-
     prod_uuid = Product.puuid_from_cache(cached_ps, p)
     if not prod_uuid:
         # Verify if product exists
@@ -106,6 +110,7 @@ def start():
     logger.info("Done warmup, loaded {} values from {} sources"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
+    connect_producer()
     consumer.set_callback(callback)
     try:
         consumer.run()
