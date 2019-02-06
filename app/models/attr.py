@@ -1,6 +1,7 @@
 import datetime
 from flask import g
-from app import errors, applogger
+from app import errors
+from ByHelpers import applogger
 from config import *
 import requests
 import ast
@@ -48,7 +49,7 @@ class Attr(object):
                 self.clss = Clss(self.clss)
                 self.id_clss = self.clss.save()
         
-    def save(self):
+    def save(self, commit=True):
         """ Class method to save attr in DB
         """
         logger.info("Saving attr...")
@@ -69,7 +70,7 @@ class Attr(object):
             # Save record
             self.message = "Attr {} correctly!".format(\
                 'updated' if self.id_attr else 'stored')
-            m_atr.save()
+            m_atr.save(commit=commit)
             self.id_attr = m_atr.last_id
             logger.info(self.message \
                     + '({})'.format(self.id_attr))
@@ -97,7 +98,7 @@ class Attr(object):
                             for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM attr WHERE {})"""\
+                            SELECT 1 FROM attr WHERE {} LIMIT 1)"""\
                             .format(_where))\
                         .fetch()[0]['exists']
         except Exception as e:

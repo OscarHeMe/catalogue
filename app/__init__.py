@@ -6,7 +6,7 @@ import json
 import config
 from config import *
 import datetime
-import app.utils.applogger as applogger
+from ByHelpers import applogger
 import app.utils.errors as errors
 import app.utils.db as db
 if APP_MODE == 'CONSUMER':
@@ -19,7 +19,14 @@ CORS(app)
 # Logger
 applogger.create_logger()
 logger = applogger.get_logger()
-   
+
+
+@app.cli.command('new_retailer')
+def new_retailer_cmd():
+    get_db()
+    from scripts.add_new_retailer import populate_retailer
+    populate_retailer()
+
 @app.cli.command('consumer')
 def consumer_cmd():
     with app.app_context():

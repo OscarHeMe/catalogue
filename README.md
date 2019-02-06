@@ -1,4 +1,4 @@
-# Byprice Item Service
+# Byprice Catalogue Service (MX Version)
 
 Service to query all item details, like images, ingredients, attributes and additional info.
 
@@ -55,6 +55,9 @@ export STREAMER_HOST='<ip or hostname>'
 export STREAMER_ROUTING_KEY=''
 export STREAMER_EXCHANGE='data'
 export STREAMER_EXCHANGE_TYPE='direct'
+export STREAMER_USER="<user>"
+export STREAMER_PASS="<pass>"
+export STREAMER_VIRTUAL_HOST="<vhost>"
 ```
 
 Logger env vars

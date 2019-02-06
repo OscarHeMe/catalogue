@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from app import applogger
+from ByHelpers import applogger
 from pprint import pformat as pf
 from .normalize_text import key_format
 import ast

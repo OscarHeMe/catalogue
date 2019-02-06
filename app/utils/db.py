@@ -11,7 +11,7 @@ logger = logging.getLogger(APP_NAME)
 def initdb():
     ''' Initialize the db '''
     # Define schema
-    _schema = 'schema.sql' if not TESTING else 'schemaT.sql'
+    _schema = 'schema.sql' if not TESTING else 'schema.sql'
     try:
         db_init = Pygres(dict(
             SQL_DB='postgres',

@@ -1,10 +1,10 @@
 import datetime
 from flask import g
-from app.utils import errors, applogger
+from app.utils import errors
+from ByHelpers import applogger
 from config import *
 import pandas as pd
 import requests
-from pprint import pformat as pf
 import ast
 import json
 from app.norm.normalize_text import key_format, tuplify
@@ -58,7 +58,10 @@ class Item(object):
         if self.item_uuid:
             m_item.item_uuid = self.item_uuid
         m_item.gtin = self.gtin
-        m_item.checksum = int(self.gtin[-1])
+        try:
+            m_item.checksum = int(self.gtin[-1])
+        except:
+            m_item.checksum = None
         m_item.name = self.name
         m_item.description = self.description
         m_item.last_modified = str(datetime.datetime.utcnow())
@@ -194,6 +197,105 @@ class Item(object):
             raise errors.ApiError(70003, "Issues fetching elements in DB")
         return _items
 
+
+    @staticmethod
+    def get_by_gtin(gtins,  _cols=['item_uuid']):
+        """ Static method to get Items by gtins
+            Params:
+            -----
+            gtins : list of gtins
+                Values to compare
+            _cols : list
+                Columns to retrieve
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        valid = []
+        # Variations of gtin
+        for gtin in gtins:
+            try:
+                code = str(int(gtin))
+                valid.append(gtin)
+            except Exception as e:
+                logger.error("Not a valid gtin format")
+                continue
+         
+        if not valid:
+            raise Exception("No valid gtins")             
+    
+        try:
+            iqry = """
+                SELECT {}
+                FROM item WHERE gtin IN ({})
+            """.format(
+                ",".join(_cols),
+                ",".join( [ """'{}'""".format(v) for v in valid ] )
+            )
+            logger.debug(iqry)
+            items = g._db.query(iqry).fetch()
+            return items
+        except Exception as e:
+            logger.error(e)
+            return []
+
+
+    @staticmethod
+    def get_by_category(id_category,  _cols=['item_uuid'], p=1, ipp=200):
+        """ Static method to get Items by gtins
+            Params:
+            -----
+            gtins : list of gtins
+                Values to compare
+            _cols : list
+                Columns to retrieve
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        # Get category details
+        rc = g._db.query("""
+            select * from category
+            where id_category = %s
+        """,(id_category,)).fetch()
+        if not rc:
+            raise Exception("No category found")
+
+        try:
+            cat = rc[0]
+            qry = """
+                select {}
+                from item 
+                where item_uuid in (
+                    select item_uuid 
+                    from product 
+                    where product_uuid in (
+                        select product_uuid 
+                        from product_category 
+                        where id_category  = {}
+                    ) 
+                )
+                offset {} limit {}
+            """.format(
+                ",".join(_cols),
+                id_category,
+                (p - 1)*ipp, 
+                ipp            
+            )
+            items = g._db.query(qry).fetch()      
+        except Exception as e:
+            logger.error(e)
+            raise Exception(e)
+
+        _resp = {
+            "category" : cat,
+            "items" : items
+        }
+        return _resp
+
+
     @staticmethod
     def delete(i_uuid):
         """ Static method to delete Item
@@ -263,8 +365,7 @@ class Item(object):
                                 ON a.id_attr = pa.id_attr
                             LEFT JOIN clss c
                                 ON a.id_clss = c.id_clss
-                        where c.name is not NULL
-                        and pa.item_uuid IN {}
+                        where p.item_uuid IN {}
                     """.format(tuplify(items))
                 df2 = pd.read_sql(qry_product_uuids, g._db.conn)
                 qry_categories="""
@@ -296,8 +397,8 @@ class Item(object):
                     row['categories_raw'] = list(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
                         (~df_categories.source.isin(["byprice", "byprice_farma"]))].name_category)
                     # All Categories
-                    row['categories'] = list(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
-                        (df_categories.source.isin(["byprice"]))].name_category)
+                    row['categories'] = list(set(df_categories[df_categories.item_uuid.isin([row.item_uuid]) &
+                        (df_categories.source.isin(["byprice"]))].name_category))
                     row['ingredients'] = list(df2[df2.item_uuid.isin([row.item_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
@@ -358,7 +459,8 @@ class Item(object):
                     row['categories_raw'] = list(df_categories[df_categories.product_uuid.isin([row.product_uuid]) &
                         (~df_categories.source.isin(["byprice", "byprice_farma"]))].name_category)
                     # Categories ByPrice
-                    row['categories'] = []
+                    row['categories'] = list(set(df_categories[df_categories.product_uuid.isin([row.product_uuid]) &
+                        (df_categories.source.isin(["byprice"]))].name_category))
                     row['ingredients'] = list(df2[df2.product_uuid.isin([row.product_uuid]) & (
                         ~df2.attr_key.isnull()) & (~df2.attr_name.isnull()) & df2.class_key.str.contains('ingredient')].drop_duplicates(
                         'attr_key').attr_name)
@@ -496,20 +598,18 @@ class Item(object):
             a.name as attr,
             c.name_es as class,
             c.key as class_key,
-            p.source
+            a.source
             FROM product_attr pa
             LEFT OUTER JOIN attr a 
             ON (pa.id_attr = a.id_attr)
             LEFT OUTER JOIN clss c
             ON (a.id_clss = c.id_clss)
-            INNER JOIN product p
-            ON (p.product_uuid = pa.product_uuid)
             WHERE pa.product_uuid IN {}
             ORDER BY class
         """.format(tuplify(puuids))
         try:
             logger.debug(_qry)
-            _respattrs = g._db.query(_qry).fetch()
+            _respattrs = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(_respattrs)
         except Exception as e:
             logger.error(e)
@@ -536,7 +636,7 @@ class Item(object):
             FROM category 
             WHERE id_category
             IN (
-                SELECT DISTINCT(id_category)
+                SELECT id_category
                 FROM product_category
                 WHERE product_uuid IN {}
             )
@@ -544,7 +644,7 @@ class Item(object):
         """.format(tuplify(puuids))
         try:
             logger.debug(_qry)
-            bp_categs = g._db.query(_qry).fetch()
+            bp_categs = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(bp_categs)
         except Exception as e:
             logger.error(e)
@@ -570,10 +670,10 @@ class Item(object):
         # Fetch info from all retailers
         try:
             if u_type == 'item_uuid':
-                _qry = """SELECT p.name, i.gtin, p.description,
+                _qry = """SELECT i.name, i.gtin, p.description,
                     p.product_uuid,
                     p.images, p.ingredients, p.source,
-                    s.hierarchy, s.name as r_name
+                    s.hierarchy, s.retailer as show_label, s.name as r_name
                     FROM product p 
                     INNER JOIN source s 
                     ON (p.source = s.key)
@@ -585,14 +685,14 @@ class Item(object):
                 _qry = """SELECT p.name, p.gtin, p.description,
                     p.product_uuid,
                     p.images, p.ingredients, p.source,
-                    s.hierarchy, s.name as r_name
+                    s.hierarchy, s.retailer as show_label, s.name as r_name
                     FROM product p 
                     INNER JOIN source s 
                     ON (p.source = s.key)
                     WHERE p.{} = '{}'
                 """.format(u_type, _uuid)
             logger.debug(_qry)
-            info_rets = g._db.query(_qry).fetch()
+            info_rets = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(info_rets)
             if not info_rets:
                 raise errors.ApiError(70008, "Not existing elements in DB!")
@@ -634,8 +734,7 @@ class Item(object):
                 else:
                     categ_options.append(k['attr'])
             else:
-                attrs.append(k)
-        # Fetch from categories table
+                attrs.append(k)        
         # Fetch Attributes
         if info_rets:
             categs += Item.fetch_categs([str(z['product_uuid']) for z in info_rets ])
@@ -646,9 +745,11 @@ class Item(object):
             brand = _normalized_attrs['brand']
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
-        df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
+        if 'source' in df_rets.columns:
+            df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
+            df_rets = df_rets[df_rets.show_label == 1]
         if df_rets.empty:
-            return {}
+            raise errors.ApiError(70003, "Issues fetching elements in DB", 404)
         return {
             'name': sorted(df_rets['name'].tolist(),
                 key=lambda x: len(x) if x else 0,
@@ -658,7 +759,9 @@ class Item(object):
             'description': sorted(df_rets['description'].dropna().tolist(),
                 key=lambda x: len(x) if x else 0, reverse=True),
             'gtin': sorted(df_rets['gtin'].dropna().tolist(),
-                key=lambda x: len(x) if x else 0)[0],
+                            key=lambda x: len(x) if x else 0)[0] \
+                    if len(df_rets['gtin'].dropna()) > 0 \
+                    else '',
             'retailers': df_rets['r_name'].tolist(),
             'attributes': attrs,
             'ingredients': ingreds,
@@ -716,14 +819,11 @@ class Item(object):
         # Request elements
         try:
             df_nattrs = pd.read_sql(_qry, g._db.conn)
-            print('DF SQL')
-            print(df_nattrs)
             if df_nattrs.empty:
                 return n_attrs
             if not df_nattrs[df_nattrs['type'] == 'ingredient'].empty:
                 n_attrs['ingredients'] = df_nattrs[df_nattrs['type'] == 'ingredient']['name'].tolist()
             if not df_nattrs[df_nattrs['type'] == 'brand'].empty:
-                print('To Dict Records', df_nattrs[df_nattrs['type'] == 'brand'].to_dict(orient='records'))
                 n_attrs['brand'] = df_nattrs[df_nattrs['type'] == 'brand']\
                                         [['name','key']].to_dict(orient='records')[0]
             logger.debug(n_attrs)
@@ -779,56 +879,82 @@ class Item(object):
 
 
     @staticmethod
-    def get_sitemap_items(size_, from_, farma=False):
+    def get_sitemap_items(size_, from_, farma=False, is_count=False):
 
         if farma:
-            qry_farma_id_categories = """
-                SELECT id_category
-                    FROM category c 
-                    where id_parent  in (select id_category 
-                                        from category tmp 
-                                        where source = 'byprice' and key='farmacia')
-                        or (key = 'farmacia' and source = 'byprice')		
+            qry_join_categories = """
+            INNER JOIN product_category pc ON p.product_uuid=pc.product_uuid
             """
-            farma_id_categories = pd.read_sql(qry_farma_id_categories, g._db.conn)
-            farma_id_categories = tuple(farma_id_categories.id_category)
+
             qry_categories = """
-            and (pc.id_category in {} or s.key='farmacias_similares')
-            """.format(farma_id_categories)
+            AND pc.deprecated IS NULL
+            AND (
+                pc.id_category IN (                
+                    SELECT id_category 
+                    FROM category tmp 
+                    WHERE source = 'byprice' 
+                        AND (key='farmacia' OR key='jugos y bebidas')
+                )
+                OR p.source='farmacias_similares'
+            )
+            """
+            qry_group = """GROUP BY p.product_uuid, p.name, p.description """
         else:
+            qry_join_categories = ""
             qry_categories = ""
+            qry_group = ""
+
+        if is_count:
+            qry_select_item ="""
+                SELECT COUNT(DISTINCT(i.item_uuid)) AS count_, 'items' AS type_
+            """
+            qry_select_product = """
+                SELECT COUNT(DISTINCT(p.product_uuid)) AS count_, 'products' AS type_
+            """
+            qry_group=""
+        else:
+            qry_select_item = """
+                SELECT 
+                    DISTINCT(i.item_uuid), 
+                    NULL::UUID AS product_uuid,
+                    i.name, 
+                    i.description
+            """
+            qry_select_product ="""
+                SELECT  
+                    NULL as item_uuid, 
+                    p.product_uuid, 
+                    p.name, 
+                    p.description
+            """
+
 
         qry_item_uuids = """
-            SELECT DISTINCT(i.item_uuid), NULL::UUID as product_uuid,
-                   CASE WHEN i.name is NULL
-                        THEN p.name
-                        ELSE i.name END AS name, 
-                    CASE WHEN i.description is NULL
-                        THEN p.description
-                        ELSE i.description END AS description
+            {qry_select_item}
                     FROM item i 
-                    INNER JOIN product p on i.item_uuid=p.item_uuid
-                    INNER JOIN source s on s.key=p.source
-                    INNER JOIN product_category pc on p.product_uuid=pc.product_uuid
-                    WHERE s.retailer=1
+                    INNER JOIN product p ON i.item_uuid=p.item_uuid
+                    {qry_join_categories}
+                    WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
+                    AND p.item_uuid IS NOT NULL
                     {qry_categories}
 
             UNION ALL
             
-            SELECT  NULL as item_uuid, p.product_uuid, p.name, p.description
+            {qry_select_product}
                 FROM product p
-                    INNER JOIN source s on s.key=p.source
-                    INNER JOIN product_category pc on p.product_uuid=pc.product_uuid
-                    WHERE s.retailer=1
-                    AND p.item_uuid is NULL
+                    {qry_join_categories}
+                    WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
+                    AND p.item_uuid IS NULL
                     {qry_categories}
-                    
+                {qry_group}
             OFFSET {from_}
-            limit {size_}
-            """.format(size_=size_, from_=from_, qry_categories=qry_categories)
+            LIMIT {size_}
+            """.format(qry_select_item=qry_select_item, qry_select_product=qry_select_product, size_=size_, from_=from_,
+                       qry_categories=qry_categories, qry_group=qry_group, qry_join_categories=qry_join_categories)
         logger.debug(qry_item_uuids)
         df = pd.read_sql(qry_item_uuids, g._db.conn)
-        df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
+        if is_count is False: # TODO Checar si debe hacerse esta validacion
+            df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
         return df
 
     

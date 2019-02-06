@@ -1,6 +1,7 @@
 import datetime
 from flask import g
-from app import errors, applogger
+from app import errors
+from ByHelpers import applogger
 from config import *
 import requests
 from pprint import pprint, pformat as pf
@@ -35,7 +36,7 @@ class Category(object):
         # Formatting needed params
         self.key = key_format(self.name)
     
-    def save(self):
+    def save(self, commit=True):
         """ Class method to save Category in DB
         """
         logger.info("Saving category...")
@@ -56,7 +57,7 @@ class Category(object):
             # Save record
             self.message = "Category {} correctly!".format(\
                 'updated' if self.id_category else 'stored')
-            m_cat.save()
+            m_cat.save(commit=commit)
             self.id_category = m_cat.last_id
             logger.info(self.message \
                     + '({})'.format(self.id_category))
@@ -84,7 +85,7 @@ class Category(object):
                             for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM category WHERE {})"""\
+                            SELECT 1 FROM category WHERE {} LIMIT 1)"""\
                             .format(_where))\
                         .fetch()[0]['exists']
         except Exception as e:
