@@ -114,13 +114,14 @@ def handle_api_error(error):
     return response
 
 # Importing blueprint modules
-from app.controllers import item, category, source, product
+from app.controllers import item, category, source, product, brand, provider
 
 app.register_blueprint(item.mod, url_prefix='/item')
 app.register_blueprint(product.mod, url_prefix='/product')
 app.register_blueprint(category.mod, url_prefix='/category')
 app.register_blueprint(source.mod, url_prefix='/source')
-
+app.register_blueprint(brand.mod, url_prefix='/brand')
+app.register_blueprint(provider.mod, url_prefix='/provider')
 
 
 if __name__ == '__main__':

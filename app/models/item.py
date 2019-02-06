@@ -953,6 +953,61 @@ class Item(object):
                        qry_categories=qry_categories, qry_group=qry_group, qry_join_categories=qry_join_categories)
         logger.debug(qry_item_uuids)
         df = pd.read_sql(qry_item_uuids, g._db.conn)
-        if is_count is False:
+        if is_count is False: # TODO Checar si debe hacerse esta validacion
             df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
         return df
+
+    
+    @staticmethod
+    def get_by_filters(filters):
+        ''' Get catalogue by filters: item, category, retailer, providers
+        '''
+        c = []
+        r = []
+        i = []
+        p = []
+        b = []
+        ing = []
+        # Build query
+        for obj in filters:
+            [(f, v)] = obj.items()
+            if f == 'category':
+                c.append(v)
+            elif f == 'retailer':
+                r.append("""'""" + v + """'""")
+            elif f == 'item':
+                i.append("""'""" + v + """'""")
+            elif f == 'provider':
+                p.append("""'""" + v + """'""")
+            elif f == 'brand':
+                b.append("""'""" + v + """'""")
+            elif f == 'ingredient':
+                ing.append("""'""" + v + """'""")
+        # Q by filters
+        q = []
+        if len(c) > 0:
+            print(""", """.join(c))
+            q.append(""" item_uuid in (select item_uuid from item_category where id_category in ( """ + """, """.join(
+                c) + """ )) """)
+        if len(r) > 0:
+            q.append(""" item_uuid in (select item_uuid from item_retailer where retailer in ( """ + """, """.join(
+                r) + """ )) """)
+        if len(p) > 0:
+            q.append(""" item_uuid in (select item_uuid from item_provider where provider_uuid in ( """ + """, """.join(
+                p) + """ )) """)
+        if len(b) > 0:
+            q.append(""" item_uuid in (select item_uuid from item_brand where brand_uuid in ( """ + """, """.join(
+                b) + """ )) """)
+        if len(ing) > 0:
+            q.append(
+                """ item_uuid in (select item_uuid from item_ingredient where id_ingredient in ( """ + """, """.join(
+                    ing) + """ )) """)
+        if len(i) > 0:
+            q.append(""" item_uuid in (""" + """, """.join(i) + """ ) """)
+        where = (""" where """ + """ and """.join(q)) if len(q) > 0 else """ limit 100 """
+        # Build query
+        qry = """ select item_uuid, name, gtin from item """ + where
+        items = g._db.query(qry).fetch()
+        if not items:
+            return []
+        return items
