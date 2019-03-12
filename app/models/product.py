@@ -532,6 +532,65 @@ class Product(object):
             logger.debug('Product UUID: ' + str(i['product_uuid']))
         return {'msg': 'Postgres Items One Working!'}
     
+
+    @staticmethod
+    def query_count(_by, **params):
+        """ Static method to query count by source
+
+            Params:
+            -----
+            _by : str
+                Key from which query is performed
+            params : dict
+                With opt keys to returnun out
+            
+            Returns:
+            -----
+            out: dict 
+                With counts
+               
+        """
+        # Build query
+        _qry = """SELECT COUNT(*) FROM product WHERE {} = '{}' """\
+            .format(_by, params['key'])
+        _qry_it = """SELECT COUNT(DISTINCT(item_uuid)) FROM product WHERE {} = '{}' """\
+            .format(_by, params['key'])
+        logger.debug(_qry)
+        logger.debug(_qry_it)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()[0]
+            logger.debug(_resp)
+            logger.debug("Found {} products".format(_resp.get('count')))
+            _resp_it = g._db.query(_qry_it).fetch()[0]
+            logger.debug("Found {} items".format(_resp_it.get('count')))
+            logger.debug(_resp_it)
+            out = {
+                'product_uuids' : _resp.get('count'),
+                'item_uuids' : _resp_it.get('count')
+            }
+            if params['not_matched']:
+                _qry_nm = """SELECT COUNT(*) FROM product WHERE {} = '{}' AND item_uuid IS NULL"""\
+                    .format(_by, params['key'])
+                logger.debug(_qry_nm)
+                _resp_nm = g._db.query(_qry_nm).fetch()[0]
+                logger.debug("Found {} not matched products".format(_resp_nm.get('count')))
+                nm = {
+                    'not_matched': _resp_nm.get('count')
+                }
+                out.update(nm)
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB!")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
+        logger.debug(out)
+        return out
+
+
+
     @staticmethod
     def query(_by, **kwargs):
         """ Static method to query by defined column values

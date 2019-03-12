@@ -22,3 +22,4 @@ matching_results.md
 spark-warehouse/
 data/vademecum/
 Dockerfile.local
+.envvars_serv

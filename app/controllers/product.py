@@ -154,6 +154,30 @@ def get_bysource():
         })
 
 
+@mod.route("/count/by/source", methods=['GET'])
+def get_countbysource():
+    """ Endpoint to fetch `Product`s by source's.
+    """
+    logger.info("Query count Product by source...")
+    params = request.args.to_dict()
+    logger.debug(params)
+    # Validate required params
+    _needed_params = {'key'}
+    if not _needed_params.issubset(params):
+        raise errors.ApiError(70001, "Missing required key params")
+    # Complement optional params, and set default if needed
+    _opt_params = {'not_matched': False}
+    for _o, _dft  in _opt_params.items():
+        if _o not in params:
+            params[_o] = _dft
+    resp = {
+        'status': 'OK'
+    }
+    resp.update(Product.query_count('source', **params))
+    logger.info(resp)
+    return jsonify(resp)
+
+
 @mod.route("/by/attr", methods=['GET'])
 def get_byattr():
     """ Endpoint to fetch `Product`s by attr's.
