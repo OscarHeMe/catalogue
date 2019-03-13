@@ -18,3 +18,10 @@ elif [[ $MODE == "CONSUMER" ]]
     echo "Starting $APP_NAME in CONSUMER mode"
     ./env/bin/flask consumer
 fi
+
+if [[ $MODE == "SERVICE_LOCAL" ]]
+    then
+    # Run gunicorm
+    echo "Starting $APP_NAME in SERVICE mode"
+    ./env/bin/gunicorn -b localhost:9000 wsgi:app --timeout=3600
+fi

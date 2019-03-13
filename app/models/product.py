@@ -551,32 +551,22 @@ class Product(object):
                
         """
         # Build query
-        _qry = """SELECT COUNT(*) FROM product WHERE {} = '{}' """\
-            .format(_by, params['key'])
-        _qry_it = """SELECT COUNT(DISTINCT(item_uuid)) FROM product WHERE {} = '{}' """\
+        _qry = """SELECT products, items, (products-all_items) AS not_matched FROM (SELECT COUNT(*)  AS products, COUNT(DISTINCT(item_uuid))  AS items, COUNT(item_uuid) as all_items FROM product WHERE {} = '{}') AS stt """\
             .format(_by, params['key'])
         logger.debug(_qry)
-        logger.debug(_qry_it)
         # Query DB
         try:
             _resp = g._db.query(_qry).fetch()[0]
             logger.debug(_resp)
-            logger.debug("Found {} products".format(_resp.get('count')))
-            _resp_it = g._db.query(_qry_it).fetch()[0]
-            logger.debug("Found {} items".format(_resp_it.get('count')))
-            logger.debug(_resp_it)
+            logger.debug("Found {} products".format(_resp.get('products')))
+            logger.debug("Found {} items".format(_resp.get('items')))
             out = {
-                'product_uuids' : _resp.get('count'),
-                'item_uuids' : _resp_it.get('count')
+                'product_uuids' : _resp.get('products'),
+                'item_uuids' : _resp.get('items')
             }
             if params['not_matched']:
-                _qry_nm = """SELECT COUNT(*) FROM product WHERE {} = '{}' AND item_uuid IS NULL"""\
-                    .format(_by, params['key'])
-                logger.debug(_qry_nm)
-                _resp_nm = g._db.query(_qry_nm).fetch()[0]
-                logger.debug("Found {} not matched products".format(_resp_nm.get('count')))
                 nm = {
-                    'not_matched': _resp_nm.get('count')
+                    'not_matched': _resp.get('not_matched')
                 }
                 out.update(nm)
         except Exception as e:
