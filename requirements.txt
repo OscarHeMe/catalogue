@@ -21,4 +21,4 @@ SQLAlchemy==1.2.8
 urllib3==1.21.1
 Werkzeug==0.14.1
 tqdm==4.25.0
-ByHelpers==0.1.1
+ByHelpers==0.1.2
