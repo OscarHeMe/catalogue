@@ -1,5 +1,5 @@
 
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 MAINTAINER ByPrice
 
@@ -27,7 +27,7 @@ RUN apt-get install -y \
     && apt-get clean
 
 # Python 3.4 and pip3 as default
-RUN easy_install3 pip && update-alternatives --install /usr/bin/python python /usr/bin/python3.4 1
+RUN easy_install3 pip && update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
 
 # Install server stuff
 RUN apt-get install -y  nginx \

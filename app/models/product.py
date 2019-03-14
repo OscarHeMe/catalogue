@@ -551,8 +551,8 @@ class Product(object):
                
         """
         # Build query
-        _qry = """SELECT products, items, (products-all_items) AS not_matched FROM (SELECT COUNT(*)  AS products, COUNT(DISTINCT(item_uuid))  AS items, COUNT(item_uuid) as all_items FROM product WHERE {} = '{}') AS stt """\
-            .format(_by, params['key'])
+        _qry = """SELECT products, unique_items, items FROM (SELECT COUNT(*)  AS products, COUNT(DISTINCT(item_uuid))  AS unique_items, COUNT(item_uuid) as items FROM product WHERE {} = '{}') AS stt """\
+            .format(_by, params['keys'])
         logger.debug(_qry)
         # Query DB
         try:
@@ -562,13 +562,9 @@ class Product(object):
             logger.debug("Found {} items".format(_resp.get('items')))
             out = {
                 'product_uuids' : _resp.get('products'),
-                'item_uuids' : _resp.get('items')
+                'item_uuids' : _resp.get('items'),
+                'unique_items': _resp.get('unique_items')
             }
-            if params['not_matched']:
-                nm = {
-                    'not_matched': _resp.get('not_matched')
-                }
-                out.update(nm)
         except Exception as e:
             logger.error(e)
             logger.warning("Issues fetching elements in DB!")
@@ -615,6 +611,95 @@ class Product(object):
                 _keys = 'WHERE {} IS NULL'.format(_by)
             else:
                 _keys = ''
+        # Format paginators
+        _p = int(kwargs['p'])
+        if _p < 1 :
+            _p = 1
+        _ipp = int(kwargs['ipp'])
+        if _ipp > 10000:
+            _ipp = 10000
+        # Order by statement
+        if 'orderby' in kwargs:
+            _orderby = kwargs['orderby'] if kwargs['orderby'] else 'product_uuid'
+        else:
+            _orderby = 'product_uuid'
+        if _orderby not in Product.__base_q:
+            _orderby = 'product_uuid'
+        # Build query
+        _qry = """SELECT {} FROM product {} ORDER BY {} OFFSET {} LIMIT {} """\
+            .format(_cols, _keys, _orderby, (_p - 1)*_ipp, _ipp)
+        logger.debug(_qry)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()
+            logger.debug("Found {} products".format(len(_resp)))
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB!")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
+        # Verify for additional cols
+        extra_cols = [x for x in (set(kwargs['cols'].split(',')) \
+                        -  set(_cols)) if x in Product.__extras__]
+        if extra_cols and _resp:
+            p_uuids = [_u['product_uuid'] for _u in _resp]
+            _extras = Product.fetch_extras(p_uuids, extra_cols)
+        # Aggregate extra columns
+        for _i, _r in enumerate(_resp):
+            _tmp_extras = {}
+            for _ex in extra_cols:
+                _tmp_extras.update({
+                    _ex : _extras[_r['product_uuid']][_ex]
+                })
+            _resp[_i].update(_tmp_extras)
+        return _resp
+
+
+    @staticmethod
+    def query_match(_by, **kwargs):
+        """ Static method to query by defined column values
+
+            Params:
+            -----
+            _by : str
+                Key from which query is performed
+            kwargs : dict
+                Extra arguments, such as (p, ipp, cols, etc..)
+            
+            Returns:
+            -----
+            _resp : list
+                List of product objects
+        """
+        logger.debug('Querying by: {}'.format(_by))
+        logger.debug('fetching: {}'.format(kwargs))
+        # Format columns
+        if kwargs['cols']:
+            _cols = ','.join([x for x in \
+                            (kwargs['cols'].split(',') \
+                            + Product.__base_q) \
+                        if x in Product.__attrs__])
+        else:
+            _cols = ','.join([x for x in Product.__base_q ])
+        # Format querying keys
+        if kwargs['keys']:
+            _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
+        else:
+            if _by != 'product_uuid':
+                _keys = 'WHERE {} IS NULL'.format(_by)
+            else:
+                _keys = ''
+        # Add restriction
+        all_ = False
+        if kwargs['all']:
+            if kwargs['all'] == '1':
+                all_ = True
+        if not all_:
+            if len(_keys) > 0:
+                _keys = _keys + ' AND '
+            _keys = _keys + 'item_uuid IS NOT NULL'
         # Format paginators
         _p = int(kwargs['p'])
         if _p < 1 :

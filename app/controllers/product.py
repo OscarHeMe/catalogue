@@ -162,11 +162,11 @@ def get_countbysource():
     params = request.args.to_dict()
     logger.debug(params)
     # Validate required params
-    _needed_params = {'key'}
+    _needed_params = {'keys'}
     if not _needed_params.issubset(params):
         raise errors.ApiError(70001, "Missing required key params")
     # Complement optional params, and set default if needed
-    _opt_params = {'not_matched': False}
+    _opt_params = {'all': False}
     for _o, _dft  in _opt_params.items():
         if _o not in params:
             params[_o] = _dft
@@ -176,6 +176,30 @@ def get_countbysource():
     resp.update(Product.query_count('source', **params))
     logger.info(resp)
     return jsonify(resp)
+
+
+@mod.route("/matching/by/source", methods=['GET'])
+def get_matchbysource():
+    """ Endpoint to fetch `Product`s by source's.
+    """
+    logger.info("Query count Product by source...")
+    params = request.args.to_dict()
+    logger.debug(params)
+    # Validate required params
+    _needed_params = {'keys'}
+    if not _needed_params.issubset(params):
+        raise errors.ApiError(70001, "Missing required key params")
+    # Complement optional params, and set default if needed
+    _opt_params = {'cols': '', 'p':1, 'ipp': 50, 'all': '0'}
+    for _o, _dft  in _opt_params.items():
+        if _o not in params:
+            params[_o] = _dft
+    _prods = Product.query_match('source', **params)
+    return jsonify({
+        'status': 'OK',
+        'products': _prods
+        })
+    
 
 
 @mod.route("/by/attr", methods=['GET'])
