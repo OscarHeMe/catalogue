@@ -1081,14 +1081,7 @@ class Item(object):
             prods_rows = g._db.query("""
                 select product_id, source from product p
                 where item_uuid = %s
-                {}
-            """.format(
-                """ and ( p.source in ({}) )""".format(
-                    """, """.join(
-                        [ """ '{}' """.format(s) for s in sources ]
-                    )
-                ) if sources else """ """
-            ), (item['item_uuid'],)).fetch()
+            """, (item['item_uuid'],)).fetch()
             
             # Rows for sources
             sources_ids = { p['source'] : p['product_id'] for p in prods_rows }
