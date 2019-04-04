@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template, url_for
 from app.models.item import Item
+from app.models.product import Product
 from app import errors, logger
 from flask import Response, stream_with_context
 import json
@@ -427,3 +428,88 @@ def get_by_filters():
     '''
     items = Item.get_by_filters(filters)
     return jsonify(items)
+
+
+@mod.route('/list', methods=['GET'])
+@cross_origin(origin="*", supports_credentials=True)
+def get_list_ids():
+    ''' Get list of all items with their given 
+        id by source so it can be modified
+            @Params:
+                - q
+                - p
+                - ipp
+                - sources
+                - gtins
+                - display
+    '''    
+    # Params
+    q = request.args.get('q','')
+    p = int(request.args.get('p',1))
+    ipp = int(request.args.get('ipp',100))
+    _sources = request.args.get('source', '')
+    _gtins = request.args.get('gtin', '')
+    _display = request.args.get('display', '')
+
+    # Split the lists
+    sources = None if not _sources else _sources.split(",")
+    gtins = None if not _gtins else _gtins.split(",")
+    display = None if not _display else _display.split(",")
+
+    try:
+        # Get classifications of the clients
+        res = Item.get_list_ids(
+            p=p,
+            ipp=ipp,
+            q=q,
+            sources=sources,
+            gtins=gtins,
+            display=display
+        )
+    except Exception as e:
+        logger.error(e)
+        raise errors.ApiError("error","Something wrong happened getting the list",401)
+
+    # Template vars
+    url = {
+        "p" : p,
+        "ipp" : ipp,
+        "q" : q,
+        "sources" : _sources,
+        "display" : _display,
+        "gtins" : _gtins,
+        "next" : (res and len(res['items']) == ipp)
+    }
+
+    return render_template(
+        'item/list.html', 
+        items=res['items'], 
+        sources=res['sources'],
+        url=url
+    )
+
+
+@mod.route('/save_product_id', methods=['POST'])
+@cross_origin(origin="*")
+def save_product_id():
+    """
+        Get items given some filters
+    """
+    data = request.get_json()
+    print(data)
+    if not ('auth' in data and data['auth'] == "ByPrice123!"):
+        raise errors.ApiError("unauthorized","No client ID found",401)
+    if 'item_uuid' not in data:
+        raise errors.ApiError("error","Invalid parameters",401)
+    if 'source' not in data:
+        raise errors.ApiError("error","Invalid parameters",401)
+    if 'product_id' not in data:
+        raise errors.ApiError("error","Invalid parameters",401)
+    
+    Product.upsert_id(
+        item_uuid=data['item_uuid'],
+        source=data['source'],
+        new_product_id=data['product_id']
+    )
+
+    return jsonify({"result" : "OK"})

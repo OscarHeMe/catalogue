@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+<script>
+    var url_change_id = "{{ url_for('item.save_product_id') }}";
+</script>
+
+<h1>Productos</h1>
+
+<div>
+    Filter by source: 
+</div>
+
+<div>
+    Columns: 
+</div>
+
+<div>
+    Auth Code:
+    <input type="text" id="auth-code" /> 
+</div>
+
+<div style="padding: 10px;">
+    {% if url.p > 1 %}
+    <a href="{{ url_for('item.get_list_ids') }}?p={{url.p-1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">< Anterior</a>
+    {% endif %}
+    &nbsp;
+    {% if url.next %}
+    <a href="{{ url_for('item.get_list_ids') }}?p={{url.p+1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">Siguiente ></a>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card-box">
+            <table class="table">
+                <thead>
+                    </tr>
+                        <th>Nombre</th>
+                        <th>GTIN</th>
+                        <th>UUID</th>
+                        {% for th in sources %}
+                        <th class="text-right">{{ th }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.gtin }}</td>
+                        <td>{{ item.item_uuid }}</td>
+                        {% for id in item.ids %}
+                        <td class="text-right list-options">
+                            <input class="product-input" type="text" source="{{sources[loop.index0]}}" item_uuid="{{item.item_uuid}}" value="{{id}}" />
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{{ 3 + sources|length }}">
+                            <div style="margin-top:20px; margin-bottom: 10px; " class="alert alert-info" role="alert">
+                            No items found
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Event Modals -->
+<div id="modal-doctor-container"></div>
+
+{% endblock %}

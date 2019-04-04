@@ -1011,3 +1011,117 @@ class Item(object):
         if not items:
             return []
         return items
+
+
+    @staticmethod
+    def get_list_ids(p=1, ipp=100, q=None, sources=None, gtins=None, display=None):
+        """ Get list of products with respective 
+            product_ids
+        """
+        
+        where = []
+        if gtins and len(gtins) > 0:
+            where.append("""
+                (i.gtin in ({}))
+            """.format(
+                """, """.join(
+                    [ """ '{}' """.format(g.zfill(14)) for g in gtins ]
+                )
+            ))
+
+        if sources and len(sources) > 0:
+            where.append(""" 
+                (i.item_uuid in (
+                    select item_uuid from product
+                    where source in ({}) 
+                ))
+            """.format(""", """.join(
+                    [ """ '{}' """.format(s) for s in sources ]
+                )
+            ))
+
+        if q:
+            where.append("""
+                ( lower(i.name) like '%%{}%%' or i.gtin like '%%{}%%' )
+            """.format(
+                q.replace(" ","%%"),
+                q
+            ))
+        
+        # Get list of items with query and all
+        print("""
+            select item_uuid, gtin, name 
+            from item i
+            {}
+            order by name asc
+            limit %s 
+            offset %s
+        """.format(
+            """ """ if not where else """where {}""".format(
+                """ and """.join(where)
+            )
+        ) % (ipp ,(p-1)*ipp))
+
+        items_rows = g._db.query("""
+            select item_uuid, gtin, name 
+            from item i
+            {}
+            order by name asc
+            limit %s 
+            offset %s
+        """.format(
+            """ """ if not where else """where {}""".format(
+                """ and """.join(where)
+            )
+        ), (ipp ,(p-1)*ipp)).fetch()
+
+        # Get all sources of the items
+        row_srcs = g._db.query("""
+            select distinct source from product p
+            inner join item i on i.item_uuid = p.item_uuid
+            {} 
+        """.format(
+            """ """ if not where else """where {}""".format(
+                """ and """.join(where)
+            )
+        )).fetch()
+        srcs = [ r['source'] for r in row_srcs if (not display or r['source'] in display) ]
+
+        if not items_rows:
+            return {"items":[],"sources":srcs}
+
+        # Loop items
+        items_results = []
+        for item in items_rows:
+            # get products of item
+            prods_rows = g._db.query("""
+                select product_id, source from product p
+                where item_uuid = %s
+                {}
+            """.format(
+                """ and ( p.source in ({}) )""".format(
+                    """, """.join(
+                        [ """ '{}' """.format(s) for s in sources ]
+                    )
+                ) if sources else """ """
+            ), (item['item_uuid'],)).fetch()
+            
+            # Rows for sources
+            sources_ids = { p['source'] : p['product_id'] for p in prods_rows }
+
+            # Append result
+            items_results.append({
+                'item_uuid' : item['item_uuid'],
+                'gtin' : item['gtin'],
+                'name' : item['name'],
+                'ids' : [ '' if s not in sources_ids else\
+                         sources_ids[s] for s in srcs ]
+            })
+
+        resp = {
+            'sources' : srcs,
+            'items' : items_results
+        }
+
+        
+        return resp

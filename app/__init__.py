@@ -92,6 +92,19 @@ def main():
         'version': __version__
     })
 
+
+# Inject modules
+@app.context_processor
+def inject_modules():
+    # Get main module
+    split_path = request.path.split('/')[1:]
+    module = 'main' if split_path == [''] else split_path[0]  
+    return dict(
+        current_module=module,
+        modules=['item']
+    )
+   
+
 #Error Handlers
 @app.errorhandler(404)
 def not_found(error):
