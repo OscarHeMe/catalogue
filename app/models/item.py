@@ -1014,7 +1014,7 @@ class Item(object):
 
 
     @staticmethod
-    def get_list_ids(p=1, ipp=100, q=None, sources=None, gtins=None, display=None):
+    def get_list_ids(p=1, ipp=100, q=None, sources=None, gtins=None, display=None, order=False):
         """ Get list of products with respective 
             product_ids
         """
@@ -1053,18 +1053,20 @@ class Item(object):
             select item_uuid, gtin, name 
             from item i
             {}
-            order by name asc
+            {}
             limit %s 
             offset %s
         """.format(
             """ """ if not where else """where {}""".format(
                 """ and """.join(where)
-            )
+            ),
+            """ """ if not order else """ order by name asc """
         ), (ipp ,(p-1)*ipp)).fetch()
 
         # Get all sources of the items
         row_srcs = g._db.query("""
             select key from source 
+            order by key asc
         """).fetch()
         srcs_base = list([ row['key'] for row in row_srcs ])
         srcs = [ r['key'] for r in row_srcs if (not display or r['key'] in display) ]

@@ -450,6 +450,7 @@ def get_list_ids():
     _sources = request.args.get('source', '')
     _gtins = request.args.get('gtin', '')
     _display = request.args.get('display', '')
+    order = request.args.get('order', '0')
 
     # Split the lists
     sources = None if not _sources else _sources.split(",")
@@ -464,7 +465,8 @@ def get_list_ids():
             q=q,
             sources=sources,
             gtins=gtins,
-            display=display
+            display=display,
+            order=int(order)
         )
     except Exception as e:
         logger.error(e)
@@ -480,7 +482,8 @@ def get_list_ids():
         "display" : _display,
         "display_list" : '' if not display else display,
         "gtins" : _gtins,
-        "next" : (res and len(res['items']) == ipp)
+        "next" : (res and len(res['items']) == ipp),
+        "order" : order
     }
 
 
