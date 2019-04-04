@@ -40,5 +40,10 @@ document.addEventListener("DOMContentLoaded", function(){
         });
     }
 
+    document.getElementById("search").addEventListener('change',function(){
+        new_url = url_change_id_active+"&q="+this.value;
+        window.location.href=new_url;
+    });
+
 
 });

@@ -55,3 +55,24 @@ table input{
     font-weight: bold;
     color: #fff;
 }
+
+a{
+    text-decoration: None;
+    font-size: 10px;
+}
+
+a.tag{
+    padding: 3px;
+    border: 1px solid #666;  
+    display: inline-block;
+    color: #333;
+}
+
+a.tag.active{
+    color: #fff;
+    background-color: green;
+}
+
+div.field{
+    padding: 5px;
+}

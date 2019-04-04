@@ -1085,6 +1085,7 @@ class Item(object):
                 """ and """.join(where)
             )
         )).fetch()
+        srcs_base = list([ row['source'] for row in row_srcs ])
         srcs = [ r['source'] for r in row_srcs if (not display or r['source'] in display) ]
 
         if not items_rows:
@@ -1120,8 +1121,11 @@ class Item(object):
 
         resp = {
             'sources' : srcs,
-            'items' : items_results
+            'items' : items_results,
+            'sources_base' : srcs_base 
         }
+
+        print(resp)
 
         
         return resp

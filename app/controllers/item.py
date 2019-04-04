@@ -476,15 +476,21 @@ def get_list_ids():
         "ipp" : ipp,
         "q" : q,
         "sources" : _sources,
+        "sources_active" : res['sources_base'] if not sources else sources,
         "display" : _display,
+        "display_list" : '' if not display else display,
         "gtins" : _gtins,
         "next" : (res and len(res['items']) == ipp)
     }
+
+    print(url)
 
     return render_template(
         'item/list.html', 
         items=res['items'], 
         sources=res['sources'],
+        sources_base=res['sources_base'],
+        sources_active=res['sources_base'] if not sources else sources,
         url=url
     )
 
