@@ -26,9 +26,16 @@ document.addEventListener("DOMContentLoaded", function(){
                 },
                 body : JSON.stringify(payload)
             }).then(function(response){
+                if(response.status != 200){
+                    console.log(response)
+                    feedback(response.statusText,response.status,"error");
+                    return false;
+                }
                 return response.json(); 
             }).then(function(myJson){
                 console.log(myJson);
+            }).catch(function(err){
+                console.log(err);
             })
         });
     }
