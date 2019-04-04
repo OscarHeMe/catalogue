@@ -59,11 +59,11 @@
 
 <div style="padding: 10px;">
     {% if url.p > 1 %}
-    <a href="{{ url_for('item.get_list_ids', _external=True) }}?p={{url.p-1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">< Anterior</a>
+    <a href="{{ url_for('item.get_list_ids') }}?p={{url.p-1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">< Anterior</a>
     {% endif %}
     &nbsp;
     {% if url.next %}
-    <a href="{{ url_for('item.get_list_ids', _external=True) }}?p={{url.p+1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">Siguiente ></a>
+    <a href="{{ url_for('item.get_list_ids') }}?p={{url.p+1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">Siguiente ></a>
     {% endif %}
 </div>
 

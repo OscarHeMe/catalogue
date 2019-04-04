@@ -9,17 +9,18 @@ import datetime
 from ByHelpers import applogger
 import app.utils.errors as errors
 import app.utils.db as db
+from app.utils.proxy import ReverseProxied
 if APP_MODE == 'CONSUMER':
     from app import consumer
 
 app = Flask(__name__)
+app.wsgi_app = ReverseProxied(app.wsgi_app)
 app.config.from_object('config')
 CORS(app)
 
 # Logger
 applogger.create_logger()
 logger = applogger.get_logger()
-
 
 @app.cli.command('new_retailer')
 def new_retailer_cmd():

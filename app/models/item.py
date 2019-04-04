@@ -1064,16 +1064,10 @@ class Item(object):
 
         # Get all sources of the items
         row_srcs = g._db.query("""
-            select distinct source from product p
-            inner join item i on i.item_uuid = p.item_uuid
-            {} 
-        """.format(
-            """ """ if not where else """where {}""".format(
-                """ and """.join(where)
-            )
-        )).fetch()
-        srcs_base = list([ row['source'] for row in row_srcs ])
-        srcs = [ r['source'] for r in row_srcs if (not display or r['source'] in display) ]
+            select key from source 
+        """).fetch()
+        srcs_base = list([ row['key'] for row in row_srcs ])
+        srcs = [ r['key'] for r in row_srcs if (not display or r['key'] in display) ]
 
         if not items_rows:
             return {"items":[],"sources":srcs}
@@ -1113,3 +1107,4 @@ class Item(object):
         }
 
         return resp
+

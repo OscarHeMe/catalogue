@@ -483,6 +483,7 @@ def get_list_ids():
         "next" : (res and len(res['items']) == ipp)
     }
 
+
     return render_template(
         'item/list.html', 
         items=res['items'], 

@@ -5,7 +5,7 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <title>Catálogo ByPrice</title>
-      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css', _external=True) }}">
 
     </head>
     <body>
@@ -23,8 +23,8 @@
 
 
         <!-- App -->
-        <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/jquery.min.js', _external=True) }}"></script>
+        <script src="{{ url_for('static', filename='js/app.js', _external=True) }}"></script>
 
         <!-- General scripts -->
         <script language="javascript">
@@ -48,7 +48,7 @@
         
         <!-- Modules -->
         {% for module in modules %}
-        <script src="{{ url_for('static', filename='js/'+module+'.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/'+module+'.js', _external=True) }}"></script>
         {% endfor %}
 
     </body>
