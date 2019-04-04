@@ -1236,3 +1236,42 @@ class Product(object):
             raise errors.ApiError(70007, "Could not execute query: ")
 
         return prods
+
+
+    @staticmethod
+    def upsert_id(item_uuid=None,source=None,new_product_id=None):
+        """ Insert or update product id to match
+        """
+        prod = g._db.model('product','product_uuid')
+        rows = g._db.query("""
+            select product_uuid, product_id from product 
+            where item_uuid = %s
+            and source = %s
+        """,(item_uuid, source)).fetch()
+        
+        if rows:
+            logger.info("Editing {} from {} to {}".format(
+                rows[0]['product_uuid'], 
+                rows[0]['product_id'],
+                new_product_id
+            ))
+            p_uuid = rows[0]['product_uuid']
+            prod.product_uuid = p_uuid
+        else:
+            logger.info("New product for {} id {}".format(
+                source, new_product_id
+            ))
+            prod.item_uuid = item_uuid
+            prod.source = source
+        
+        try:
+            prod.product_id = new_product_id
+            prod.save()
+            prod.clear()
+        except:
+            prod.rollback()
+            raise Exception("Could not save product")
+        
+        return True
+
+        

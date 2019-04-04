@@ -9,17 +9,18 @@ import datetime
 from ByHelpers import applogger
 import app.utils.errors as errors
 import app.utils.db as db
+from app.utils.proxy import ReverseProxied
 if APP_MODE == 'CONSUMER':
     from app import consumer
 
 app = Flask(__name__)
+app.wsgi_app = ReverseProxied(app.wsgi_app)
 app.config.from_object('config')
 CORS(app)
 
 # Logger
 applogger.create_logger()
 logger = applogger.get_logger()
-
 
 @app.cli.command('new_retailer')
 def new_retailer_cmd():
@@ -91,6 +92,19 @@ def main():
         'date' : datetime.datetime.utcnow(),
         'version': __version__
     })
+
+
+# Inject modules
+@app.context_processor
+def inject_modules():
+    # Get main module
+    split_path = request.path.split('/')[1:]
+    module = 'main' if split_path == [''] else split_path[0]  
+    return dict(
+        current_module=module,
+        modules=['item']
+    )
+   
 
 #Error Handlers
 @app.errorhandler(404)

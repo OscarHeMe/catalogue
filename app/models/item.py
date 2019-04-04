@@ -1011,3 +1011,95 @@ class Item(object):
         if not items:
             return []
         return items
+
+
+    @staticmethod
+    def get_list_ids(p=1, ipp=100, q=None, sources=None, gtins=None, display=None, order=False):
+        """ Get list of products with respective 
+            product_ids
+        """
+        
+        where = []
+        if gtins and len(gtins) > 0:
+            where.append("""
+                (i.gtin in ({}))
+            """.format(
+                """, """.join(
+                    [ """ '{}' """.format(g.zfill(14)) for g in gtins ]
+                )
+            ))
+
+        if sources and len(sources) > 0:
+            where.append(""" 
+                (i.item_uuid in (
+                    select item_uuid from product
+                    where source in ({}) 
+                ))
+            """.format(""", """.join(
+                    [ """ '{}' """.format(s) for s in sources ]
+                )
+            ))
+
+        if q:
+            where.append("""
+                ( lower(i.name) like '%%{}%%' or i.gtin like '%%{}%%' )
+            """.format(
+                q.replace(" ","%%"),
+                q
+            ))
+        
+        # Get list of items with query and all
+        items_rows = g._db.query("""
+            select item_uuid, gtin, name 
+            from item i
+            {}
+            {}
+            limit %s 
+            offset %s
+        """.format(
+            """ """ if not where else """where {}""".format(
+                """ and """.join(where)
+            ),
+            """ """ if not order else """ order by name asc """
+        ), (ipp ,(p-1)*ipp)).fetch()
+
+        # Get all sources of the items
+        row_srcs = g._db.query("""
+            select key from source 
+            order by key asc
+        """).fetch()
+        srcs_base = list([ row['key'] for row in row_srcs ])
+        srcs = [ r['key'] for r in row_srcs if (not display or r['key'] in display) ]
+
+        if not items_rows:
+            return {"items":[],"sources":srcs}
+
+        # Loop items
+        items_results = []
+        for item in items_rows:
+            # get products of item
+            prods_rows = g._db.query("""
+                select product_id, source from product p
+                where item_uuid = %s
+            """, (item['item_uuid'],)).fetch()
+            
+            # Rows for sources
+            sources_ids = { p['source'] : p['product_id'] for p in prods_rows }
+
+            # Append result
+            items_results.append({
+                'item_uuid' : item['item_uuid'],
+                'gtin' : item['gtin'],
+                'name' : item['name'],
+                'ids' : [ '' if s not in sources_ids else\
+                         sources_ids[s] for s in srcs ]
+            })
+
+        resp = {
+            'sources' : srcs,
+            'items' : items_results,
+            'sources_base' : srcs_base 
+        }
+
+        return resp
+
