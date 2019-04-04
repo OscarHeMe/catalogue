@@ -1111,5 +1111,5 @@ class Item(object):
             'items' : items_results,
             'sources_base' : srcs_base 
         }
-                
+
         return resp

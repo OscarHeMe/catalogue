@@ -3,8 +3,8 @@
 {% block body %}
 
 <script>
-    var url_change_id = "{{ url_for('item.save_product_id') }}";
-    var url_change_id_active = "{{ url_for('item.get_list_ids') }}?p=1&source={{url.sources}}&display={{url.display}}";
+    var url_change_id = "{{ url_for('item.save_product_id', _external=True) }}";
+    var url_change_id_active = "{{ url_for('item.get_list_ids', _external=True) }}?p=1&source={{url.sources}}&display={{url.display}}";
 </script>
 
 
@@ -14,18 +14,18 @@
     <div>Filter by source: </div>
     <a 
         class="tag {{ 'active' if not url.sources else '' }}" 
-        href="{{ url_for('item.get_list_ids') }}?p=1&source=&display={{url.display}}&q={{url.q}}">
+        href="{{ url_for('item.get_list_ids', _external=True) }}?p=1&source=&display={{url.display}}&q={{url.q}}">
         All</a>&nbsp;
     {% if url.sources %}
     <a 
         class="tag active" 
-        href="{{ url_for('item.get_list_ids') }}?p=1&source={{url.sources}}&display={{url.display}}&q={{url.q}}">
+        href="{{ url_for('item.get_list_ids', _external=True) }}?p=1&source={{url.sources}}&display={{url.display}}&q={{url.q}}">
         {{ url.sources }}</a>&nbsp;
     {% else %}
         {% for s in sources_active %}
     <a 
         class="tag {{ 'active' if s == url.sources else '' }}" 
-        href="{{ url_for('item.get_list_ids') }}?p=1&source={{s}}&display={{url.display}}&q={{url.q}}">
+        href="{{ url_for('item.get_list_ids', _external=True) }}?p=1&source={{s}}&display={{url.display}}&q={{url.q}}">
         {{ s }}</a>&nbsp;
         {% endfor %}    
     {% endif %}
@@ -35,13 +35,13 @@
     <div>Columns: </div>
     <a 
         class="tag {{ 'active' if not url.display else '' }}" 
-        href="{{ url_for('item.get_list_ids') }}?p=1&source={{url.sources}}&display=&q={{url.q}}">
+        href="{{ url_for('item.get_list_ids', _external=True) }}?p=1&source={{url.sources}}&display=&q={{url.q}}">
         All</a>&nbsp;
     {% for s in sources_base %}
         {% if s not in url.display_list %}
     <a 
         class="tag {{ 'active' if s in url.display_list else '' }}" 
-        href="{{ url_for('item.get_list_ids') }}?p=1&source={{url.sources}}&display={{url.display}}{{ ',' if loop.index0 != 0 else '' }}{{s}}&q={{url.q}}">
+        href="{{ url_for('item.get_list_ids', _external=True) }}?p=1&source={{url.sources}}&display={{url.display}}{{ ',' if loop.index0 != 0 else '' }}{{s}}&q={{url.q}}">
         {{ s }}</a>&nbsp;
         {%endif%}
     {% endfor %}   
@@ -59,11 +59,11 @@
 
 <div style="padding: 10px;">
     {% if url.p > 1 %}
-    <a href="{{ url_for('item.get_list_ids') }}?p={{url.p-1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">< Anterior</a>
+    <a href="{{ url_for('item.get_list_ids', _external=True) }}?p={{url.p-1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">< Anterior</a>
     {% endif %}
     &nbsp;
     {% if url.next %}
-    <a href="{{ url_for('item.get_list_ids') }}?p={{url.p+1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">Siguiente ></a>
+    <a href="{{ url_for('item.get_list_ids', _external=True) }}?p={{url.p+1}}&source={{url.sources}}&display={{url.display}}&q={{url.q}}">Siguiente ></a>
     {% endif %}
 </div>
 
