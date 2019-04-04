@@ -1049,19 +1049,6 @@ class Item(object):
             ))
         
         # Get list of items with query and all
-        print("""
-            select item_uuid, gtin, name 
-            from item i
-            {}
-            order by name asc
-            limit %s 
-            offset %s
-        """.format(
-            """ """ if not where else """where {}""".format(
-                """ and """.join(where)
-            )
-        ) % (ipp ,(p-1)*ipp))
-
         items_rows = g._db.query("""
             select item_uuid, gtin, name 
             from item i
@@ -1124,8 +1111,5 @@ class Item(object):
             'items' : items_results,
             'sources_base' : srcs_base 
         }
-
-        print(resp)
-
-        
+                
         return resp
