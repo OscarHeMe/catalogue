@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template, url_for
 from app.models.product import Product
 from app import errors, logger
 from flask_cors import CORS, cross_origin
@@ -360,3 +360,93 @@ def reset_match():
         raise errors.ApiError(70001, "Missing required key params")
     # Call to update Product
     return jsonify(Product.undo_match(params['puuid']))
+
+
+@mod.route('/list', methods=['GET'])
+@cross_origin(origin="*", supports_credentials=True)
+def get_list():
+    ''' Get list of all products with their given 
+        id, source, item_uuid, etc...
+            @Params:
+                - q
+                - p
+                - ipp
+                - sources
+                - gtins
+                - matched
+                - order
+    '''    
+    # Params
+    q = request.args.get('q','')
+    p = int(request.args.get('p',1))
+    ipp = int(request.args.get('ipp',100))
+    _sources = request.args.get('source', '')
+    _gtins = request.args.get('gtin', '')
+    matched = request.args.get('matched', None)
+    order = request.args.get('order', '0')
+
+    # Split the lists
+    sources = None if not _sources else _sources.split(",")
+    gtins = None if not _gtins else _gtins.split(",")
+
+    try:
+        # Get classifications of the clients
+        res = Product.get_list(
+            p=p,
+            ipp=ipp,
+            q=q,
+            sources=sources,
+            gtins=gtins,
+            matched=matched,
+            order=int(order)
+        )
+    except Exception as e:
+        logger.error(e)
+        raise errors.ApiError("error","Something wrong happened getting products list",401)
+
+    # Template vars
+    url = {
+        "p" : p,
+        "ipp" : ipp,
+        "q" : q,
+        "sources" : _sources,
+        "sources_active" : res['sources_base'] if not sources else sources,
+        "matched" : matched,
+        "gtins" : _gtins,
+        "next" : (res and len(res['products']) == ipp),
+        "order" : order
+    }
+
+    return render_template(
+        'product/list.html', 
+        products=res['products'], 
+        sources=res['sources'],
+        sources_base=res['sources_base'],
+        sources_active=res['sources_base'] if not sources else sources,
+        url=url
+    )
+
+
+@mod.route('/update', methods=['POST'])
+@cross_origin(origin="*")
+def update():
+    """
+        Get items given some filters
+    """
+    data = request.get_json()
+    if not ('auth' in data and data['auth'] == "ByPrice123!"):
+        raise errors.ApiError("unauthorized","No client ID found",401)
+    if 'product_uuid' not in data:
+        raise errors.ApiError("error","Invalid parameters",402)
+    if 'key' not in data:
+        raise errors.ApiError("error","Invalid parameters",402)
+    
+    print(data)
+    Product.update(
+        product_uuid=data['product_uuid'],
+        item_uuid=None if 'item_uuid' not in data or not data['item_uuid'] else data['item_uuid'],
+        product_id=None if 'product_id' not in data or not data['product_id'] else data['product_id'],
+        key=data['key']
+    )
+
+    return jsonify({"result" : "OK"})

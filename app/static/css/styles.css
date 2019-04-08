@@ -16,6 +16,7 @@ table, td, th{
 table input{
     border: 0px;
     outline: none;
+    background-color: transparent;
 }
 
 .feedback {
@@ -75,4 +76,13 @@ a.tag.active{
 
 div.field{
     padding: 5px;
+}
+
+input.product-input-piuuid,
+input.product-input-pid{
+    min-width: 190px;
+}
+
+td.editable{
+    background-color: #f0f0f0;
 }

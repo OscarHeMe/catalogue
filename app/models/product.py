@@ -1261,6 +1261,15 @@ class Product(object):
             logger.info("New product for {} id {}".format(
                 source, new_product_id
             ))
+            # Get item info to populate name
+            _item = g._db.query("""
+                select name, gtin from item
+                where item_uuid = %s
+            """,(item_uuid,)).fetch()
+            # Values
+            if _item:
+                prod.name  = _item[0]['name']
+                prod.gtin  = _item[0]['gtin']
             prod.item_uuid = item_uuid
             prod.source = source
         
@@ -1274,4 +1283,99 @@ class Product(object):
         
         return True
 
+
+    @staticmethod
+    def update(product_uuid=None, product_id=None, item_uuid=None, key=None):
+        """ Update either item_uuid or product_id
+        """
+        print("Updating 2")
+        prod = g._db.model('product','product_uuid')
+        if not product_uuid:
+            logger.error("Missing params")
+            print("Not saving")
+            return False
+        try:
+            prod.product_uuid = product_uuid
+            if key == 'product_id':
+                prod.product_id = None if not product_id else product_id
+            if key == 'item_uuid':
+                prod.item_uuid = None if not item_uuid else item_uuid
+            prod.save()
+            print("Saved...")
+            logger.info("Saved product")
+        except Exception as e: 
+            prod.rollback()
+            logger.error(e)
+            raise Exception("Could not save product")
+        return True
+
+
+    @staticmethod
+    def get_list(p=1, ipp=100, q=None, sources=None, gtins=None, matched=None, order=False):
+        """ Get list of products given certain parameters   
+            like gtin, query_string, sources, if matched, etc...
+        """
         
+        where = []
+        if gtins and len(gtins) > 0:
+            where.append("""
+                (p.gtin in ({}))
+            """.format(
+                """, """.join(
+                    [ """ '{}' """.format(g.zfill(14)) for g in gtins ]
+                )
+            ))
+
+        if sources and len(sources) > 0:
+            where.append(""" 
+                (p.source in ({}))
+            """.format(""", """.join(
+                    [ """ '{}' """.format(s) for s in sources ]
+                )
+            ))
+
+        if q:
+            where.append("""
+                ( lower(p.name) like '%%{}%%' or p.gtin like '%%{}%%' )
+            """.format(
+                q.replace(" ","%%"),
+                q
+            ))
+
+        if matched:
+            where.append("""
+                ( item_uuid is {} null )
+            """.format(
+                """ not """ if matched == '1' else """"""
+            ))
+                
+        # Get list of items with query and all
+        prod_rows = g._db.query("""
+            select product_uuid, product_id, gtin, name, description, source, item_uuid
+            from product p {} {}
+            limit %s offset %s
+        """.format(
+            """ """ if not where else """where {}""".format(
+                """ and """.join(where)
+            ),
+            """ """ if not order else """ order by p.name asc """
+        ), (ipp ,(p-1)*ipp)).fetch()
+
+        # Get all sources
+        row_srcs = g._db.query("""
+            select key from source 
+            order by key asc
+        """).fetch()
+        srcs_base = list([ row['key'] for row in row_srcs ])
+        srcs = [ r['key'] for r in row_srcs]
+
+        if not prod_rows:
+            return {"products":[],"sources":srcs}
+
+        resp = {
+            'sources' : srcs,
+            'products' : prod_rows,
+            'sources_base' : srcs_base 
+        }
+
+        return resp

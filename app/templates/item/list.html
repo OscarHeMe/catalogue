@@ -8,7 +8,7 @@
 </script>
 
 
-<h1>Productos</h1>
+<h1>Items</h1>
 
 <div class="field">
     {% if url.order == '1' %}
@@ -103,7 +103,7 @@
                         <td>{{ item.gtin }}</td>
                         <td>{{ item.item_uuid }}</td>
                         {% for id in item.ids %}
-                        <td class="text-right list-options">
+                        <td class="text-right list-options editable">
                             <input class="product-input" type="text" source="{{sources[loop.index0]}}" item_uuid="{{item.item_uuid}}" value="{{id}}" />
                         </td>
                         {% endfor %}
@@ -123,8 +123,5 @@
         </div>
     </div>
 </div>
-
-<!-- Event Modals -->
-<div id="modal-doctor-container"></div>
 
 {% endblock %}

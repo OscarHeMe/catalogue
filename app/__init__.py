@@ -102,7 +102,7 @@ def inject_modules():
     module = 'main' if split_path == [''] else split_path[0]  
     return dict(
         current_module=module,
-        modules=['item']
+        modules=['item','product']
     )
    
 
