@@ -382,7 +382,7 @@ def get_list():
     ipp = int(request.args.get('ipp',100))
     _sources = request.args.get('source', '')
     _gtins = request.args.get('gtin', '')
-    matched = request.args.get('matched', None)
+    matched = request.args.get('matched', 'all')
     order = request.args.get('order', '0')
 
     # Split the lists
@@ -397,7 +397,7 @@ def get_list():
             q=q,
             sources=sources,
             gtins=gtins,
-            matched=matched,
+            matched=None if matched=='all' else matched,
             order=int(order)
         )
     except Exception as e:

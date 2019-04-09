@@ -24,6 +24,13 @@
         Order by name</a>
     {% endif %}    
     <!-- Matched -->
+</div>
+
+<div class="field">
+    <a 
+        class="tag {{'active' if url.matched == 'all' else ''}}" 
+        href="{{ url_for('product.get_list', _external=True) }}?p=1&source={{url.sources}}&matched=all&q={{url.q}}&order={{url.order}}">
+        All</a>&nbsp;
     {% if url.matched == '1' %}
     <a 
         class="tag active" 

@@ -1336,9 +1336,12 @@ class Product(object):
 
         if q:
             where.append("""
-                ( lower(p.name) like '%%{}%%' or p.gtin like '%%{}%%' )
+                ( lower(p.name) like '%%{}%%' 
+                or p.gtin like '%%{}%%' 
+                or p.product_id like '%%{}%%' )
             """.format(
-                q.replace(" ","%%"),
+                q.replace(" ","%%").lower(),
+                q,
                 q
             ))
 
@@ -1370,7 +1373,7 @@ class Product(object):
         srcs = [ r['key'] for r in row_srcs]
 
         if not prod_rows:
-            return {"products":[],"sources":srcs}
+            return {"products":[],"sources":srcs,"sources_base" : srcs_base }
 
         resp = {
             'sources' : srcs,
