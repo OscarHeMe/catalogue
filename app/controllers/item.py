@@ -497,6 +497,32 @@ def get_list_ids():
     )
 
 
+@mod.route('/update', methods=['POST'])
+@cross_origin(origin="*")
+def update():
+    """
+        Get items given some filters
+    """
+    data = request.get_json()
+    if not ('auth' in data and data['auth'] == "ByPrice123!"):
+        raise errors.ApiError("unauthorized","No client ID found",401)
+    if 'item_uuid' not in data:
+        raise errors.ApiError("error","Invalid parameters",401)
+    if 'name' not in data and 'gtin' not in data:
+        raise errors.ApiError("error","Invalid parameters",401)
+    
+    name = None if 'name' not in data else data['name']
+    gtin = None if 'gtin' not in data else data['gtin']
+
+    Item.update(
+        item_uuid=data['item_uuid'],
+        name=name,
+        gtin=gtin
+    )
+    
+    return jsonify({"result" : "OK"})
+
+
 @mod.route('/save_product_id', methods=['POST'])
 @cross_origin(origin="*")
 def save_product_id():

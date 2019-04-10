@@ -12,6 +12,7 @@ import datetime
 import requests
 import ast
 import json
+import uuid
 
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
 logger = applogger.get_logger()
@@ -1335,15 +1336,23 @@ class Product(object):
             ))
 
         if q:
-            where.append("""
-                ( lower(p.name) like '%%{}%%' 
-                or p.gtin like '%%{}%%' 
-                or p.product_id like '%%{}%%' )
-            """.format(
-                q.replace(" ","%%").lower(),
-                q,
-                q
-            ))
+            try:
+                iuuid = uuid.UUID(q)
+                where.append("""
+                    ( p.item_uuid = '{}' )
+                """.format(
+                    q
+                ))
+            except:  
+                where.append("""
+                    (lower(p.name) like '%%{}%%' 
+                    or p.gtin like '%%{}%%' 
+                    or p.product_id like '%%{}%%' )
+                """.format(
+                    q.replace(" ","%%").lower(),
+                    q,
+                    q
+                ))
 
         if matched:
             where.append("""

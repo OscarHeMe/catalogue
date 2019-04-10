@@ -9,6 +9,7 @@ import ast
 import json
 from app.norm.normalize_text import key_format, tuplify
 from uuid import UUID as ConstructUUID
+from app.utils.gtin import *
 
 geo_stores_url = 'http://' + SRV_GEOLOCATION + '/store/retailer?key=%s'
 logger = applogger.get_logger()
@@ -1041,12 +1042,20 @@ class Item(object):
             ))
 
         if q:
-            where.append("""
-                ( lower(i.name) like '%%{}%%' or i.gtin like '%%{}%%' )
-            """.format(
-                q.replace(" ","%%"),
-                q
-            ))
+            try:
+                iuuid = uuid.UUID(q)
+                where.append("""
+                    ( i.item_uuid='{}' )
+                """.format(
+                    q
+                ))
+            except:  
+                where.append("""
+                    ( lower(i.name) like '%%{}%%' or i.gtin like '%%{}%%' )
+                """.format(
+                    q.replace(" ","%%"),
+                    q
+                ))
         
         # Get list of items with query and all
         items_rows = g._db.query("""
@@ -1103,3 +1112,27 @@ class Item(object):
 
         return resp
 
+    @staticmethod
+    def update(item_uuid=None, name=None, gtin=None):
+        """ Update either name or gtin for given item_uuid
+        """
+        item = g._db.model('item','item_uuid')
+        if not item_uuid:
+            logger.error("Missing params")
+            return False
+        try:
+            item.item_uuid = item_uuid
+            if name != None:
+                item.name = name
+            if gtin != None:
+                if is_valid_GTIN(int(gtin)):
+                    item.gitn = str(gtin).zfill(14)
+                else:
+                    raise Exception("Invalid GTIN")
+            item.save()
+            logger.info("Saved item")
+        except Exception as e: 
+            item.rollback()
+            logger.error(e)
+            raise Exception("Could not save item")
+        return True
