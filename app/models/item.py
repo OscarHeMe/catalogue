@@ -1043,7 +1043,7 @@ class Item(object):
 
         if q:
             try:
-                iuuid = uuid.UUID(q)
+                iuuid = ConstructUUID(q)
                 where.append("""
                     ( i.item_uuid='{}' )
                 """.format(
@@ -1081,7 +1081,7 @@ class Item(object):
         srcs = [ r['key'] for r in row_srcs if (not display or r['key'] in display) ]
 
         if not items_rows:
-            return {"items":[],"sources":srcs}
+            return {"items":[],"sources":srcs,"sources_base":srcs_base}
 
         # Loop items
         items_results = []
