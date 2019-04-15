@@ -251,8 +251,8 @@ class Product(object):
     def save_images(self, pcommit=True):
         """ Class method to save product images
         """
-        print('All images bby')
-        print(self.images)
+        logger.debug('All images bby')
+        logger.debug(self.images)
         for _img in self.images:
             
             try:
@@ -1289,11 +1289,11 @@ class Product(object):
     def update(product_uuid=None, product_id=None, item_uuid=None, key=None):
         """ Update either item_uuid or product_id
         """
-        print("Updating 2")
+        logger.debug("Updating 2")
         prod = g._db.model('product','product_uuid')
         if not product_uuid:
             logger.error("Missing params")
-            print("Not saving")
+            logger.debug("Not saving")
             return False
         try:
             prod.product_uuid = product_uuid
@@ -1302,7 +1302,7 @@ class Product(object):
             if key == 'item_uuid':
                 prod.item_uuid = None if not item_uuid else item_uuid
             prod.save()
-            print("Saved...")
+            logger.debug("Saved...")
             logger.info("Saved product")
         except Exception as e: 
             prod.rollback()
