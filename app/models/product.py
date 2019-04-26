@@ -706,8 +706,6 @@ class Product(object):
         if _p < 1 :
             _p = 1
         _ipp = int(kwargs['ipp'])
-        if _ipp > 10000:
-            _ipp = 10000
         # Order by statement
         if 'orderby' in kwargs:
             _orderby = kwargs['orderby'] if kwargs['orderby'] else 'product_uuid'
@@ -746,6 +744,7 @@ class Product(object):
             _resp[_i].update(_tmp_extras)
         return _resp
     
+
     @staticmethod
     def fetch_extras(p_uuids, _cols):
         """ Static method to retrieve foreign references
