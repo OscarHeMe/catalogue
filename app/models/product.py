@@ -693,14 +693,15 @@ class Product(object):
             else:
                 _keys = ''
         # Add restriction
-        all_ = False
         if kwargs['all']:
-            if kwargs['all'] == '1':
-                all_ = True
-        if not all_:
-            if len(_keys) > 0:
-                _keys = _keys + ' AND '
-            _keys = _keys + 'item_uuid IS NOT NULL'
+            if kwargs['all'] == '0':
+                if len(_keys) > 0:
+                    _keys = _keys + ' AND '
+                _keys = _keys + 'item_uuid IS NOT NULL'
+            if kwargs['all'] == 'notmatched':
+                if len(_keys) > 0:
+                    _keys = _keys + ' AND '
+                _keys = _keys + 'item_uuid IS NULL'            
         # Format paginators
         _p = int(kwargs['p'])
         if _p < 1 :
