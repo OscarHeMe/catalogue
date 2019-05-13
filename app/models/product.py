@@ -1199,8 +1199,8 @@ class Product(object):
         """ Query products by intersection of one
             or various cols
         """
-        p = int(kwargs['p'])
-        ipp = int(kwargs['ipp'])
+        p = int(kwargs['p'][0])
+        ipp = int(kwargs['ipp'][0])
         del kwargs['p'], kwargs['ipp']
 
         # Columns
