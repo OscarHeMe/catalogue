@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from flask import Blueprint, jsonify, request, render_template, url_for
+from flask import Blueprint, jsonify, request, render_template, url_for, Response
 from app.models.product import Product
 from app import errors, logger
+import pandas as pd
+import csv
 from flask_cors import CORS, cross_origin
 
 mod = Blueprint('product',__name__,url_prefix="/product")
@@ -190,16 +192,52 @@ def get_matchbysource():
     if not _needed_params.issubset(params):
         raise errors.ApiError(70001, "Missing required key params")
     # Complement optional params, and set default if needed
-    _opt_params = {'cols': '', 'p':1, 'ipp': 50, 'all': '0'}
+    _opt_params = {'cols': '', 'p':1, 'ipp': 50, 'all': '0', 'csv':'1'}
     for _o, _dft  in _opt_params.items():
         if _o not in params:
             params[_o] = _dft
     _prods = Product.query_match('source', **params)
-    return jsonify({
-        'status': 'OK',
-        'products': _prods
-        })
+    if params['csv'] == '1':
+        csv_ = pd.DataFrame(_prods, dtype=str).to_csv(quoting=csv.QUOTE_ALL)
+        return Response(
+        csv_,
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                 "attachment; filename=data.csv"})
+    else:
+        return jsonify({
+            'status': 'OK',
+            'products': _prods
+            })
     
+
+# @mod.route("/getPlotCSV", methods=['GET'])
+# def getPlotCSV():
+#     """ Endpoint to fetch `Product`s by source's.
+#     """
+#     logger.info("Query count Product by source...")
+#     params = request.args.to_dict()
+#     logger.debug(params)
+#     # Validate required params
+#     _needed_params = {'keys'}
+#     if not _needed_params.issubset(params):
+#         raise errors.ApiError(70001, "Missing required key params")
+#     # Complement optional params, and set default if needed
+#     _opt_params = {'cols': '', 'p':1, 'ipp': 50, 'all': '0'}
+#     for _o, _dft  in _opt_params.items():
+#         if _o not in params:
+#             params[_o] = _dft
+#     _prods = Product.query_match('source', **params)
+#     return jsonify({
+#         'status': 'OK',
+#         'products': _prods
+#         })
+#     return Response(
+#         csv,
+#         mimetype="text/csv",
+#         headers={"Content-disposition":
+#                  "attachment; filename=data.csv"})
+
 
 
 @mod.route("/by/attr", methods=['GET'])
