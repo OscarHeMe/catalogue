@@ -1213,7 +1213,12 @@ class Product(object):
         where = []
         where_qry = """ """
         for k, vals in kwargs.items():
-            where.append(" {} IN ({}) ".format(k, vals) )
+            where.append(
+                " {} IN ({}) ".format(
+                    k, 
+                    ",".join([ "'{}'".format(v) for v in vals ])
+                ) 
+            )
 
         if where:
             where_qry = """ where {}""".format(""" and """.join(where))
@@ -1233,10 +1238,11 @@ class Product(object):
         try:
             rows = g._db.query(qry).fetch()
         except Exception as e:
+            logger.error(e)
             logger.error("Could not execute intersect query: {}".format(qry))
             raise errors.ApiError(70007, "Could not execute query: ")
 
-        return prods
+        return rows
 
 
     @staticmethod
