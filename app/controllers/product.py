@@ -374,9 +374,9 @@ def get_intersection():
 
     # Pagination default
     if not 'p' in params:
-        params['p'] = 1
+        params['p'] = [1]
     if not 'ipp' in params:
-        params['ipp'] = 100
+        params['ipp'] = [100]
         
     # Query items
     _prods = Product.intersection(**params)

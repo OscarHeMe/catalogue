@@ -1199,16 +1199,40 @@ class Product(object):
         """ Query products by intersection of one
             or various cols
         """
-        p = int(kwargs['p'][0])
-        ipp = int(kwargs['ipp'][0])
-        del kwargs['p'], kwargs['ipp']
+        print(kwargs)
+        if 'p' in kwargs:
+            p = int(kwargs['p'][0])
+            del kwargs['p']
+        else:
+            p = 1
+        if 'ipp' in kwargs:
+            ipp = int(kwargs['ipp'][0])
+            del kwargs['ipp']
+        else:
+            ipp = 100
 
         # Columns
         if 'cols' not in kwargs or not kwargs['cols']:
-            cols = ["*"]
+            cols = [
+                "i.name as name",
+                "i.gtin as gtin", 
+                "i.item_uuid as item_uuid",
+                "p.*"
+            ]
         else:
-            cols = kwargs['cols']
+            cols = kwargs['cols'][0].split(",")
             del kwargs['cols']
+
+        for i,c in enumerate(cols):
+            if c in ['name','gtin','item_uuid','description']:
+                cols[i] = "i.{} as {}".format(c, c)   
+
+        # Replace keys
+        for k in kwargs:
+            if k in ['name','gtin','item_uuid']:
+                new_key = "i.{}".format(k)
+                kwargs[new_key] = kwargs[k]
+                del kwargs[k]
 
         where = []
         where_qry = """ """
@@ -1225,7 +1249,9 @@ class Product(object):
 
         # Query
         qry = """
-            select {} from product {}
+            select {} from product p
+            inner join item i on i.item_uuid = p.item_uuid
+            {}
             limit {}
             offset {}
         """.format(
