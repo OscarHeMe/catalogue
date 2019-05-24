@@ -192,7 +192,7 @@ def get_matchbysource():
     if not _needed_params.issubset(params):
         raise errors.ApiError(70001, "Missing required key params")
     # Complement optional params, and set default if needed
-    _opt_params = {'cols': '', 'p':1, 'ipp': 50, 'all': '0', 'csv':'1'}
+    _opt_params = {'cols': '', 'p':1, 'ipp': 50, 'all': '0', 'csv':'0'}
     for _o, _dft  in _opt_params.items():
         if _o not in params:
             params[_o] = _dft
@@ -210,33 +210,6 @@ def get_matchbysource():
             'products': _prods
             })
     
-
-# @mod.route("/getPlotCSV", methods=['GET'])
-# def getPlotCSV():
-#     """ Endpoint to fetch `Product`s by source's.
-#     """
-#     logger.info("Query count Product by source...")
-#     params = request.args.to_dict()
-#     logger.debug(params)
-#     # Validate required params
-#     _needed_params = {'keys'}
-#     if not _needed_params.issubset(params):
-#         raise errors.ApiError(70001, "Missing required key params")
-#     # Complement optional params, and set default if needed
-#     _opt_params = {'cols': '', 'p':1, 'ipp': 50, 'all': '0'}
-#     for _o, _dft  in _opt_params.items():
-#         if _o not in params:
-#             params[_o] = _dft
-#     _prods = Product.query_match('source', **params)
-#     return jsonify({
-#         'status': 'OK',
-#         'products': _prods
-#         })
-#     return Response(
-#         csv,
-#         mimetype="text/csv",
-#         headers={"Content-disposition":
-#                  "attachment; filename=data.csv"})
 
 
 

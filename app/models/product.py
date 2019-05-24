@@ -714,9 +714,14 @@ class Product(object):
             _orderby = 'product_uuid'
         if _orderby not in Product.__base_q:
             _orderby = 'product_uuid'
+        
+        if kwargs['csv'] != '1':
+            ext = "OFFSET {} LIMIT {}".format((_p - 1)*_ipp, _ipp)
+        else:
+            ext = ''
         # Build query
-        _qry = """SELECT {} FROM product {} ORDER BY {} OFFSET {} LIMIT {} """\
-            .format(_cols, _keys, _orderby, (_p - 1)*_ipp, _ipp)
+        _qry = """SELECT {} FROM product {} ORDER BY {} {} """\
+            .format(_cols, _keys, _orderby, ext)
         logger.debug(_qry)
         # Query DB
         try:
