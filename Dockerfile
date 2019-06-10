@@ -1,4 +1,4 @@
-FROM byprice/base-python-web:latest
+FROM byprice/byprice-base-service:python3.6
 
 # Copy repo
 COPY ./ /catalogue/
