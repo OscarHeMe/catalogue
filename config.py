@@ -46,6 +46,7 @@ STREAMER_EXCHANGE_TYPE = os.getenv('STREAMER_EXCHANGE_TYPE', 'direct')
 QUEUE_ROUTING = os.getenv('QUEUE_ROUTING', "bp_routing")
 QUEUE_CATALOGUE = os.getenv('QUEUE_CATALOGUE', "bp_catalogue")
 
+QUEUE_CATALOGUE = QUEUE_CATALOGUE.replace('_item', '') + '_item'
 
 QUEUE_ROUTING = QUEUE_ROUTING + "_dev" \
     if ENV.upper() in ['DEV','LOCAL'] else QUEUE_ROUTING
