@@ -75,8 +75,8 @@ def item(data):
     # Remap keys without modification
     re_map = {'url': 'url', 'retailer': 'source',
               'provider': 'provider', 'brand': 'brand', 'name': 'name',
-              'description': 'description', 'raw_html': 'raw_html', 'nutriments': 'nutriments',
-              'id': 'product_id'}
+              'description': 'description', 'raw_html': 'raw_html',
+              'id': 'product_id', 'gtin': 'gtin'}
     for _old, _new in re_map.items():
         if _old in data:
             fdata[_new] = data[_old]

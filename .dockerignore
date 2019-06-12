@@ -3,6 +3,7 @@ env/
 .envvars
 */*.pyc
 __pycache__
+*.p
 *.pid
 *.log
 *.rdb
@@ -17,3 +18,4 @@ app/tests/__pycache__
 schemaT.sql
 spark-warehouse
 data/
+Dockerfile.local

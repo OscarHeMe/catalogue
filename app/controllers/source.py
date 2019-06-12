@@ -65,3 +65,4 @@ def get_intersection(source):
 		'status': 'OK',
 		'products': _prods
 		})
+

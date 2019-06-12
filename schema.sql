@@ -50,7 +50,8 @@ CREATE TABLE "item" (
     checksum integer,
     name text,
     description text,
-    last_modified timestamp
+    last_modified timestamp,
+    page_views integer DEFAULT 0
  );
 
 /* productRetailer */
@@ -76,8 +77,8 @@ CREATE TABLE "product" (
 CREATE TABLE "product_image" (
     id_product_image serial PRIMARY KEY,
     product_uuid uuid REFERENCES "product" (product_uuid),
-    descriptor json,
     image text,
+    descriptor json,
     last_modified timestamp
 );
 
@@ -129,6 +130,7 @@ CREATE TABLE "product_category" (
     id_product_category serial PRIMARY KEY NOT NULL,
     id_category int REFERENCES category(id_category),
     product_uuid uuid REFERENCES product(product_uuid),
+    deprecated  integer,
     last_modified timestamp
 );
 
@@ -136,6 +138,7 @@ CREATE TABLE "product_normalized" (
     product_uuid uuid REFERENCES product(product_uuid),
     normalized text
 );
+
 
 /* Indexes */
 /*

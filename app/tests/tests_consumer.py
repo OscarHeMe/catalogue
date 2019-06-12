@@ -86,7 +86,7 @@ class TestStreamer(threading.Thread):
         print('Async Streaming Test Product!')
         ## Run consumer
         i = 0
-        for i in range(1000000):
+        for i in range(300):
             print(i)
 
 class CatalogueServiceTestCase(unittest.TestCase):

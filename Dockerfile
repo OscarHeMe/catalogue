@@ -1,7 +1,4 @@
-FROM byprice-base-serv
-
-MAINTAINER ByPrice
-
+FROM byprice/base-python-web:latest
 
 # Environment variables
 ENV LC_ALL=C.UTF-8
@@ -12,22 +9,17 @@ ENV REGION="US"
 ENV ROUTE="bpcatalogue"
 ENV MODE="SERVICE"
 
-RUN apt-get update
-RUN apt-get install -y python3-tk --force-yes
-RUN apt-get install -y libglib2.0-0 --force-yes
-RUN apt-get install -y libsm6 libxext6 --force-yes
-
-# Copy Repo content
+# Copy repo
 COPY ./ /catalogue/
 RUN mkdir /catalogue/logs
 
 # Change workdir
 WORKDIR /catalogue
 
-# Populate the database
+# Install local dependencies
 RUN virtualenv env && env/bin/pip install -r requirements.txt
 
-# Se mapean los puertos con docker run -P
+# Map ports
 EXPOSE 8000
 EXPOSE 80
 

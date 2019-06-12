@@ -36,8 +36,8 @@ def to_key(categories):
 
 
 # SPECIAL TOKENS
-entretenimiento  = ['novela', 'drama', 'terror', 'miedo', 'ciencia ficcion', 'pelicula', 'cd', 'dvd', 'blu ray',
-                    'musica', 'video', 'fotografia', 'camara', 'libro', 'television', 'radio', 'literatura', 'cuento',
+entretenimiento  = ['novela', 'drama', 'miedo', 'ciencia ficcion', 'pelicula', 'cd', 'dvd', 'bluray',
+                    'musica', 'fotografia', 'camara', 'libro', 'radio', 'literatura', 'cuento',
                     'revista']
 
 farmacia = ['cardiobascular', 'bacteria', 'infeccion', 'antiseptico', 'moreton', 'cortadura', 'inmuno',
@@ -87,7 +87,7 @@ salud_sexual_t = ['tampon', 'intima', 'sexual', 'condon', 'preservativo', 'embar
                   'lubricante', 'estimulante', 'anticonceptivo', 'toalla', 'viagra', 'cialis', 'erectil']
 salud_sexual_b = ['bebe', 'bano', 'alberca', 'cuerpo', 'cara', 'aceite', 'papel', 'ojos', 'nariz', 'nasal', 'oftal',
                   'laxante', 'motor', 'antitranspirante', 'gel', 'servilleta', 'bebe', 'baby', 'infantil', 'kids', 'bano',
-                  'panal', 'lactea', 'leche', 'facial', 'ocular', 'psycoestimulante'] + entretenimiento
+                  'panal', 'lactea', 'leche', 'facial', 'ocular', 'psycoestimulante', 'television', 'video'] + entretenimiento
 
 
 equipo_botiquin_t = ['equipo medico', 'oximetro', 'baumanometro', 'termometro', 'botiquin', 'jeringa', 'nebulizador', 'alcohol', 'anticeptico',
@@ -206,8 +206,7 @@ ferreteria_jarceria_t = ['ferreteria', 'jarceria', 'herramienta', 'truper', 'mar
                          ]
 ferreteria_jarceria_b = ['farmacia', 'deporte', 'perro', 'gato', 'ropa', 'balon', 'electrodomestico', 'aceite', 'llanta'
                          'papeleria', 'acuarela', 'playa', 'balon', 'parabrisas', 'juguete', 'playera',
-                         'camiseta', 'maleta', 'alberca', 'neumatico', 'anticongelante'
-                         ] + entretenimiento
+                         'camiseta', 'maleta', 'alberca', 'neumatico', 'anticongelante'] + entretenimiento
 
 
 mascotas_t = ['mascota', 'perro', 'peces', 'gato', 'pajaro', 'tortuga', 'cachorro', 'antipulga', 'morder', 'carnaza',
@@ -276,7 +275,7 @@ computo_electronica_t = ['tecnologia', 'impresora', 'electronico', 'celular', 't
                          'software', 'lenovo', 'kingston', 'dell', 'thoshiba', 'intel', 'toshiba', 'bocina',
                          'estereo', 'display', 'mouse', 'inalambrico', 'nvidia']
 computo_electronica_b = ['farmacia', 'mickey', 'mascota', 'maskingtape', 'ferreteria', 'jarceria', 'silla',
-                         'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa', 'maleta'
+                         'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa', 'maleta', 'toal'
                          ] + entretenimiento
 
 
@@ -329,13 +328,85 @@ ropa_zapatos_accesorios_b = ['farmacia', 'perro', 'gato', 'mascota', 'carne', 'a
                              'tortilla', 'pulga', 'alimento', 'bikini', 'juguete', 'nenuco'] + entretenimiento + oficina_papeleria_t
 
 
+tecnologia_t = ['tecnologia', 'impresora', 'electronico', 'celular', 'telefono', 'computo', 'computadora', 'pc',
+                 'teclado', 'monitor', 'pantalla', 'bocina', 'cargador', 'usb', 'game', 'estereo', 'laptop',
+                 'gps', 'phone', 'huawei', 'sony', 'samsung', 'panasonic', 'microsoft', 'smartwatch',
+                 'software', 'lenovo', 'kingston', 'dell', 'thoshiba', 'intel', 'toshiba', 'bocina',
+                 'estereo', 'display', 'mouse', 'inalambrico', 'nvidia', 'audifonos', 'television', 'proyector'
+                ]
+tecnologia_b = ['farmacia', 'mickey', 'mascota', 'maskingtape', 'ferreteria', 'jarceria', 'silla',
+                'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa', 'maleta', "toal"] + entretenimiento
+
+cocina_t = ['cocina', 'mesa', 'plato', 'cubierto', 'cubiertos', 'taza', 'vajilla', 'olla', 'refractario',
+            'cuchara', 'cucharon', 'cuchillo', 'tazon', 'tupper', 'mantel', 'copa', 'sarten', 'tfal', 'exprimidor', 'ekco',
+            'parrilla', 'hermetico', 'popit', 'vaso', 'jarra', 'tefal', 'kitchen', 'espatula', 'pelador', 'pelapapas',
+            'salero', 'receta', 'licuadora'
+            ]
+cocina_b = ['farmacia', 'mascota', 'perro', 'gato', 'carro', 'auto', 'perfume', 'locion', 'abarrote', 'despensa',
+           'desechable', 'verdura', 'fruta', 'alimento', 'bebida', 'juguete', 'bebe', 'panaderia', 'mochila',
+           'salchichoneria', 'globo', 'alcohol', 'cerveza', 'nino', 'aderezo', 'congelado', 'boligrafo',
+           'lapiz', 'lapices', 'cuaderno', 'carbon', 'folder', 'hockey', 'futbolito', 'billar', 'estuchera',
+           'rompecabezas', 'destreza', 'candado', 'herramienta', 'martillo', 'truper', 'taladro', 'calculadora', 'manguera',
+           'cartas', 'bolsa', 'vela', 'bebible', 'lacteo', 'yogur', 'enlatado', 'higiene', 'sexual', 'intimo', 'pingpong',
+           'disfraz', 'disfraces', 'globo', 'mascara', 'unicel', 'higienico', 'marcador', 'cuaderno',
+           'papeleria', 'calculadora', 'ligas', 'insecticida', 'boligrafo',
+           'libreta', 'geometria', 'marcador', 'fertilizante', 'abono'
+           ] + entretenimiento
+
+fotografia_t = ['fotografia', 'lente', 'camara', 'videocamara', 'fotografica', 'tripie', 'monopie', 'gopro', 'nikon',
+                'cybershot', 'canon']
+fotografia_b = ['contacto', 'ropa', 'sol', 'anteojos', 'gafas', 'recamara', 'hombre', 'mujer', 'gucci', 'armani',
+                'prada', 'silhouette', 'polo', 'ralph', 'frendi', 'guess', 'nike', 'kate', 'spade', 'vogue', 'hawkers',
+                'rayban', 'vans', 'deportiv']
+
+videojuegos_t = ['ps4', 'ps3', 'xbox', '3ds', 'nintendo switch', 'wii', 'videojuego', 'gaming', 'gamer', 'headset']
+videojuegos_b = ['farmacia', 'sarten', 'desechable', 'olla', 'herramienta', 'ferreteria', 'jarceria', 'hogar',
+                     'electrodomestico', 'alimento', 'bebida', 'peluche', 'cerveza', 'vino', 'alcohol', 'agua', 'lacteos',
+                     'jugo', 'sexual', 'consolador']
+
+electrodomesticos_t = ['electrodomesticos', 'horno', 'microondas', 'licuadora', 'estufa', 'refrigerador', 'cafetera',
+                       'lavadora', 'aspiradora', 'calentador', 'batidora', 'plancha', 'tostadora', 'regulador', 'nobreak',
+                       'podadora', 'ventilador', 'frigobar', 'sandwichera', 'television', 'lavasecadora', 'secadora',
+                       'whirlpool', 'mabe', 'alaciadora']
+electrodomesticos_b = ['ropa', 'shampoo', 'acondicionador'] + entretenimiento
+
+pantallas_t = ['television', 'pantalla', 'tv', 'monitor']
+pantallas_b = ['celular', 'phone', 'reloj', 'pc', 'bebe', 'farmacia', 'mickey', 'mascota', 'maskingtape', 'ferreteria',
+               'jarceria', 'silla', 'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa',
+               'maleta', 'solar', 'toal'] + entretenimiento
+
+celulares_t = ['celular', 'smartphone', 'phone']
+celulares_b = ['farmacia']
+
+refrigeradores_t = ['refrigerador', 'frigobar']
+refrigeradores_b = []
+
+lavadoras_t = ['lavadora', 'lavasecadora', 'secadora']
+lavadoras_b = ['auto', 'cabello', 'cepillo']
+
+computadoras_t = ['computadora', 'laptop', 'pc', 'software', 'teclado', 'monitor', 'impresora', 'bocinas', 'headset',
+                  'usb', 'harddrive', 'ssd', 'memoria', 'gabinete']
+computadoras_b = ['juguete', 'mesa', 'bebe', 'farmacia', 'hogar', 'cocina'] + entretenimiento
+
+bano_t = ['bano', 'higienico', 'destapacano', 'aromatizante', 'trapeador', 'retrete', 'shampo', 'champu', 'shampu',
+          'cepillo', 'jabon', 'esponja', 'regadera', 'inodoro', 'lavamanos', 'banera', 'ducha', 'mingitorio', 'lavabo',
+          'bide', 'urinario', 'detergente', 'cloro', 'glade', 'airwick', 'microfibra', 'cloralex', 'brasso', 'lysol',
+          'ajax']
+bano_b = ['perro', 'farmacia', 'mascota', 'patio', 'jardin', 'auto', 'carro', 'plato', 'trastes', 'cocina', 'papeleria',
+          'cigarro', 'alcohol', 'bebida']
+
+cafeteras_t = ['cafetera', 'cafe', 'capuchino', 'splenda', 'canderel', 'stevia', 'coffee', 'cremora', 'lyncott', 'termo']
+cafeteras_b = ['color', 'papeleria', 'farmacia', 'pintura', 'maquillaje', 'cosmetico', 'tinte', 'juguete', 'perro',
+               'gato', 'helado', 'dulceria', 'chatarra', 'dinamico', 'ropa', 'termal', 'termostato', 'termometro'] + entretenimiento
+
+
 #DEPARTMENTS
 farmacia_t = list(set(['farmacia'] + farmacia + mama_bebe_t + medicamentos_t + naturales_t + salud_sexual_t +
                       equipo_botiquin_t+ derma_t + vitaminas_suplementos_t + cuidado_personal_belleza_t))
 
 farmacia_b = ['ferreteria', 'jarceria', 'mascota', 'perro', 'gato', 'antifaz', 'abarrote', 'cafe', 'moda', 'disfraz',
               'fiesta', 'papeleria', 'oficina', 'phone', 'caramelo', 'despensa', 'alpura', 'lala', 'yogurt', 'helado',
-              'nieve', 'abarrote'] + \
+              'nieve', 'abarrote', 'television'] + \
              entretenimiento + mascotas_t + salchichoneria_quesos_gourmet_t + cerveza_vinos_licores
 
 
@@ -343,7 +414,9 @@ super_t = list(set( super_ + frutas_verduras_t + panaderia_tortilleria_t + botan
              lacteos_huevo_t + salchichoneria_quesos_gourmet_t + alimentos_congelados_refrigerados_t + jugos_bebidas_t + \
              despensa_t + desechables_t + jugueteria_t + ferreteria_jarceria_t + mascotas_t + hogar_t + \
              limpieza_detergentes_t + entretenimiento_t + computo_electronica_t + autos_motos_llantas_t + \
-             deportes_t + oficina_papeleria_t + cerveza_vinos_licores_t + ropa_zapatos_accesorios_t + cuidado_personal_belleza_t))
+             deportes_t + oficina_papeleria_t + cerveza_vinos_licores_t + ropa_zapatos_accesorios_t + cuidado_personal_belleza_t +\
+             cafeteras_t + bano_t + computadoras_t + lavadoras_t + refrigeradores_t + celulares_t + pantallas_t + electrodomesticos_t + \
+             videojuegos_t + fotografia_t + cocina_t + tecnologia_t))
 super_b = farmacia + medicamentos_t
 
 
@@ -574,6 +647,90 @@ categories_json = {
                     "tokens": oficina_papeleria_t,
                     "banned": oficina_papeleria_b
                 }
+            },
+            {
+                "Tecnología": {
+                    "subcats": [],
+                    "tokens": tecnologia_t,
+                    "banned": tecnologia_b
+                }
+            },
+            {
+                "Cocina": {
+                    "subcats": [],
+                    "tokens": cocina_t,
+                    "banned": cocina_b
+                }
+            },
+            {
+                "Fotografía": {
+                    "subcats": [],
+                    "tokens": fotografia_t,
+                    "banned": fotografia_b
+                }
+            },
+            {
+                "Videojuegos": {
+                    "subcats": [],
+                    "tokens": videojuegos_t,
+                    "banned": videojuegos_b
+                }
+            },
+            {
+                "Electrodomésticos": {
+                    "subcats": [],
+                    "tokens": electrodomesticos_t,
+                    "banned": electrodomesticos_b
+                }
+            },
+            {
+                "Pantallas": {
+                    "subcats": [],
+                    "tokens": pantallas_t,
+                    "banned": pantallas_b
+                }
+            },
+            {
+                "Celulares": {
+                    "subcats": [],
+                    "tokens": celulares_t,
+                    "banned": celulares_b
+                }
+            },
+            {
+                "Refrigeradores": {
+                    "subcats": [],
+                    "tokens": refrigeradores_t,
+                    "banned": refrigeradores_b
+                }
+            },
+            {
+                "Lavadoras": {
+                    "subcats": [],
+                    "tokens": lavadoras_t,
+                    "banned": lavadoras_b
+                }
+            },
+            {
+                "Computadoras": {
+                    "subcats": [],
+                    "tokens": computadoras_t,
+                    "banned": computadoras_b
+                }
+            },
+            {
+                "Baño": {
+                    "subcats": [],
+                    "tokens": bano_t,
+                    "banned": bano_b
+                }
+            },
+            {
+                "Cafeteras": {
+                    "subcats": [],
+                    "tokens": cafeteras_t,
+                    "banned": cafeteras_b
+                }
             }
         ],
         "tokens": super_t,
@@ -586,7 +743,7 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
         categories_raw = clean(categories_raw, is_name)
     if names:
         names = clean(names, True)
-    #print(categories_raw)
+    # print(categories_raw)
     if categories_raw:
         match_categories = []
         for name, attrs in categories_json.items():
@@ -619,7 +776,7 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                         if not bad_results_sub:
                             cat_name = list(cat.keys())[0]
                             match_categories.append(cat_name)
-                            # print("++++++ \t", cat_name, ': ', results)
+            #                 print("++++++ \t", cat_name, ': ', results)
             #             else:
             #                 cat_name = list(cat.keys())[0]
             #                 print("------ \t", cat_name, ': ', bad_results_sub)
@@ -637,15 +794,20 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
 
 def create_categories_in_db():
     print("Creating categories in db")
+    db_name = os.getenv("SQL_DB")
+    if os.getenv('ENV', '').lower() == 'dev' and 'dev' not in os.getenv("SQL_DB", ''):
+        db_name += '_dev'
+
     db = Pygres(
         {
             "SQL_HOST": os.getenv("SQL_HOST"),
             "SQL_PORT": os.getenv("SQL_PORT"),
-            "SQL_DB": os.getenv("SQL_DB"),
+            "SQL_DB": db_name,
             "SQL_USER": os.getenv("SQL_USER"),
             "SQL_PASSWORD": os.getenv("SQL_PASSWORD")
         }
     )
+
     bp_farma = pd.read_sql("select * from category where source='byprice_farma'", db.conn)
     bp_all = pd.read_sql("select id_category from category where source='byprice'", db.conn)
     bp_source = pd.read_sql("select * from source where key='byprice_farma'", db.conn)

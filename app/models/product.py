@@ -12,6 +12,7 @@ from sqlalchemy import create_engine, Text
 from sqlalchemy.dialects.postgresql import UUID
 import datetime
 import json
+import uuid
 
 geo_stores_url = 'http://' + SRV_GEOLOCATION + '/store/retailer?key=%s'
 logger = applogger.get_logger()
@@ -56,6 +57,16 @@ class Product(object):
         try:
             self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
             self.product_id = str(self.product_id)[-255:] if self.product_id else None
+            # Categories parsing
+            if not isinstance(self.categories, str):
+                if not (self.categories is None):
+                    try:
+                        self.categories = ','.join(self.categories)
+                    except Exception as e:
+                        logger.error(e)
+                        logger.warning("Categories with unvalid format!")
+                        logger.debug(self.categories)
+                        self.categories = None
         except Exception as e:
             error_str = "Error while defining identifiers: {}".format(str(e))
             logger.error(error_str)
@@ -71,8 +82,8 @@ class Product(object):
         except Exception as e:
             logger.error("Cannot serialize product: " + str(e))
             if APP_MODE == "CONSUMER":
-                logger.warning("Wrong DataType to serialize for Product!")
-                raise Exception("Wrong DataType to serialize for Product!")
+                logger.warning("Wrong DataType to serialize for Product ({} {})!".format(self.source, self.product_uuid))
+                raise Exception("Wrong DataType to serialize for Product ({} {})!".format(self.source, self.product_uuid))
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70005, "Wrong DataType to serialize for Product!")
         # Args validation
@@ -94,10 +105,10 @@ class Product(object):
             error_str = "WRONG DATATYPE: " + str(e) + "({} {})".format(self.source, self.product_uuid)
             logger.error(error_str)
             if APP_MODE == "CONSUMER":
-                raise Exception(error_str)
+                logger.warning("Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
+                raise Exception("Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
             if APP_MODE == "SERVICE":
-                raise errors.ApiError(70005, error_str)
-        logger.debug("Product declaration finished!")
+                raise errors.ApiError(70005, "Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
 
     def save(self, pcommit=True, _is_update=False, verified=False):
         """ Class method to save Product record in DB
@@ -123,6 +134,15 @@ class Product(object):
             # Verify for insert, if previously verified continue to save
             elif verified:
                 pass
+
+            
+
+
+
+
+
+
+
             else:
                 # If not verified, check if not already in DB
                 if Product.exists({'product_id': self.product_id,
@@ -207,7 +227,6 @@ class Product(object):
                 return False
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70002, "Issues saving attributes in DB! {}".format(str(e)))
-
         try:
             logger.debug("Nutriments: " + str(self.nutriments))
             if self.nutriments:
@@ -673,6 +692,51 @@ class Product(object):
         for i in q:
             logger.debug('Product UUID: ' + str(i['product_uuid']))
         return {'msg': 'Postgres Items One Working!'}
+    
+
+    @staticmethod
+    def query_count(_by, **params):
+        """ Static method to query count by source
+
+            Params:
+            -----
+            _by : str
+                Key from which query is performed
+            params : dict
+                With opt keys to returnun out
+            
+            Returns:
+            -----
+            out: dict 
+                With counts
+               
+        """
+        # Build query
+        _qry = """SELECT products, unique_items, items FROM (SELECT COUNT(*)  AS products, COUNT(DISTINCT(item_uuid))  AS unique_items, COUNT(item_uuid) as items FROM product WHERE {} = '{}') AS stt """\
+            .format(_by, params['keys'])
+        logger.debug(_qry)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()[0]
+            logger.debug(_resp)
+            logger.debug("Found {} products".format(_resp.get('products')))
+            logger.debug("Found {} items".format(_resp.get('items')))
+            out = {
+                'product_uuids' : _resp.get('products'),
+                'item_uuids' : _resp.get('items'),
+                'unique_items': _resp.get('unique_items')
+            }
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB!")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
+        logger.debug(out)
+        return out
+
+
 
     @staticmethod
     def query(_by, **kwargs):
@@ -752,6 +816,100 @@ class Product(object):
                 })
             _resp[_i].update(_tmp_extras)
         return _resp
+
+
+    @staticmethod
+    def query_match(_by, **kwargs):
+        """ Static method to query by defined column values
+
+            Params:
+            -----
+            _by : str
+                Key from which query is performed
+            kwargs : dict
+                Extra arguments, such as (p, ipp, cols, etc..)
+            
+            Returns:
+            -----
+            _resp : list
+                List of product objects
+        """
+        logger.debug('Querying by: {}'.format(_by))
+        logger.debug('fetching: {}'.format(kwargs))
+        # Format columns
+        if kwargs['cols']:
+            _cols = ','.join([x for x in \
+                            (kwargs['cols'].split(',') \
+                            + Product.__base_q) \
+                        if x in Product.__attrs__])
+        else:
+            _cols = ','.join([x for x in Product.__base_q ])
+        # Format querying keys
+        if kwargs['keys']:
+            _keys = 'WHERE ' + _by + ' IN ' + str(tuplify(kwargs['keys']))
+        else:
+            if _by != 'product_uuid':
+                _keys = 'WHERE {} IS NULL'.format(_by)
+            else:
+                _keys = ''
+        # Add restriction
+        if kwargs['all']:
+            if kwargs['all'] == '0':
+                if len(_keys) > 0:
+                    _keys = _keys + ' AND '
+                _keys = _keys + 'item_uuid IS NOT NULL'
+            if kwargs['all'] == 'notmatched':
+                if len(_keys) > 0:
+                    _keys = _keys + ' AND '
+                _keys = _keys + 'item_uuid IS NULL'            
+        # Format paginators
+        _p = int(kwargs['p'])
+        if _p < 1 :
+            _p = 1
+        _ipp = int(kwargs['ipp'])
+        # Order by statement
+        if 'orderby' in kwargs:
+            _orderby = kwargs['orderby'] if kwargs['orderby'] else 'product_uuid'
+        else:
+            _orderby = 'product_uuid'
+        if _orderby not in Product.__base_q:
+            _orderby = 'product_uuid'
+        
+        if kwargs['csv'] != '1':
+            ext = "OFFSET {} LIMIT {}".format((_p - 1)*_ipp, _ipp)
+        else:
+            ext = ''
+        # Build query
+        _qry = """SELECT {} FROM product {} ORDER BY {} {} """\
+            .format(_cols, _keys, _orderby, ext)
+        logger.debug(_qry)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()
+            logger.debug("Found {} products".format(len(_resp)))
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB!")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
+        # Verify for additional cols
+        extra_cols = [x for x in (set(kwargs['cols'].split(',')) \
+                        -  set(_cols)) if x in Product.__extras__]
+        if extra_cols and _resp:
+            p_uuids = [_u['product_uuid'] for _u in _resp]
+            _extras = Product.fetch_extras(p_uuids, extra_cols)
+        # Aggregate extra columns
+        for _i, _r in enumerate(_resp):
+            _tmp_extras = {}
+            for _ex in extra_cols:
+                _tmp_extras.update({
+                    _ex : _extras[_r['product_uuid']][_ex]
+                })
+            _resp[_i].update(_tmp_extras)
+        return _resp
+    
 
     @staticmethod
     def fetch_extras(p_uuids, _cols):
@@ -1204,28 +1362,59 @@ class Product(object):
         """ Query products by intersection of one
             or various cols
         """
-        p = int(kwargs['p'])
-        ipp = int(kwargs['ipp'])
-        del kwargs['p'], kwargs['ipp']
+        print(kwargs)
+        if 'p' in kwargs:
+            p = int(kwargs['p'][0])
+            del kwargs['p']
+        else:
+            p = 1
+        if 'ipp' in kwargs:
+            ipp = int(kwargs['ipp'][0])
+            del kwargs['ipp']
+        else:
+            ipp = 100
 
         # Columns
         if 'cols' not in kwargs or not kwargs['cols']:
-            cols = ["*"]
+            cols = [
+                "i.name as name",
+                "i.gtin as gtin", 
+                "i.item_uuid as item_uuid",
+                "p.*"
+            ]
         else:
-            cols = kwargs['cols']
+            cols = kwargs['cols'][0].split(",")
             del kwargs['cols']
+
+        for i,c in enumerate(cols):
+            if c in ['name','gtin','item_uuid','description']:
+                cols[i] = "i.{} as {}".format(c, c)   
+
+        # Replace keys
+        for k in kwargs:
+            if k in ['name','gtin','item_uuid']:
+                new_key = "i.{}".format(k)
+                kwargs[new_key] = kwargs[k]
+                del kwargs[k]
 
         where = []
         where_qry = """ """
         for k, vals in kwargs.items():
-            where.append(" {} IN ({}) ".format(k, vals))
+            where.append(
+                " {} IN ({}) ".format(
+                    k, 
+                    ",".join([ "'{}'".format(v) for v in vals ])
+                ) 
+            )
 
         if where:
             where_qry = """ where {}""".format(""" and """.join(where))
 
         # Query
         qry = """
-            select {} from product {}
+            select {} from product p
+            inner join item i on i.item_uuid = p.item_uuid
+            {}
             limit {}
             offset {}
         """.format(
@@ -1238,7 +1427,161 @@ class Product(object):
         try:
             rows = g._db.query(qry).fetch()
         except Exception as e:
+            logger.error(e)
             logger.error("Could not execute intersect query: {}".format(qry))
             raise errors.ApiError(70007, "Could not execute query: ")
+        return rows
 
-        return prods
+
+    @staticmethod
+    def upsert_id(item_uuid=None,source=None,new_product_id=None):
+        """ Insert or update product id to match
+        """
+        prod = g._db.model('product','product_uuid')
+        rows = g._db.query("""
+            select product_uuid, product_id from product 
+            where item_uuid = %s
+            and source = %s
+        """,(item_uuid, source)).fetch()
+        
+        if rows:
+            logger.info("Editing {} from {} to {}".format(
+                rows[0]['product_uuid'], 
+                rows[0]['product_id'],
+                new_product_id
+            ))
+            p_uuid = rows[0]['product_uuid']
+            prod.product_uuid = p_uuid
+        else:
+            logger.info("New product for {} id {}".format(
+                source, new_product_id
+            ))
+            # Get item info to populate name
+            _item = g._db.query("""
+                select name, gtin from item
+                where item_uuid = %s
+            """,(item_uuid,)).fetch()
+            # Values
+            if _item:
+                prod.name  = _item[0]['name']
+                prod.gtin  = _item[0]['gtin']
+            prod.item_uuid = item_uuid
+            prod.source = source
+        
+        try:
+            prod.product_id = new_product_id
+            prod.save()
+            prod.clear()
+        except:
+            prod.rollback()
+            raise Exception("Could not save product")
+        
+        return True
+
+
+    @staticmethod
+    def update(product_uuid=None, product_id=None, item_uuid=None, key=None):
+        """ Update either item_uuid or product_id
+        """
+        logger.debug("Updating 2")
+        prod = g._db.model('product','product_uuid')
+        if not product_uuid:
+            logger.error("Missing params")
+            logger.debug("Not saving")
+            return False
+        try:
+            prod.product_uuid = product_uuid
+            if key == 'product_id':
+                prod.product_id = None if not product_id else product_id
+            if key == 'item_uuid':
+                prod.item_uuid = None if not item_uuid else item_uuid
+            prod.save()
+            logger.debug("Saved...")
+            logger.info("Saved product")
+        except Exception as e: 
+            prod.rollback()
+            logger.error(e)
+            raise Exception("Could not save product")
+        return True
+
+
+    @staticmethod
+    def get_list(p=1, ipp=100, q=None, sources=None, gtins=None, matched=None, order=False):
+        """ Get list of products given certain parameters   
+            like gtin, query_string, sources, if matched, etc...
+        """
+        
+        where = []
+        if gtins and len(gtins) > 0:
+            where.append("""
+                (p.gtin in ({}))
+            """.format(
+                """, """.join(
+                    [ """ '{}' """.format(g.zfill(14)) for g in gtins ]
+                )
+            ))
+
+        if sources and len(sources) > 0:
+            where.append(""" 
+                (p.source in ({}))
+            """.format(""", """.join(
+                    [ """ '{}' """.format(s) for s in sources ]
+                )
+            ))
+
+        if q:
+            try:
+                iuuid = uuid.UUID(q)
+                where.append("""
+                    ( p.item_uuid = '{}' )
+                """.format(
+                    q
+                ))
+            except:  
+                where.append("""
+                    (lower(p.name) like '%%{}%%' 
+                    or p.gtin like '%%{}%%' 
+                    or p.product_id like '%%{}%%' )
+                """.format(
+                    q.replace(" ","%%").lower(),
+                    q,
+                    q
+                ))
+
+        if matched:
+            where.append("""
+                ( item_uuid is {} null )
+            """.format(
+                """ not """ if matched == '1' else """"""
+            ))
+                
+        # Get list of items with query and all
+        prod_rows = g._db.query("""
+            select product_uuid, product_id, gtin, name, description, source, item_uuid
+            from product p {} {}
+            limit %s offset %s
+        """.format(
+            """ """ if not where else """where {}""".format(
+                """ and """.join(where)
+            ),
+            """ """ if not order else """ order by p.name asc """
+        ), (ipp ,(p-1)*ipp)).fetch()
+
+        # Get all sources
+        row_srcs = g._db.query("""
+            select key from source 
+            order by key asc
+        """).fetch()
+        srcs_base = list([ row['key'] for row in row_srcs ])
+        srcs = [ r['key'] for r in row_srcs]
+
+        if not prod_rows:
+            return {"products":[],"sources":srcs,"sources_base" : srcs_base }
+
+        resp = {
+            'sources' : srcs,
+            'products' : prod_rows,
+            'sources_base' : srcs_base 
+        }
+
+        return resp

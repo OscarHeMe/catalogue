@@ -19,6 +19,8 @@ def connect_database(type_='pygres'):
     db_name = os.getenv("SQL_DB")
     db_user = os.getenv("SQL_USER")
     db_password = os.getenv("SQL_PASSWORD")
+    if os.getenv('ENV', '').lower() == 'dev' and 'dev' not in db_name:
+        db_name += '_dev'
     if type_.lower() == 'pygres':
         return Pygres(
             {

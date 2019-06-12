@@ -135,3 +135,26 @@ class Source(object):
             raise errors.ApiError(70007, "Could not execute query: ")
 
         return rows
+
+
+    @staticmethod
+    def update_sources():
+        rows = g._db.query("""
+            select distinct source from product p
+        """).fetch()
+        sources = [r['source'] for r in rows]
+        with open('data/sources.json','w') as file:
+            json.dump(source, file)
+        return True
+
+        
+    @staticmethod
+    def get_sources():
+        try:
+            with open('data/sources.json') as file:
+                json.load(file)
+        except:
+            update_sources()
+            with open('data/sources.json') as file:
+                json.load(file)
+        return sources

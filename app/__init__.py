@@ -10,17 +10,18 @@ import datetime
 from ByHelpers import applogger
 import app.utils.errors as errors
 import app.utils.db as db
+from app.utils.proxy import ReverseProxied
 if APP_MODE == 'CONSUMER':
     from app import consumer
 
 app = Flask(__name__)
+app.wsgi_app = ReverseProxied(app.wsgi_app)
 app.config.from_object('config')
 CORS(app)
 
 # Logger
 applogger.create_logger()
 logger = applogger.get_logger()
-
 
 @app.cli.command('new_retailer')
 def new_retailer_cmd():
@@ -92,6 +93,19 @@ def main():
         'version': __version__
     })
 
+
+# Inject modules
+@app.context_processor
+def inject_modules():
+    # Get main module
+    split_path = request.path.split('/')[1:]
+    module = 'main' if split_path == [''] else split_path[0]  
+    return dict(
+        current_module=module,
+        modules=['item','product']
+    )
+   
+
 #Error Handlers
 @app.errorhandler(404)
 def not_found(error):
@@ -114,13 +128,14 @@ def handle_api_error(error):
     return response
 
 # Importing blueprint modules
-from app.controllers import item, category, source, product
+from app.controllers import item, category, source, product, brand, provider
 
 app.register_blueprint(item.mod, url_prefix='/item')
 app.register_blueprint(product.mod, url_prefix='/product')
 app.register_blueprint(category.mod, url_prefix='/category')
 app.register_blueprint(source.mod, url_prefix='/source')
-
+app.register_blueprint(brand.mod, url_prefix='/brand')
+app.register_blueprint(provider.mod, url_prefix='/provider')
 
 
 if __name__ == '__main__':

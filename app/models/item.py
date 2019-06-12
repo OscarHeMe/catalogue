@@ -5,11 +5,11 @@ from ByHelpers import applogger
 from config import *
 import pandas as pd
 import requests
-from pprint import pformat as pf
 import ast
 import json
 from app.norm.normalize_text import key_format, tuplify
 from uuid import UUID as ConstructUUID
+from app.utils.gtin import *
 
 geo_stores_url = 'http://' + SRV_GEOLOCATION + '/store/retailer?key=%s'
 logger = applogger.get_logger()
@@ -197,6 +197,105 @@ class Item(object):
             logger.error(e)
             raise errors.ApiError(70003, "Issues fetching elements in DB")
         return _items
+
+
+    @staticmethod
+    def get_by_gtin(gtins,  _cols=['item_uuid']):
+        """ Static method to get Items by gtins
+            Params:
+            -----
+            gtins : list of gtins
+                Values to compare
+            _cols : list
+                Columns to retrieve
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        valid = []
+        # Variations of gtin
+        for gtin in gtins:
+            try:
+                code = str(int(gtin))
+                valid.append(gtin)
+            except Exception as e:
+                logger.error("Not a valid gtin format")
+                continue
+         
+        if not valid:
+            raise Exception("No valid gtins")             
+    
+        try:
+            iqry = """
+                SELECT {}
+                FROM item WHERE gtin IN ({})
+            """.format(
+                ",".join(_cols),
+                ",".join( [ """'{}'""".format(v) for v in valid ] )
+            )
+            logger.debug(iqry)
+            items = g._db.query(iqry).fetch()
+            return items
+        except Exception as e:
+            logger.error(e)
+            return []
+
+
+    @staticmethod
+    def get_by_category(id_category,  _cols=['item_uuid'], p=1, ipp=200):
+        """ Static method to get Items by gtins
+            Params:
+            -----
+            gtins : list of gtins
+                Values to compare
+            _cols : list
+                Columns to retrieve
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        # Get category details
+        rc = g._db.query("""
+            select * from category
+            where id_category = %s
+        """,(id_category,)).fetch()
+        if not rc:
+            raise Exception("No category found")
+
+        try:
+            cat = rc[0]
+            qry = """
+                select {}
+                from item 
+                where item_uuid in (
+                    select item_uuid 
+                    from product 
+                    where product_uuid in (
+                        select product_uuid 
+                        from product_category 
+                        where id_category  = {}
+                    ) 
+                )
+                offset {} limit {}
+            """.format(
+                ",".join(_cols),
+                id_category,
+                (p - 1)*ipp, 
+                ipp            
+            )
+            items = g._db.query(qry).fetch()      
+        except Exception as e:
+            logger.error(e)
+            raise Exception(e)
+
+        _resp = {
+            "category" : cat,
+            "items" : items
+        }
+        return _resp
+
 
     @staticmethod
     def delete(i_uuid):
@@ -510,7 +609,7 @@ class Item(object):
             a.value as attr,
             c.name as class,
             c.key as class_key,
-            pa.source
+            a.source
             FROM product_attr pa
             LEFT OUTER JOIN attr a 
             ON (pa.id_attr = a.id_attr)
@@ -521,7 +620,7 @@ class Item(object):
         """.format(tuplify(puuids))
         try:
             logger.debug(_qry)
-            _respattrs = g._db.query(_qry).fetch()
+            _respattrs = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(_respattrs)
         except Exception as e:
             logger.error(e)
@@ -556,8 +655,7 @@ class Item(object):
         """.format(tuplify(puuids))
         try:
             logger.debug(_qry)
-            bp_categs = pd.read_sql(_qry, g._db.conn)\
-                            .drop_duplicates('name')
+            bp_categs = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(bp_categs)
         except Exception as e:
             logger.error(e)
@@ -600,8 +698,7 @@ class Item(object):
                 _qry = """SELECT p.name, p.gtin, p.description,
                     p.product_uuid,
                     p.images, p.ingredients, p.source,
-                    s.hierarchy, s.retailer as show_label,
-                    s.name as r_name
+                    s.hierarchy, s.retailer as show_label, s.name as r_name
                     FROM product p 
                     INNER JOIN source s 
                     ON (p.source = s.key)
@@ -650,7 +747,7 @@ class Item(object):
                 else:
                     categ_options.append(k['attr'])
             else:
-                attrs.append(k)
+                attrs.append(k)        
         # Fetch Attributes
         if info_rets:
             categs += Item.fetch_categs([str(z['product_uuid']) for z in info_rets ])
@@ -661,7 +758,9 @@ class Item(object):
             brand = _normalized_attrs['brand']
         # Filter info from no valid retailers
         df_rets = pd.DataFrame(info_rets)
-        df_rets = df_rets[df_rets.show_label == 1]
+        if 'source' in df_rets.columns:
+            df_rets = df_rets[~df_rets.source.isin(['ims','plm','gs1','nielsen'])]
+            df_rets = df_rets[df_rets.show_label == 1]
         if df_rets.empty:
             raise errors.ApiError(70003, "Issues fetching elements in DB", 404)
         return {
@@ -863,6 +962,185 @@ class Item(object):
                        qry_categories=qry_categories, qry_group=qry_group, qry_join_categories=qry_join_categories)
         logger.debug(qry_item_uuids)
         df = pd.read_sql(qry_item_uuids, g._db.conn)
-        if is_count is False:
+        if is_count is False: # TODO Checar si debe hacerse esta validacion
             df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
         return df
+
+    
+    @staticmethod
+    def get_by_filters(filters):
+        ''' Get catalogue by filters: item, category, retailer, providers
+        '''
+        c = []
+        r = []
+        i = []
+        p = []
+        b = []
+        ing = []
+        # Build query
+        for obj in filters:
+            [(f, v)] = obj.items()
+            if f == 'category':
+                c.append(v)
+            elif f == 'retailer':
+                r.append("""'""" + v + """'""")
+            elif f == 'item':
+                i.append("""'""" + v + """'""")
+            elif f == 'provider':
+                p.append("""'""" + v + """'""")
+            elif f == 'brand':
+                b.append("""'""" + v + """'""")
+            elif f == 'ingredient':
+                ing.append("""'""" + v + """'""")
+        # Q by filters
+        q = []
+        if len(c) > 0:
+            print(""", """.join(c))
+            q.append(""" item_uuid in (select item_uuid from item_category where id_category in ( """ + """, """.join(
+                c) + """ )) """)
+        if len(r) > 0:
+            q.append(""" item_uuid in (select item_uuid from item_retailer where retailer in ( """ + """, """.join(
+                r) + """ )) """)
+        if len(p) > 0:
+            q.append(""" item_uuid in (select item_uuid from item_provider where provider_uuid in ( """ + """, """.join(
+                p) + """ )) """)
+        if len(b) > 0:
+            q.append(""" item_uuid in (select item_uuid from item_brand where brand_uuid in ( """ + """, """.join(
+                b) + """ )) """)
+        if len(ing) > 0:
+            q.append(
+                """ item_uuid in (select item_uuid from item_ingredient where id_ingredient in ( """ + """, """.join(
+                    ing) + """ )) """)
+        if len(i) > 0:
+            q.append(""" item_uuid in (""" + """, """.join(i) + """ ) """)
+        where = (""" where """ + """ and """.join(q)) if len(q) > 0 else """ limit 100 """
+        # Build query
+        qry = """ select item_uuid, name, gtin from item """ + where
+        items = g._db.query(qry).fetch()
+        if not items:
+            return []
+        return items
+
+
+    @staticmethod
+    def get_list_ids(p=1, ipp=100, q=None, sources=None, gtins=None, display=None, order=False):
+        """ Get list of products with respective 
+            product_ids
+        """
+        
+        where = []
+        if gtins and len(gtins) > 0:
+            where.append("""
+                (i.gtin in ({}))
+            """.format(
+                """, """.join(
+                    [ """ '{}' """.format(g.zfill(14)) for g in gtins ]
+                )
+            ))
+
+        if sources and len(sources) > 0:
+            where.append(""" 
+                (i.item_uuid in (
+                    select item_uuid from product
+                    where source in ({}) 
+                ))
+            """.format(""", """.join(
+                    [ """ '{}' """.format(s) for s in sources ]
+                )
+            ))
+
+        if q:
+            try:
+                iuuid = ConstructUUID(q)
+                where.append("""
+                    ( i.item_uuid='{}' )
+                """.format(
+                    q
+                ))
+            except:  
+                where.append("""
+                    ( lower(i.name) like '%%{}%%' or i.gtin like '%%{}%%' )
+                """.format(
+                    q.replace(" ","%%"),
+                    q
+                ))
+        
+        # Get list of items with query and all
+        items_rows = g._db.query("""
+            select item_uuid, gtin, name 
+            from item i
+            {}
+            {}
+            limit %s 
+            offset %s
+        """.format(
+            """ """ if not where else """where {}""".format(
+                """ and """.join(where)
+            ),
+            """ """ if not order else """ order by name asc """
+        ), (ipp ,(p-1)*ipp)).fetch()
+
+        # Get all sources of the items
+        row_srcs = g._db.query("""
+            select key from source 
+            order by key asc
+        """).fetch()
+        srcs_base = list([ row['key'] for row in row_srcs ])
+        srcs = [ r['key'] for r in row_srcs if (not display or r['key'] in display) ]
+
+        if not items_rows:
+            return {"items":[],"sources":srcs,"sources_base":srcs_base}
+
+        # Loop items
+        items_results = []
+        for item in items_rows:
+            # get products of item
+            prods_rows = g._db.query("""
+                select product_id, source from product p
+                where item_uuid = %s
+            """, (item['item_uuid'],)).fetch()
+            
+            # Rows for sources
+            sources_ids = { p['source'] : p['product_id'] for p in prods_rows }
+
+            # Append result
+            items_results.append({
+                'item_uuid' : item['item_uuid'],
+                'gtin' : item['gtin'],
+                'name' : item['name'],
+                'ids' : [ '' if s not in sources_ids else\
+                         sources_ids[s] for s in srcs ]
+            })
+
+        resp = {
+            'sources' : srcs,
+            'items' : items_results,
+            'sources_base' : srcs_base 
+        }
+
+        return resp
+
+    @staticmethod
+    def update(item_uuid=None, name=None, gtin=None):
+        """ Update either name or gtin for given item_uuid
+        """
+        item = g._db.model('item','item_uuid')
+        if not item_uuid:
+            logger.error("Missing params")
+            return False
+        try:
+            item.item_uuid = item_uuid
+            if name != None:
+                item.name = name
+            if gtin != None:
+                if is_valid_GTIN(int(gtin)):
+                    item.gitn = str(gtin).zfill(14)
+                else:
+                    raise Exception("Invalid GTIN")
+            item.save()
+            logger.info("Saved item")
+        except Exception as e: 
+            item.rollback()
+            logger.error(e)
+            raise Exception("Could not save item")
+        return True
