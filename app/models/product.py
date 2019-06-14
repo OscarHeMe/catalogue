@@ -58,15 +58,15 @@ class Product(object):
             self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
             self.product_id = str(self.product_id)[-255:] if self.product_id else None
             # Categories parsing
-            if not isinstance(self.categories, str):
-                if not (self.categories is None):
-                    try:
-                        self.categories = ','.join(self.categories)
-                    except Exception as e:
-                        logger.error(e)
-                        logger.warning("Categories with unvalid format!")
-                        logger.debug(self.categories)
-                        self.categories = None
+            # if not isinstance(self.categories, str):
+            #     if not (self.categories is None):
+            #         try:
+            #             self.categories = ','.join(self.categories)
+            #         except Exception as e:
+            #             logger.error(e)
+            #             logger.warning("Categories with unvalid format!")
+            #             logger.debug(self.categories)
+            #             self.categories = None
         except Exception as e:
             error_str = "Error while defining identifiers: {}".format(str(e))
             logger.error(error_str)

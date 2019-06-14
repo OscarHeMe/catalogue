@@ -212,7 +212,6 @@ def get_matchbysource():
     
 
 
-
 @mod.route("/by/attr", methods=['GET'])
 def get_byattr():
     """ Endpoint to fetch `Product`s by attr's.
