@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd /catalogue/
+
 /bin/bash ./env/bin/activate
 
 # Init the database

@@ -1,4 +1,6 @@
-FROM byprice/base-python-web:latest
+FROM byprice/byprice-base-service:python3.6
+
+RUN apt-get install libsm6 libxrender1 libfontconfig1 -y 
 
 # Environment variables
 ENV LC_ALL=C.UTF-8
@@ -24,6 +26,10 @@ EXPOSE 8000
 EXPOSE 80
 
 VOLUME /var/log/catalogue
+
+# Sym link
+RUN mkdir -p /catalogue_item/bin/
+COPY ./bin/run.sh /catalogue_item/bin/
 
 # Add Nginx configuration file
 RUN bash bin/nginx_conf.sh
