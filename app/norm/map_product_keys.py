@@ -97,7 +97,7 @@ def item(data):
             fdata['gtin'] = data['match']['gtin']
     elif 'gtin' in data:
         fdata['gtin'] = data['gtin']
-    fdata['attributes'] = []
+    fdata['attributes'] = {}
     if 'attributes' in data:
         fdata['attributes'] = data['attributes']
     if 'nutriments' in data:
