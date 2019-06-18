@@ -16,29 +16,31 @@ new_item_test = {
 
 # Add Product Test
 new_prod_test = {
-    "product_id": "00000000000000124900",
-    "gtin": "00000001249002",
-    "source": "chedraui",
+    "product_id": "51259534",
+    "gtin": "51259534",
+    "source": "walmart_us",
     "name": "refresco pepsi cola sin cafeina 354 ml",
     "description": "refresco pepsi cola sin cafeina 354 ml",
     "images" :  ['http://chedraui.com.mx/media/catalog/product/1/2/124900_00.jpg'],
-    "categories": "Despensa",
-    "url": "http://www.chedraui.com.mx/index.php/universidad/refresco-pepsi-cola-sin-cafeina-354ml.html",
+    "categories": ["Despensa"],
+    "url": "http://i5.walmartimages.com/asr/d12c87ae-3ab2-4467-87b6-a196ecb8f699_4.7c24fc9142322c264f2361df1105a2c5.jpeg",
     "brand": "Pepsi Cola",
     "provider": "Pepsico",
-    "attributes": [{
-        "attr_name": "Despensa",
-        "attr_key": "despensa",
-        "clss_name": "Categoría",
-        "clss_key": "category",
-    }],
+    "attributes": {
+        "category": [{
+            "attr_name": "Despensa",
+            "attr_key": "despensa",
+            "clss_name": "Categoría",
+            "clss_key": "category",
+        }]
+    },
     "raw_html": "<body>product_html</body>"
     # "item_uuid": "" # Missing
 }
 
 # Update product image
 img_prod_test = {
-    "image" : "http://chedraui.com.mx/media/catalog/product/1/2/124900_00.jpg",
+    "image" : "http://i5.walmartimages.com/asr/d12c87ae-3ab2-4467-87b6-a196ecb8f699_4.7c24fc9142322c264f2361df1105a2c5.jpeg",
     "descriptor" : [
         [1,2,3,4], [1,2,3,4]
     ]
@@ -209,7 +211,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
             pass
         self.assertEqual(_r.status_code, 200)
     
-    #@unittest.skip('Already tested')
+    @unittest.skip('Already tested')
     def test_07_update_prod_img(self):
         """ Update Product Image
         """ 
@@ -353,7 +355,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
             pass
         self.assertEqual(_r.status_code, 200)
 
-    #@unittest.skip('Already tested')
+    @unittest.skip('Already tested')
     def test_90_delete_product(self):
         """ Delete existing Product and its references
         """ 
