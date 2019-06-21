@@ -671,7 +671,7 @@ class Item(object):
         # Fetch info from all retailers
         try:
             if u_type == 'item_uuid':
-                _qry = """SELECT i.name, i.gtin, p.description,
+                _qry = """SELECT i.name, i.gtin, i.description,
                     p.product_uuid,
                     p.images, p.ingredients, p.source,
                     s.hierarchy, s.retailer as show_label, s.name as r_name
