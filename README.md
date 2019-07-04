@@ -89,6 +89,14 @@ export LOG_PORT='<remote logging port>'
 . envvars && MODE='CONSUMER' $APP_DIR/bin/run.sh
 ```
 
+### Consumer for item
+
+- Build docker image with `./Dockerfile.item` template:
+
+```bash
+docker build --no-cache -t <amazon prefix>/catalogue_item:dev -f Dockerfile.item .
+```
+
 #### Manually
 
 1. Activate virtual environments `source env/bin/activate`
