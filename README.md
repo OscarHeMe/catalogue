@@ -58,6 +58,7 @@ export STREAMER_EXCHANGE_TYPE='direct'
 export STREAMER_USER="<user>"
 export STREAMER_PASS="<pass>"
 export STREAMER_VIRTUAL_HOST="<vhost>"
+export QUEUE_CATALOGUE="<queue>"
 ```
 
 Logger env vars
@@ -90,6 +91,7 @@ export LOG_PORT='<remote logging port>'
 ```
 
 ### Consumer for item
+- Add suffix '_item' to QUEUE_CATALOGUE environment variable
 
 - Build docker image with `./Dockerfile.item` template:
 
