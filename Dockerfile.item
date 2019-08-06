@@ -1,11 +1,11 @@
 FROM byprice/base-python-web:latest
 
 # Copy repo
-COPY ./ /catalogue/
-RUN mkdir /catalogue/logs
+COPY ./ /catalogue_item/
+RUN mkdir /catalogue_item/logs
 
 # Change workdir
-WORKDIR /catalogue
+WORKDIR /catalogue_item
 
 # Install local dependencies
 RUN virtualenv env && env/bin/pip install -r requirements.txt
@@ -14,13 +14,13 @@ RUN virtualenv env && env/bin/pip install -r requirements.txt
 EXPOSE 8000
 EXPOSE 80
 
-VOLUME /var/log/catalogue
+VOLUME /var/log/catalogue_item
 
 # Add Nginx configuration file
 ADD cfn/nginx/conf.d/ /etc/nginx/conf.d
 RUN rm -rf /etc/nginx/sites-available/default && rm -rf /etc/nginx/sites-enabled/default
 
-ENTRYPOINT /bin/bash /catalogue/bin/run.sh
+ENTRYPOINT /bin/bash /catalogue_item/bin/run.sh
 
 
 

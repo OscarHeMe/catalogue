@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Catálogo ByPrice</title>
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css', _external=True) }}">
+
+    </head>
+    <body>
+
+        
+        <div class="container" id="main-container">
+            <!-- Container -->
+            <div class="row">
+                <div id="main-wrapper">
+                    <!-- Loader -->
+                    {% block body %}{% endblock %}
+                </div>
+            </div>
+        </div>
+
+
+        <!-- App -->
+        <script src="{{ url_for('static', filename='js/jquery.min.js', _external=True) }}"></script>
+        <script src="{{ url_for('static', filename='js/app.js', _external=True) }}"></script>
+
+        <!-- General scripts -->
+        <script language="javascript">
+            // Global module variable
+            Mod = {}
+            current_module = '{{request.endpoint}}'.split(".")[0]
+            var messages = [];
+            {% for category,message in get_flashed_messages(with_categories=true) %}
+            messages.push({
+                "text" : "{{message}}",
+                "category" : "{{category}}"
+            })
+            {% endfor %}
+            for (i in messages)
+                feedback(messages[i].text,'Info', (messages[i].category || "info"));
+
+            {% if error %}
+            feedback('{{ error }}', 'Error', 'error');
+            {% endif %}
+        </script>
+        
+        <!-- Modules -->
+        {% for module in modules %}
+        <script src="{{ url_for('static', filename='js/'+module+'.js', _external=True) }}"></script>
+        {% endfor %}
+
+    </body>
+</html>

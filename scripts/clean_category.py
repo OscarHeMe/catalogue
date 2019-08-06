@@ -36,8 +36,8 @@ def to_key(categories):
 
 
 # SPECIAL TOKENS
-entretenimiento  = ['novela', 'drama', 'terror', 'miedo', 'ciencia ficcion', 'pelicula', 'cd', 'dvd', 'blu ray',
-                    'musica', 'video', 'fotografia', 'camara', 'libro', 'radio', 'literatura', 'cuento',
+entretenimiento  = ['novela', 'drama', 'miedo', 'ciencia ficcion', 'pelicula', 'cd', 'dvd', 'bluray',
+                    'musica', 'fotografia', 'camara', 'libro', 'radio', 'literatura', 'cuento',
                     'revista']
 
 farmacia = ['cardiobascular', 'bacteria', 'infeccion', 'antiseptico', 'moreton', 'cortadura', 'inmuno',
@@ -87,7 +87,7 @@ salud_sexual_t = ['tampon', 'intima', 'sexual', 'condon', 'preservativo', 'embar
                   'lubricante', 'estimulante', 'anticonceptivo', 'toalla', 'viagra', 'cialis', 'erectil']
 salud_sexual_b = ['bebe', 'bano', 'alberca', 'cuerpo', 'cara', 'aceite', 'papel', 'ojos', 'nariz', 'nasal', 'oftal',
                   'laxante', 'motor', 'antitranspirante', 'gel', 'servilleta', 'bebe', 'baby', 'infantil', 'kids', 'bano',
-                  'panal', 'lactea', 'leche', 'facial', 'ocular', 'psycoestimulante'] + entretenimiento
+                  'panal', 'lactea', 'leche', 'facial', 'ocular', 'psycoestimulante', 'television', 'video'] + entretenimiento
 
 
 equipo_botiquin_t = ['equipo medico', 'oximetro', 'baumanometro', 'termometro', 'botiquin', 'jeringa', 'nebulizador', 'alcohol', 'anticeptico',
@@ -275,7 +275,7 @@ computo_electronica_t = ['tecnologia', 'impresora', 'electronico', 'celular', 't
                          'software', 'lenovo', 'kingston', 'dell', 'thoshiba', 'intel', 'toshiba', 'bocina',
                          'estereo', 'display', 'mouse', 'inalambrico', 'nvidia']
 computo_electronica_b = ['farmacia', 'mickey', 'mascota', 'maskingtape', 'ferreteria', 'jarceria', 'silla',
-                         'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa', 'maleta'
+                         'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa', 'maleta', 'toal'
                          ] + entretenimiento
 
 
@@ -335,8 +335,7 @@ tecnologia_t = ['tecnologia', 'impresora', 'electronico', 'celular', 'telefono',
                  'estereo', 'display', 'mouse', 'inalambrico', 'nvidia', 'audifonos', 'television', 'proyector'
                 ]
 tecnologia_b = ['farmacia', 'mickey', 'mascota', 'maskingtape', 'ferreteria', 'jarceria', 'silla',
-                'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa', 'maleta'
-                         ] + entretenimiento
+                'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa', 'maleta', "toal"] + entretenimiento
 
 cocina_t = ['cocina', 'mesa', 'plato', 'cubierto', 'cubiertos', 'taza', 'vajilla', 'olla', 'refractario',
             'cuchara', 'cucharon', 'cuchillo', 'tazon', 'tupper', 'mantel', 'copa', 'sarten', 'tfal', 'exprimidor', 'ekco',
@@ -374,7 +373,7 @@ electrodomesticos_b = ['ropa', 'shampoo', 'acondicionador'] + entretenimiento
 pantallas_t = ['television', 'pantalla', 'tv', 'monitor']
 pantallas_b = ['celular', 'phone', 'reloj', 'pc', 'bebe', 'farmacia', 'mickey', 'mascota', 'maskingtape', 'ferreteria',
                'jarceria', 'silla', 'patio', 'pegamento', 'herramientas', 'adhesivo', 'sellador', 'ropa',
-               'maleta', 'solar'] + entretenimiento
+               'maleta', 'solar', 'toal'] + entretenimiento
 
 celulares_t = ['celular', 'smartphone', 'phone']
 celulares_b = ['farmacia']
@@ -407,7 +406,7 @@ farmacia_t = list(set(['farmacia'] + farmacia + mama_bebe_t + medicamentos_t + n
 
 farmacia_b = ['ferreteria', 'jarceria', 'mascota', 'perro', 'gato', 'antifaz', 'abarrote', 'cafe', 'moda', 'disfraz',
               'fiesta', 'papeleria', 'oficina', 'phone', 'caramelo', 'despensa', 'alpura', 'lala', 'yogurt', 'helado',
-              'nieve', 'abarrote'] + \
+              'nieve', 'abarrote', 'television'] + \
              entretenimiento + mascotas_t + salchichoneria_quesos_gourmet_t + cerveza_vinos_licores
 
 
@@ -415,7 +414,9 @@ super_t = list(set( super_ + frutas_verduras_t + panaderia_tortilleria_t + botan
              lacteos_huevo_t + salchichoneria_quesos_gourmet_t + alimentos_congelados_refrigerados_t + jugos_bebidas_t + \
              despensa_t + desechables_t + jugueteria_t + ferreteria_jarceria_t + mascotas_t + hogar_t + \
              limpieza_detergentes_t + entretenimiento_t + computo_electronica_t + autos_motos_llantas_t + \
-             deportes_t + oficina_papeleria_t + cerveza_vinos_licores_t + ropa_zapatos_accesorios_t + cuidado_personal_belleza_t))
+             deportes_t + oficina_papeleria_t + cerveza_vinos_licores_t + ropa_zapatos_accesorios_t + cuidado_personal_belleza_t +\
+             cafeteras_t + bano_t + computadoras_t + lavadoras_t + refrigeradores_t + celulares_t + pantallas_t + electrodomesticos_t + \
+             videojuegos_t + fotografia_t + cocina_t + tecnologia_t))
 super_b = farmacia + medicamentos_t
 
 
@@ -711,13 +712,6 @@ categories_json = {
                 }
             },
             {
-                "Tecnología": {
-                    "subcats": [],
-                    "tokens": tecnologia_t,
-                    "banned": tecnologia_b
-                }
-            },
-            {
                 "Computadoras": {
                     "subcats": [],
                     "tokens": computadoras_t,
@@ -749,7 +743,7 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
         categories_raw = clean(categories_raw, is_name)
     if names:
         names = clean(names, True)
-    #print(categories_raw)
+    # print(categories_raw)
     if categories_raw:
         match_categories = []
         for name, attrs in categories_json.items():
@@ -782,7 +776,7 @@ def get_categories_related(categories_raw, min_score=90, min_bad_score=80, is_na
                         if not bad_results_sub:
                             cat_name = list(cat.keys())[0]
                             match_categories.append(cat_name)
-                            # print("++++++ \t", cat_name, ': ', results)
+            #                 print("++++++ \t", cat_name, ': ', results)
             #             else:
             #                 cat_name = list(cat.keys())[0]
             #                 print("------ \t", cat_name, ': ', bad_results_sub)

@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+<script>
+    var url_change_id = "{{ url_for('product.update', _external=True) }}";
+    var url_change_id_active = "{{ url_for('product.get_list', _external=True) }}?p=1&source={{url.sources}}&matched={{url.matched}}&order={{url.order}}";
+</script>
+
+
+<h1>Productos (por retailer)</h1>
+
+<div class="field">
+    <!-- Order by name -->
+    {% if url.order == '1' %}
+    <a 
+        class="tag active" 
+        href="{{ url_for('product.get_list', _external=True) }}?p=1&source={{url.sources}}&matched={{url.matched}}&q={{url.q}}&order=0">
+        Order by name</a>&nbsp;
+    {% else %}
+    <a 
+        class="tag"
+        href="{{ url_for('product.get_list', _external=True) }}?p=1&source={{url.sources}}&matched={{url.matched}}&q={{url.q}}&order=1">
+        Order by name</a>
+    {% endif %}    
+    <!-- Matched -->
+</div>
+
+<div class="field">
+    <a 
+        class="tag {{'active' if url.matched == 'all' else ''}}" 
+        href="{{ url_for('product.get_list', _external=True) }}?p=1&source={{url.sources}}&matched=all&q={{url.q}}&order={{url.order}}">
+        All</a>&nbsp;
+    {% if url.matched == '1' %}
+    <a 
+        class="tag active" 
+        href="{{ url_for('product.get_list', _external=True) }}?p=1&source={{url.sources}}&matched=0&q={{url.q}}&order={{url.order}}">
+        Matched</a>&nbsp;
+    {% else %}
+    <a 
+        class="tag"
+        href="{{ url_for('product.get_list', _external=True) }}?p=1&source={{url.sources}}&matched=1&q={{url.q}}&order={{url.order}}">
+        Matched</a>
+    {% endif %} 
+</div>
+
+<div class="field">
+    <div>Filter by source: </div>
+    <a 
+        class="tag {{ 'active' if not url.sources else '' }}" 
+        href="{{ url_for('product.get_list', _external=True) }}?p=1&source=&matched={{url.matched}}&q={{url.q}}&order={{url.order}}">
+        All</a>&nbsp;
+    {% if url.sources %}
+    <a 
+        class="tag active" 
+        href="{{ url_for('product.get_list', _external=True) }}?p=1&source={{url.sources}}&matched={{url.matched}}&q={{url.q}}&order={{url.order}}">
+        {{ url.sources }}</a>&nbsp;
+    {% else %}
+        {% for s in sources_active %}
+    <a 
+        class="tag {{ 'active' if s == url.sources else '' }}" 
+        href="{{ url_for('product.get_list', _external=True) }}?p=1&source={{s}}&matched={{url.matched}}&q={{url.q}}&order={{url.order}}">
+        {{ s }}</a>&nbsp;
+        {% endfor %}    
+    {% endif %}
+</div>
+
+<div class="field">
+    Search by gtin or name:
+    <input type="text" id="search" value="{{url.q }}" /> 
+</div>
+
+<div class="field">
+    Auth Code:
+    <input type="text" id="auth-code" /> 
+</div>
+
+<div style="padding: 10px;">
+    {% if url.p > 1 %}
+    <a href="{{ url_for('product.get_list') }}?p={{url.p-1}}&source={{url.sources}}&matched={{url.matched}}&q={{url.q}}&order={{url.order}}">< Anterior</a>
+    {% endif %}
+    &nbsp;
+    {% if url.next %}
+    <a href="{{ url_for('product.get_list') }}?p={{url.p+1}}&source={{url.sources}}&matched={{url.matched}}&q={{url.q}}&order={{url.order}}">Siguiente ></a>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card-box">
+            <table class="table">
+                <thead>
+                    </tr>
+                        <th>Source</th>
+                        <th>GTIN</th>
+                        <th>Name</th>
+                        <th>Prod UUID</th>
+                        <th>Prod ID</th>
+                        <th>Item UUID</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% for prod in products %}
+                    <tr>
+                        <td>{{ prod.source }}</td>
+                        <td>{{ '' if not prod.gtin else prod.gtin }}</td>
+                        <td>{{ '' if not prod.name else prod.name }}</td>
+                        <td>{{ prod.product_uuid }}</td>
+                        <td class="editable">
+                            <input 
+                                class="product-input-pid product-input" 
+                                type="text" 
+                                value_type='product_id'
+                                product_uuid="{{prod.product_uuid}}" 
+                                value="{{prod.product_id}}" />
+                        </td>
+                        <td class="editable">
+                            <input 
+                                style="min-width: 255px;" 
+                                class="product-input-piuuid product-input" 
+                                value_type='item_uuid'
+                                type="text" 
+                                product_uuid="{{prod.product_uuid}}" 
+                                value="{{'' if not prod.item_uuid else prod.item_uuid}}" />
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{{ 3 + sources|length }}">
+                            <div style="margin-top:20px; margin-bottom: 10px; " class="alert alert-info" role="alert">
+                            No items found
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,4 +1,4 @@
-# Byprice Item Service (US Version)
+# Byprice Catalogue Service (MX Version)
 
 Service to query all item details, like images, ingredients, attributes and additional info.
 
@@ -58,6 +58,7 @@ export STREAMER_EXCHANGE_TYPE='direct'
 export STREAMER_USER="<user>"
 export STREAMER_PASS="<pass>"
 export STREAMER_VIRTUAL_HOST="<vhost>"
+export QUEUE_CATALOGUE="<queue>"
 ```
 
 Logger env vars
@@ -87,6 +88,15 @@ export LOG_PORT='<remote logging port>'
 
 ```bash
 . envvars && MODE='CONSUMER' $APP_DIR/bin/run.sh
+```
+
+### Consumer for item
+- Add suffix '_item' to QUEUE_CATALOGUE environment variable
+
+- Build docker image with `./Dockerfile.item` template:
+
+```bash
+docker build --no-cache -t <amazon prefix>/catalogue_item:dev -f Dockerfile.item .
 ```
 
 #### Manually

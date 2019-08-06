@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template, url_for, Response
 from app.models.product import Product
 from app import errors, logger
+import pandas as pd
+import csv
 from flask_cors import CORS, cross_origin
 
 mod = Blueprint('product',__name__,url_prefix="/product")
@@ -154,6 +156,63 @@ def get_bysource():
         })
 
 
+@mod.route("/count/by/source", methods=['GET'])
+def get_countbysource():
+    """ Endpoint to fetch `Product`s by source's.
+    """
+    logger.info("Query count Product by source...")
+    params = request.args.to_dict()
+    logger.debug(params)
+    # Validate required params
+    _needed_params = {'keys'}
+    if not _needed_params.issubset(params):
+        raise errors.ApiError(70001, "Missing required key params")
+    # Complement optional params, and set default if needed
+    _opt_params = {'all': False}
+    for _o, _dft  in _opt_params.items():
+        if _o not in params:
+            params[_o] = _dft
+    resp = {
+        'status': 'OK'
+    }
+    resp.update(Product.query_count('source', **params))
+    logger.info(resp)
+    return jsonify(resp)
+
+
+@mod.route("/matching/by/source", methods=['GET'])
+def get_matchbysource():
+    """ Endpoint to fetch `Product`s by source's.
+    """
+    logger.info("Query count Product by source...")
+    params = request.args.to_dict()
+    logger.debug(params)
+    # Validate required params
+    _needed_params = {'keys'}
+    if not _needed_params.issubset(params):
+        raise errors.ApiError(70001, "Missing required key params")
+    # Complement optional params, and set default if needed
+    _opt_params = {'cols': '', 'p':1, 'ipp': 50, 'all': '0', 'csv':'0'}
+    for _o, _dft  in _opt_params.items():
+        if _o not in params:
+            params[_o] = _dft
+    _prods = Product.query_match('source', **params)
+    if params['csv'] == '1':
+        csv_ = pd.DataFrame(_prods, dtype=str).to_csv(quoting=csv.QUOTE_ALL)
+        return Response(
+        csv_,
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                 "attachment; filename=data.csv"})
+    else:
+        return jsonify({
+            'status': 'OK',
+            'products': _prods
+            })
+    
+
+
+
 @mod.route("/by/attr", methods=['GET'])
 def get_byattr():
     """ Endpoint to fetch `Product`s by attr's.
@@ -288,9 +347,9 @@ def get_intersection():
 
     # Pagination default
     if not 'p' in params:
-        params['p'] = 1
+        params['p'] = [1]
     if not 'ipp' in params:
-        params['ipp'] = 100
+        params['ipp'] = [100]
         
     # Query items
     _prods = Product.intersection(**params)
@@ -312,3 +371,93 @@ def reset_match():
         raise errors.ApiError(70001, "Missing required key params")
     # Call to update Product
     return jsonify(Product.undo_match(params['puuid']))
+
+
+@mod.route('/list', methods=['GET'])
+@cross_origin(origin="*", supports_credentials=True)
+def get_list():
+    ''' Get list of all products with their given 
+        id, source, item_uuid, etc...
+            @Params:
+                - q
+                - p
+                - ipp
+                - sources
+                - gtins
+                - matched
+                - order
+    '''    
+    # Params
+    q = request.args.get('q','')
+    p = int(request.args.get('p',1))
+    ipp = int(request.args.get('ipp',100))
+    _sources = request.args.get('source', '')
+    _gtins = request.args.get('gtin', '')
+    matched = request.args.get('matched', 'all')
+    order = request.args.get('order', '0')
+
+    # Split the lists
+    sources = None if not _sources else _sources.split(",")
+    gtins = None if not _gtins else _gtins.split(",")
+
+    try:
+        # Get classifications of the clients
+        res = Product.get_list(
+            p=p,
+            ipp=ipp,
+            q=q,
+            sources=sources,
+            gtins=gtins,
+            matched=None if matched=='all' else matched,
+            order=int(order)
+        )
+    except Exception as e:
+        logger.error(e)
+        raise errors.ApiError("error","Something wrong happened getting products list",401)
+
+    # Template vars
+    url = {
+        "p" : p,
+        "ipp" : ipp,
+        "q" : q,
+        "sources" : _sources,
+        "sources_active" : res['sources_base'] if not sources else sources,
+        "matched" : matched,
+        "gtins" : _gtins,
+        "next" : (res and len(res['products']) == ipp),
+        "order" : order
+    }
+
+    return render_template(
+        'product/list.html', 
+        products=res['products'], 
+        sources=res['sources'],
+        sources_base=res['sources_base'],
+        sources_active=res['sources_base'] if not sources else sources,
+        url=url
+    )
+
+
+@mod.route('/update', methods=['POST'])
+@cross_origin(origin="*")
+def update():
+    """
+        Get items given some filters
+    """
+    data = request.get_json()
+    if not ('auth' in data and data['auth'] == "ByPrice123!"):
+        raise errors.ApiError("unauthorized","No client ID found",401)
+    if 'product_uuid' not in data:
+        raise errors.ApiError("error","Invalid parameters",402)
+    if 'key' not in data:
+        raise errors.ApiError("error","Invalid parameters",402)
+    
+    print(data)
+    Product.update(
+        product_uuid=data['product_uuid'],
+        item_uuid=None if 'item_uuid' not in data or not data['item_uuid'] else data['item_uuid'],
+        product_id=None if 'product_id' not in data or not data['product_id'] else data['product_id'],
+        key=data['key']
+    )
+
+    return jsonify({"result" : "OK"})
