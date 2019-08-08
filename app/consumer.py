@@ -12,7 +12,7 @@ import sys
 logger = applogger.get_logger()
 
 # Rabbit instances
-    consumer = RabbitEngine({
+consumer = RabbitEngine({
         'queue':QUEUE_CATALOGUE,
         'routing_key': QUEUE_CATALOGUE},
         blocking=False)
