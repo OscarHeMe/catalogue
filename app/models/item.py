@@ -21,7 +21,7 @@ class Item(object):
 
     __attrs__ = ['item_uuid', 'gtin', 'checksum', 'name',
                  'description', 'last_modified']
-    __base_q = ['item_uuid', 'gtin', 'name']
+    __base_q = ['item_uuid', 'name', 'gtin']
     __extras__ = []
 
     def __init__(self, params):
@@ -115,8 +115,8 @@ class Item(object):
         if _p < 1 :
             _p = 1
         _ipp = int(kwargs['ipp'])
-        if _ipp > 10000:
-            _ipp = 10000
+        # if _ipp > 10000:
+        #     _ipp = 10000
         # Order by statement
         if 'orderby' in kwargs:
             _orderby = kwargs['orderby'] if kwargs['orderby'] else 'item_uuid'
@@ -141,6 +141,87 @@ class Item(object):
                 raise errors.ApiError(70003, "Issues fetching elements in DB")
 
         return _resp
+    
+    @staticmethod
+    def it_list(**kwargs):
+        """ Static method to get all items by query
+
+            Params:
+            -----
+            kwargs : dict
+                Extra arguments, such as (p, ipp, cols, etc..)
+            
+            Returns:
+            -----
+            _resp : list
+                List of product objects
+        """
+        logger.debug('Querying items')
+        logger.debug('fetching: {}'.format(kwargs))
+        # Format columns
+        if kwargs['cols']:
+            _cols = ','.join([x for x in \
+                            (Item.__base_q \
+                            + kwargs['cols'].split(',')) \
+                        if x in Item.__attrs__])
+        else:
+            _cols = ','.join([x for x in Item.__base_q ])
+        # Format querying keys
+        _keys = 'WHERE item_uuid IS NOT NULL'
+        
+        # Format paginators
+        _p = int(kwargs['p'])
+        if _p < 1 :
+            _p = 1
+        _ipp = int(kwargs['ipp'])
+        if _ipp > 10000:
+            _ipp = 10000
+        # Order by statement
+        if 'orderby' in kwargs:
+            _orderby = kwargs['orderby'] if kwargs['orderby'] else 'item_uuid'
+        else:
+            _orderby = 'item_uuid'
+        if _orderby not in Item.__base_q:
+            _orderby = 'item_uuid'
+        # Build query
+        _qry = """SELECT {} FROM item {} ORDER BY {} OFFSET {} LIMIT {} """\
+            .format(_cols, _keys, _orderby, (_p - 1)*_ipp, _ipp)
+        logger.debug(_qry)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()
+            logger.info("Found {} items".format(len(_resp)))
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB!")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
+        return _resp
+
+    
+    @staticmethod
+    def it_count():
+        """ Static method to count existent Items
+        """
+        _keys = 'WHERE item_uuid IS NOT NULL'
+        # Build query
+        _qry = """SELECT COUNT(*) as n_items FROM item {} """\
+            .format(_keys)
+        logger.debug(_qry)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()
+            logger.info("Found {} items".format(_resp[0]['n_items']))
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB!")
+            if APP_MODE == "CONSUMER":
+                return False
+            if APP_MODE == "SERVICE":
+                raise errors.ApiError(70003, "Issues fetching elements in DB")
+        return _resp[0]['n_items']
 
     @staticmethod
     def exists(k_param):

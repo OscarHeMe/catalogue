@@ -729,20 +729,22 @@ class Product(object):
             else:
                 _keys = ''
         # Add restriction
-        if kwargs['all']:
-            if kwargs['all'] == '0':
+        if kwargs['items']:
+            if kwargs['items'] == 'matched':
                 if len(_keys) > 0:
                     _keys = _keys + ' AND '
                 _keys = _keys + 'item_uuid IS NOT NULL'
-            if kwargs['all'] == 'notmatched':
+            elif kwargs['items'] == 'notmatched':
                 if len(_keys) > 0:
                     _keys = _keys + ' AND '
-                _keys = _keys + 'item_uuid IS NULL'            
+                _keys = _keys + 'item_uuid IS NULL'                    
         # Format paginators
         _p = int(kwargs['p'])
         if _p < 1 :
             _p = 1
         _ipp = int(kwargs['ipp'])
+        if _ipp > 5000:
+            _ipp = 5000
         # Order by statement
         if 'orderby' in kwargs:
             _orderby = kwargs['orderby'] if kwargs['orderby'] else 'product_uuid'
@@ -750,11 +752,7 @@ class Product(object):
             _orderby = 'product_uuid'
         if _orderby not in Product.__base_q:
             _orderby = 'product_uuid'
-        
-        if kwargs['csv'] != '1':
-            ext = "OFFSET {} LIMIT {}".format((_p - 1)*_ipp, _ipp)
-        else:
-            ext = ''
+        ext = "OFFSET {} LIMIT {}".format((_p - 1)*_ipp, _ipp)
         # Build query
         _qry = """SELECT {} FROM product {} ORDER BY {} {} """\
             .format(_cols, _keys, _orderby, ext)

@@ -1,5 +1,15 @@
 FROM byprice/base-python-web:latest
 
+
+# Environment variables
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+ENV FLASK_APP=app/__init__.py
+ENV APP_NAME="catalogue"
+ENV REGION=""
+ENV ROUTE="bpcatalogue"
+
+
 # Copy repo
 COPY ./ /catalogue/
 RUN mkdir /catalogue/logs
@@ -17,6 +27,7 @@ EXPOSE 80
 VOLUME /var/log/catalogue
 
 # Add Nginx configuration file
+RUN bash bin/nginx_conf.sh
 ADD cfn/nginx/conf.d/ /etc/nginx/conf.d
 RUN rm -rf /etc/nginx/sites-available/default && rm -rf /etc/nginx/sites-enabled/default
 

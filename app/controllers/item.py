@@ -5,6 +5,8 @@ from app.models.product import Product
 from app import errors, logger
 from flask import Response, stream_with_context
 import json
+import csv
+import pandas as pd
 from flask_cors import CORS, cross_origin
 
 mod = Blueprint('item', __name__, url_prefix="/item")
@@ -547,3 +549,54 @@ def save_product_id():
     )
 
     return jsonify({"result" : "OK"})
+
+
+
+
+@mod.route('/matching/list', methods=['GET'])
+@cross_origin(origin="*", supports_credentials=True)
+def get_it_list():
+    ''' Get list of all items with their given 
+        id and name
+            @Params:
+                - p
+                - ipp
+    '''
+    logger.debug("List items")
+    params = request.args
+    # Validation
+    if not params:
+        raise errors.ApiError(70001, "Missing required key params")
+
+    _needed_params = {'p', 'ipp'}
+    if not _needed_params.issubset(params.keys()):
+        raise errors.ApiError(70001, "Missing required key params: {}".format(list(_needed_params)))
+
+    if 'cols' not in params:
+        cols = ','.join(['description'])
+    else:
+        cols = params['cols']
+
+    _resp = Item.it_list(cols=cols, p=params['p'], ipp=params['ipp'])
+
+    if params.get('csv', '0') == '1':
+        csv_ = pd.DataFrame(_resp, dtype=str).to_csv(quoting=csv.QUOTE_ALL)
+        return Response(
+        csv_,
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                "attachment; filename=item_data.csv"})
+    return jsonify({
+        "status": "OK",
+        "items": _resp
+    })
+
+
+@mod.route('/matching/count', methods=['GET'])
+@cross_origin(origin="*", supports_credentials=True)
+def count_items():
+    _resp = Item.it_count()
+    return jsonify({
+        "status": "OK",
+        "total items": _resp
+    })
