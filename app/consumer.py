@@ -12,10 +12,10 @@ import sys
 logger = applogger.get_logger()
 
 # Rabbit instances
-consumer = RabbitEngine({
-    'queue':QUEUE_CATALOGUE,
-    'routing_key': QUEUE_CATALOGUE},
-    blocking=False)
+    consumer = RabbitEngine({
+        'queue':QUEUE_CATALOGUE,
+        'routing_key': QUEUE_CATALOGUE},
+        blocking=False)
 
 producer = RabbitEngine({
     'queue':QUEUE_ROUTING,
@@ -106,5 +106,3 @@ def start():
     except Exception as e:
         logger.error("Couldn't connect to Rabbit!!")
         logger.error(e)
-        
-            
