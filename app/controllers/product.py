@@ -461,3 +461,29 @@ def update():
     )
 
     return jsonify({"result" : "OK"})
+
+
+@mod.route("/by/items_and_retailers", methods=['GET'])
+def get_byitems_and_retailers():
+    """ Endpoint to fetch `Product`s by item_uuid's.
+    """
+    logger.info("Query Product by Item UUID...")
+    params = request.args.to_dict()
+    logger.debug(params)
+    # Validate required params
+    _needed_params = {'items', 'retailers'}
+    if not _needed_params.issubset(params):
+        raise errors.ApiError(70001, "Missing required key params")
+    # Complement optional params, and set default if needed
+    '''_opt_params = {'cols': '', 'p':1, 'ipp': 50}
+    for _o, _dft  in _opt_params.items():
+        if _o not in params:
+            params[_o] = _dft'''
+    cols = ('gtin', 'item_uuid', 'name', 'product_uuid', 'source')
+    items = params['items'].split(',')
+    retailers = params['retailers'].split(',')
+    _prods = Product.bulk_query(items, retailers, cols)
+    return jsonify({
+        'status': 'OK',
+        'products': _prods
+        })
