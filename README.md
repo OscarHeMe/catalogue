@@ -113,7 +113,11 @@ Set the environment variable `$MODE` to the test the consumer or the web service
 ```bash
 source bin/tests.sh
 ```
+### With docker as in PRODUCTION
 
+```bash
+docker run -it --env-file ./<docker-env.file> --expose <psql-port> -p 127.0.0.1:<local-ws-port>:80 -m <384m> --memory-swap <384m> --name <app-name> --entrypoint bash catalogue:latest
+```
 
 ## License
 
