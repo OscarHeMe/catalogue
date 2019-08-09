@@ -479,9 +479,11 @@ def get_byitems_and_retailers():
     for _o, _dft  in _opt_params.items():
         if _o not in params:
             params[_o] = _dft'''
-    cols = ('gtin', 'item_uuid', 'name', 'product_uuid', 'source')
+    cols = ['gtin', 'item_uuid', 'name', 'product_uuid', 'source']
     items = params['items'].split(',')
     retailers = params['retailers'].split(',')
+    if 'cols' in params:
+        cols += params['cols'].split(',')
     _prods = Product.bulk_query(items, retailers, cols)
     return jsonify({
         'status': 'OK',
