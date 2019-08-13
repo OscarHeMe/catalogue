@@ -657,6 +657,42 @@ class Product(object):
             _resp[_i].update(_tmp_extras)
         return _resp
 
+    
+    @staticmethod
+    def bulk_query(items, retailers, cols):
+        """ Static method to bulk query by defined column values
+
+            Params:
+            -----
+            items : str
+                csv list of item_uuids
+            retailers : str
+                csv list of retailers
+            cols : str
+                csv list of columns to get from table
+            
+            Returns:
+            -----
+            _resp : list
+                List of product objects
+        """
+
+        # Build query
+        _qry = """SELECT {} FROM product WHERE item_uuid IN ({}) AND source IN ({}) """\
+            .format(",".join(cols), "'" + "', '".join(items) + "'", "'" + "', '".join(retailers) + "'")
+        logger.debug(_qry)
+        # Query DB
+        try:
+            _resp = g._db.query(_qry).fetch()
+            logger.debug("Found {} products".format(len(_resp)))
+        except Exception as e:
+            logger.error(e)
+            logger.warning("Issues fetching elements in DB!")
+            raise errors.ApiError(70003, "Issues fetching elements in DB")
+
+        return _resp
+
+
 
     @staticmethod
     def query_match(_by, **kwargs):
