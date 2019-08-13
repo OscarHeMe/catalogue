@@ -13,9 +13,9 @@ logger = applogger.get_logger()
 
 # Rabbit instances
 consumer = RabbitEngine({
-        'queue':QUEUE_CATALOGUE,
-        'routing_key': QUEUE_CATALOGUE},
-        blocking=False)
+    'queue':QUEUE_CATALOGUE,
+    'routing_key': QUEUE_CATALOGUE},
+    blocking=False)
 
 producer = RabbitEngine({
     'queue':QUEUE_ROUTING,
