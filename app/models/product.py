@@ -707,8 +707,8 @@ class Product(object):
         if _p < 1 :
             _p = 1
         _ipp = int(kwargs['ipp'])
-        if _ipp > 5000:
-            _ipp = 5000
+        # if _ipp > 5000:
+        #     _ipp = 5000
         # Order by statement
         if 'orderby' in kwargs:
             _orderby = kwargs['orderby'] if kwargs['orderby'] else 'product_uuid'
