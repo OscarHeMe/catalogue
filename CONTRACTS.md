@@ -365,6 +365,26 @@
 
 Same as previous [endpoint](#get_resp).
 
+## Get Products by Item UUIDs and Retailers
+
+**Method**:  GET
+
+**Endpoint**: `/by/items_and_retailers?items=<item_uuids | required>&cols=<product_table_fields | optional>&retailers=<retailers | required>`
+
+**Query Params**:
+
+| Param | Description | Condition |
+| ----- | ----------- | --------- |
+| items  | Comma Separated Product UUIDs | required |
+| cols  | Comma separated Product fields | optional |
+| retailers | Comma separated Retailers | required |
+
+*Note*: Optional **cols** are: `item_uuid`,`description`, `normalized`, `gtin`, `raw_product`, `raw_html`, `categories`, `ingredients`, `brand`, `provider`, `url`, `images`, `last_modified`, `prod_images`, `prod_attrs` and `prod_categs`.
+
+**Response:**
+
+Same as previous [endpoint](#get_resp).
+
 ## Get Products by Source
 
 **Method**:  GET
