@@ -32,7 +32,12 @@ def get_prods():
 	if not _needed_params.issubset(params):
 		raise errors.ApiError(70001, "Missing required key params")
 	sources = params['keys']
-	_prods = Search.get_by_source(sources)
+	# Complement optional params, and set default if needed
+	_opt_params = {'p':1, 'ipp': 50}
+	for _o, _dft in _opt_params.items():
+		if _o not in params:
+			params[_o] = _dft
+	_prods = Search.get_by_source(sources, **dict(params))
 	return jsonify({
         'status': 'OK',
         'products': _prods

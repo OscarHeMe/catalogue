@@ -32,16 +32,29 @@ class Search(object):
 
 
     @staticmethod
-    def get_by_source(sources):
+    def get_by_source(sources, **kwargs):
         ''' Get products by source
         '''
+        ipp, p = kwargs['ipp'], kwargs['p']
+        try:
+            ipp = int(ipp)
+        except:
+            ipp = 50
+        try:
+            p = int(p)
+        except:
+            p = 1
+        if ipp > 10000:
+            ipp = 10000
+        if p < 1:
+            p = 1
         sources = "'" + "','".join(sources.split(',')) + "'"
         # Get the products
         produts = g._db.query("""
             SELECT name FROM search_by_source
 
-            WHERE source IN ({})
-            """.format(sources)).fetch()
+            WHERE source IN ({}) LIMIT {} OFFSET {}
+            """.format(sources, ipp, (p-1)*ipp)).fetch()
             
         if not produts:
             return []
