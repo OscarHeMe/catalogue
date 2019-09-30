@@ -83,7 +83,7 @@ class Product(object):
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
-                logger.warning("Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
+                logger.warning("Wrong Dataype to save Product ({} {})!".format(self.source, self.product_uuid))
                 raise Exception("Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70005, "Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
@@ -93,7 +93,6 @@ class Product(object):
             with product_image, product_attr and product_category
         """
         logger.debug("Saving Product...")
-        _is_update = False
         # Verify for update
         if self.product_uuid:
             # If already validated for updated, dont do it again
@@ -130,10 +129,12 @@ class Product(object):
         # Always add what Item UUID is set
         m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
         try:
-            res = m_prod.save(commit=True)
+            cmt = not _is_update
+            res = m_prod.save(commit=cmt)
             self.message = "Correctly {} Product!"\
                 .format('updated' if self.product_uuid else 'stored')
-            self.product_uuid = m_prod.last_id
+            if not self.product_uuid:
+                self.product_uuid = m_prod.last_id
             logger.debug(self.message)
             # Save product images
             if self.images:
@@ -251,7 +252,7 @@ class Product(object):
     def save_images(self, pcommit=True):
         """ Class method to save product images
         """
-        logger.debug('All images bby')
+        logger.debug('Saving all images')
         logger.debug(self.images)
         for _img in self.images:
             

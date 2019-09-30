@@ -25,12 +25,14 @@ producer = RabbitEngine({
 # Cache variable
 cached_ps = {}
 
+counter = 0
+
 # Product Acumulator
 pstack = []
 last_updt = datetime.datetime.utcnow()
 
 
-def process(new_item, reroute=True):
+def process(new_item, reroute=True, commit=True):
     """ Method that processes all elements with defined rules
     """
     # Fetch Route key
@@ -55,13 +57,13 @@ def process(new_item, reroute=True):
         logger.debug("Got UUID from cache!")
     # if exists
     if prod_uuid:
-        logger.debug('Found product ({} {})!'.format(p.source, p.product_uuid))
+        logger.debug('Found product ({} {})!'.format(p.source, prod_uuid if not isinstance(prod_uuid, list) else prod_uuid[0].get('product_uuid')))
         # Get product_uuid
         p.product_uuid = prod_uuid[0]['product_uuid']
         # If `item` update item
         if route_key == 'item':
             logger.debug('Found product, batch updating...') 
-            if not p.save(pcommit=True, _is_update=True, verified=True):
+            if not p.save(pcommit=commit, _is_update=True, verified=True):
                 raise Exception("Could not update product!")
             logger.info('Updated ({} {}) product!'.format(p.source, p.product_uuid))
     else:
@@ -69,7 +71,7 @@ def process(new_item, reroute=True):
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
-        if not p.save(pcommit=True, verified=True):
+        if not p.save(pcommit=commit, verified=True):
             raise Exception('Unable to create new Product ({} {})!'.format(p.source, p.product_uuid))
         logger.info('Created product ({} {})'.format(p.source, p.product_uuid))
     if route_key == 'price':
@@ -83,10 +85,21 @@ def process(new_item, reroute=True):
 
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
+    global counter
+    commit = False
+    lim = 150
     new_item = json.loads(body.decode('utf-8'))
     logger.debug("New incoming product..")
+    counter += 1
+    print('---counter: {}'.format(counter))
+    if counter in [1, lim]:
+        logger.debug("Commit")
+        commit = True
+        if counter == lim:
+            counter = 0
     # Processing without try catch, to reset container in case of failure
-    process(new_item)
+    
+    process(new_item, commit=commit)
     try: 
         ch.basic_ack(delivery_tag = method.delivery_tag)
     except Exception as e:
