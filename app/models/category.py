@@ -41,12 +41,12 @@ class Category(object):
         """
         logger.info("Saving category...")
         if self.id_category:
-            if not Category.exists({'id_category': self.id_category}):
+            if not Category.exists({'id_category': self.id_category}, commit=commit):
                 raise errors.ApiError(70006, "Cannot update, Category not in DB!")
-        elif Category.exists({'key': self.key, 'source': self.source}):
+        elif Category.exists({'key': self.key, 'source': self.source}, commit=commit):
             self.message = 'Category already exists!'
             self.id_category = Category.get_id(self.name,
-                                        self.source)
+                                        self.source, commit=commit)
             return self.id_category
         # Load model
         m_cat = g._db.model("category", "id_category")
@@ -67,7 +67,7 @@ class Category(object):
             return None
         
     @staticmethod
-    def exists(k_param):
+    def exists(k_param, commit=False):
         """ Static method to verify Category existance
 
             Params:
@@ -86,7 +86,7 @@ class Category(object):
         try:
             exists = g._db.query("""SELECT EXISTS (
                             SELECT 1 FROM category WHERE {} LIMIT 1)"""\
-                            .format(_where))\
+                            .format(_where), commit=commit)\
                         .fetch()[0]['exists']
         except Exception as e:
             logger.error(e)
@@ -94,7 +94,7 @@ class Category(object):
         return exists
     
     @staticmethod
-    def get_id(_cat, _source, _key='id_category'):
+    def get_id(_cat, _source, _key='id_category', commit=False):
         """ Fetch ID from category
 
             Params:
@@ -120,7 +120,7 @@ class Category(object):
                         LIMIT 1"""\
                         .format(_key,
                             key_format(_cat),
-                            _source))\
+                            _source), commit=commit)\
                     .fetch()
             if _res:
                 return _res[0][_key]

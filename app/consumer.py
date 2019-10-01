@@ -52,7 +52,7 @@ def process(new_item, reroute=True, commit=True):
         prod_uuid = Product.get({
             'product_id': p.product_id,
             'source': p.source,
-            }, limit=1)
+            }, limit=1, commit=commit)
     else:
         logger.debug("Got UUID from cache!")
     # if exists
@@ -90,13 +90,14 @@ def callback(ch, method, properties, body):
     lim = 150
     new_item = json.loads(body.decode('utf-8'))
     logger.debug("New incoming product..")
-    counter += 1
     print('---counter: {}'.format(counter))
-    if counter in [1, lim]:
+    if counter == 0:
         logger.debug("Commit")
         commit = True
-        if counter == lim:
-            counter = 0
+    counter += 1
+    if counter == lim:
+        counter = 0
+            
     # Processing without try catch, to reset container in case of failure
     
     process(new_item, commit=commit)

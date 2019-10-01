@@ -129,13 +129,15 @@ class Product(object):
         # Always add what Item UUID is set
         m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
         try:
-            cmt = not _is_update
+            cmt = not _is_update or pcommit
+            print('Commit product? {}'.format(cmt))
             res = m_prod.save(commit=cmt)
             self.message = "Correctly {} Product!"\
                 .format('updated' if self.product_uuid else 'stored')
             if not self.product_uuid:
                 self.product_uuid = m_prod.last_id
             logger.debug(self.message)
+            print('Commit product extra tables? {}'.format(pcommit))
             # Save product images
             if self.images:
                 self.save_images(pcommit=pcommit)
@@ -143,10 +145,7 @@ class Product(object):
             if self.categories:
                 self.save_categories(_is_update, pcommit=pcommit)
             # Save product attrs
-            if self.attributes:
-                self.save_attributes(_is_update, pcommit=pcommit)
-            # Save category, brand and provider as attributes
-            self.save_extras(_is_update)
+            self.save_extras(_is_update, pcommit=pcommit)
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
@@ -160,22 +159,23 @@ class Product(object):
         """ Class method to save brand, provider and categs
             as attributes
         """
-        self.attributes = []
+        if not self.attributes:
+            self.attributes = []
         # Load all elements as Attributes
         if self.brand:
             self.attributes.append({
                 'attr_name': self.brand,
-                'attr_key': key_format(self.brand),
+                'attr_key' : key_format(self.brand),
                 'clss_name': 'Marca',
-                'clss_key': 'brand',
+                'clss_key' : 'brand',
                 'clss_desc': 'Marca'
             })
         if self.provider:
             self.attributes.append({
                 'attr_name': self.provider,
-                'attr_key': key_format(self.provider),
+                'attr_key' : key_format(self.provider),
                 'clss_name': 'Proveedor',
-                'clss_key': 'provider',
+                'clss_key' : 'provider',
                 'clss_desc': 'Proveedor, Laboratorio, Manufacturador, etc.'
             })
         if self.categories:
@@ -200,7 +200,7 @@ class Product(object):
                 logger.warning("Cannot add product attribute, missing keys!")
                 continue
             # Verify if attr exists
-            id_attr = Attr.get_id(_attr['attr_name'], self.source)
+            id_attr = Attr.get_id(_attr['attr_name'], self.source, commit=pcommit)
             # If not, create attr
             if not id_attr:
                 attr = Attr({
@@ -221,7 +221,7 @@ class Product(object):
                                         FROM product_attr
                                         WHERE product_uuid = '{}'
                                         AND id_attr = {} LIMIT 1"""
-                                .format(self.product_uuid, id_attr))\
+                                .format(self.product_uuid, id_attr), commit=pcommit)\
                             .fetch()
             # If not create product_attr
             if id_prod_attr:
@@ -267,7 +267,7 @@ class Product(object):
                 # if '%' in qry_txt:
                 #     g_qry = g._db.query(qry_txt.replace('%','%%'))    
                 # else:
-                g_qry = g._db.query(qry_txt, (self.product_uuid, _img))         
+                g_qry = g._db.query(qry_txt, (self.product_uuid, _img), commit=pcommit)         
                 _exist = g_qry.fetch()             
                 if len(_exist) > 0:
                     Product.save_pimage(self.product_uuid, _img, _exist[0]['id_product_image'],pcommit=pcommit)
@@ -370,13 +370,13 @@ class Product(object):
         for _cat in self.categories.split(','):
             try:
                 # Get ID if exists, otherwise create category
-                id_cat = Category.get_id(_cat, self.source)
+                id_cat = Category.get_id(_cat, self.source, commit=pcommit)
                 if not id_cat:
                     categ = Category({
                         'source': self.source,
                         'id_parent': Category.get_id(_cat,
                                                      self.source,
-                                                     'id_parent'),
+                                                     'id_parent', commit=pcommit),
                         'name': _cat
                         })
                     id_cat = categ.save(commit=pcommit)
@@ -389,7 +389,7 @@ class Product(object):
                                             WHERE id_category = {}
                                             AND product_uuid = '{}' LIMIT 1"""
                                             .format(id_cat,
-                                                    self.product_uuid))\
+                                                    self.product_uuid), commit=pcommit)\
                                     .fetch()
                 if id_prod_categ:
                     if not update:
@@ -412,7 +412,7 @@ class Product(object):
         return True
 
     @staticmethod
-    def exists(k_param):
+    def exists(k_param, commit=True):
         """ Static method to verify Product existance
 
             Params:
@@ -432,7 +432,7 @@ class Product(object):
             _q = """SELECT EXISTS (SELECT 1 FROM product WHERE {} LIMIT 1)"""\
                  .format(_where)
             logger.debug("Query: {}".format(_q))
-            exists = g._db.query(_q)\
+            exists = g._db.query(_q, commit=commit)\
                 .fetch()[0]['exists']
         except Exception as e:
             logger.error(e)
@@ -482,7 +482,7 @@ class Product(object):
         return cache_ids
 
     @staticmethod
-    def get(_by, _cols=['product_uuid'], limit=None):
+    def get(_by, _cols=['product_uuid'], limit=None, commit=True):
         """ Static method to get Item info
 
             Params:
@@ -510,7 +510,7 @@ class Product(object):
             _query += ' LIMIT {}'.format(limit)
         logger.debug(_query)
         try:
-            _items = g._db.query(_query).fetch()
+            _items = g._db.query(_query, commit=commit).fetch()
             logger.debug("Got {} products".format(len(_items)))
         except Exception as e:
             logger.error(e)
@@ -522,11 +522,11 @@ class Product(object):
         return _items
 
     @staticmethod
-    def get_one():
+    def get_one(commit=True):
         """ Static Method to verify correct connection with Items Postgres DB
         """
         try:
-            q = g._db.query("SELECT * FROM product LIMIT 1").fetch()
+            q = g._db.query("SELECT * FROM product LIMIT 1", commit=commit).fetch()
         except:
             logger.error("Postgres Catalogue Connection error")
             return False
@@ -1449,7 +1449,7 @@ class Product(object):
         row_srcs = g._db.query("""
             select key from source 
             order by key asc
-        """).fetch()
+        """, commit=False).fetch()
         srcs_base = list([ row['key'] for row in row_srcs ])
         srcs = [ r['key'] for r in row_srcs]
 
