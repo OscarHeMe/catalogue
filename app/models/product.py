@@ -98,7 +98,7 @@ class Product(object):
             # If already validated for updated, dont do it again
             if _is_update:
                 pass
-            elif not Product.exists({'product_uuid': self.product_uuid}):
+            elif not Product.exists({'product_uuid': self.product_uuid}, commit=pcommit):
                 # If wants to update but wrong UUID, return Error
                 if APP_MODE == "CONSUMER":
                     logger.error("Cannot update, UUID not in DB ({} {})!".format(self.source, self.product_uuid))
@@ -113,7 +113,7 @@ class Product(object):
         else:
             # If not verified, check if not already in DB
             if Product.exists({'product_id': self.product_id,
-                             'source': self.source}):
+                             'source': self.source}, commit=pcommit):
                 self.message = 'Product already exists!'
                 self.product_uuid = Product\
                     .get({'product_id': self.product_id,
@@ -128,16 +128,16 @@ class Product(object):
         m_prod.last_modified = str(datetime.datetime.utcnow())
         # Always add what Item UUID is set
         m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
+        step = 'Start'
         try:
-            cmt = not _is_update or pcommit
-            print('Commit product? {}'.format(cmt))
+            cmt = pcommit
             res = m_prod.save(commit=cmt)
+            step = 'Product'
             self.message = "Correctly {} Product!"\
                 .format('updated' if self.product_uuid else 'stored')
             if not self.product_uuid:
                 self.product_uuid = m_prod.last_id
             logger.debug(self.message)
-            print('Commit product extra tables? {}'.format(pcommit))
             # Save product images
             if self.images:
                 self.save_images(pcommit=pcommit)
@@ -147,12 +147,13 @@ class Product(object):
             # Save product attrs
             self.save_extras(_is_update, pcommit=pcommit)
         except Exception as e:
+            m_prod.conn.commit()
             logger.error(e)
             if APP_MODE == "CONSUMER":
-                logger.error("Issues saving in DB ({} {})!".format(self.source, self.product_uuid))
+                logger.error("Issues saving in DB ({} {}). Step: {}".format(self.source, self.product_uuid, step))
                 return False
             if APP_MODE == "SERVICE":
-                raise errors.ApiError(70002, "Issues saving in DB ({} {})!".format(self.source, self.product_uuid))
+                raise errors.ApiError(70002, "Issues saving in DB ({} {}). Step: {}".format(self.source, self.product_uuid, step))
         return True
 
     def save_extras(self, update=False, pcommit=True):
@@ -220,7 +221,8 @@ class Product(object):
             id_prod_attr = g._db.query("""SELECT id_product_attr
                                         FROM product_attr
                                         WHERE product_uuid = '{}'
-                                        AND id_attr = {} LIMIT 1"""
+                                        AND id_attr = {} LIMIT 1
+                                        FOR UPDATE SKIP LOCKED"""
                                 .format(self.product_uuid, id_attr), commit=pcommit)\
                             .fetch()
             # If not create product_attr
@@ -263,7 +265,7 @@ class Product(object):
                 #                        AND image = '{}'""".format(self.product_uuid, _img)
                 qry_txt = """SELECT id_product_image FROM product_image
                                         WHERE product_uuid = %s
-                                        AND image = %s"""
+                                        AND image = %s FOR UPDATE SKIP LOCKED"""
                 # if '%' in qry_txt:
                 #     g_qry = g._db.query(qry_txt.replace('%','%%'))    
                 # else:
@@ -330,7 +332,8 @@ class Product(object):
                     FROM product_image
                     WHERE product_uuid = '{}'
                     AND image = '{}'
-                    LIMIT 1"""\
+                    LIMIT 1 
+                    FOR UPDATE SKIP LOCKED"""\
                     .format(p_obj['product_uuid'], p_obj['image']))\
                 .fetch()
             if not id_pimg:
@@ -429,8 +432,8 @@ class Product(object):
         _where = ' AND '.join(["{}='{}'".format(*z)
                                for z in list(k_param.items())])
         try:
-            _q = """SELECT EXISTS (SELECT 1 FROM product WHERE {} LIMIT 1)"""\
-                 .format(_where)
+            _q = """SELECT EXISTS (SELECT 1 FROM product 
+                    WHERE {} LIMIT 1""".format(_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
             logger.debug("Query: {}".format(_q))
             exists = g._db.query(_q, commit=commit)\
                 .fetch()[0]['exists']
@@ -469,9 +472,11 @@ class Product(object):
                 Nested dict by source and product_id to product_uuid map
         """
         _df = pd\
-            .read_sql("""SELECT product_uuid, source, product_id
-                    FROM product WHERE source NOT IN ('ims','plm','nielsen','gs1')""",
+            .read_sql("""SELECT product_uuid, source, product_id 
+                    FROM product WHERE source NOT IN ('ims','plm','nielsen','gs1') 
+                    FOR UPDATE SKIP LOCKED""",
                     g._db.conn)
+        g._db.conn.commit()        
         cache_ids = {}
         for y, gdf in _df.groupby('source'):
             cache_ids[y] = gdf[['product_uuid','product_id']]\
@@ -509,6 +514,7 @@ class Product(object):
         if limit:
             _query += ' LIMIT {}'.format(limit)
         logger.debug(_query)
+        # print(_query)
         try:
             _items = g._db.query(_query, commit=commit).fetch()
             logger.debug("Got {} products".format(len(_items)))
@@ -553,7 +559,7 @@ class Product(object):
                
         """
         # Build query
-        _qry = """SELECT products, unique_items, items FROM (SELECT COUNT(*)  AS products, COUNT(DISTINCT(item_uuid))  AS unique_items, COUNT(item_uuid) as items FROM product WHERE {} = '{}') AS stt """\
+        _qry = """SELECT products, unique_items, items FROM (SELECT COUNT(*)  AS products, COUNT(DISTINCT(item_uuid))  AS unique_items, COUNT(item_uuid) as items FROM product WHERE {} = '{}' ) AS stt """\
             .format(_by, params['keys'])
         logger.debug(_qry)
         # Query DB
@@ -628,7 +634,7 @@ class Product(object):
         if _orderby not in Product.__base_q:
             _orderby = 'product_uuid'
         # Build query
-        _qry = """SELECT {} FROM product {} ORDER BY {} OFFSET {} LIMIT {} """\
+        _qry = """SELECT {} FROM product {} ORDER BY {} OFFSET {} LIMIT {} FOR UPDATE SKIP LOCKED"""\
             .format(_cols, _keys, _orderby, (_p - 1)*_ipp, _ipp)
         logger.debug(_qry)
         # Query DB
@@ -679,7 +685,7 @@ class Product(object):
         """
 
         # Build query
-        _qry = """SELECT {} FROM product WHERE item_uuid IN ({}) AND source IN ({}) """\
+        _qry = """SELECT {} FROM product WHERE item_uuid IN ({}) AND source IN ({})"""\
             .format(",".join(cols), "'" + "', '".join(items) + "'", "'" + "', '".join(retailers) + "'")
         logger.debug(_qry)
         # Query DB
@@ -755,7 +761,7 @@ class Product(object):
             _orderby = 'product_uuid'
         ext = "OFFSET {} LIMIT {}".format((_p - 1)*_ipp, _ipp)
         # Build query
-        _qry = """SELECT {} FROM product {} ORDER BY {} {} """\
+        _qry = """SELECT {} FROM product {} ORDER BY {} {}"""\
             .format(_cols, _keys, _orderby, ext)
         logger.debug(_qry)
         # Query DB
@@ -888,8 +894,7 @@ class Product(object):
                 ON (clss.id_clss = attr.id_clss)) AS att
             ON (att.id_attr = pat.id_attr)
             WHERE product_uuid IN {}
-            ORDER BY product_uuid
-            """.format(tuplify(p_uuids))
+            ORDER BY product_uuid""".format(tuplify(p_uuids))
         logger.debug(_qry)
         try:
             resp_at = g._db.query(_qry).fetch()
@@ -926,8 +931,7 @@ class Product(object):
         for i in range(0,len(p_uuids), 1000):
             _qry = """SELECT product_uuid, normalized
                 FROM product_normalized
-                WHERE product_uuid IN {}
-                """.format(tuplify(p_uuids[i: i+1000]))
+                WHERE product_uuid IN {}""".format(tuplify(p_uuids[i: i+1000]))
             logger.debug(_qry)
             try:
                 resp_norm = g._db.query(_qry).fetch()
@@ -963,8 +967,7 @@ class Product(object):
             to_char(last_modified, 'YYYY-MM-DD HH24:00:00') as last_modified
             FROM product_image
             WHERE product_uuid IN {}
-            ORDER BY product_uuid
-            """.format(tuplify(p_uuids))
+            ORDER BY product_uuid""".format(tuplify(p_uuids))
         logger.debug(_qry)
         try:
             resp_im = g._db.query(_qry).fetch()
@@ -1006,8 +1009,7 @@ class Product(object):
             LEFT OUTER JOIN category ca
             ON (ca.id_category = pca.id_category)
             WHERE product_uuid IN {}
-            ORDER BY product_uuid
-            """.format(tuplify(p_uuids))
+            ORDER BY product_uuid""".format(tuplify(p_uuids))
         logger.debug(_qry)
         try:
             resp_ca = g._db.query(_qry).fetch()
@@ -1068,7 +1070,7 @@ class Product(object):
         f_query = """SELECT {ref_table}.product_uuid FROM {table}
             INNER JOIN {ref_table}
             ON ({table}.id_{table} = {ref_table}.id_{table})
-            {keys} {vals} {rets} """\
+            {keys} {vals} {rets}"""\
             .format(table=field.split('.')[0],
                     ref_table=valu.split('.')[0],
                     keys=_keys,
@@ -1113,8 +1115,7 @@ class Product(object):
             _exists = g._db.query("""SELECT EXISTS (
                                     SELECT 1 FROM {table}
                                     WHERE product_uuid = '{uuid}'
-                                    AND id_{table} = {_id}
-                                    )"""
+                                    AND id_{table} = {_id}"""
                                   .format(table=_table,
                                           uuid=_uuid,
                                           _id=_id))\
@@ -1239,7 +1240,7 @@ class Product(object):
         """ Query products by intersection of one
             or various cols
         """
-        print(kwargs)
+        # print(kwargs)
         if 'p' in kwargs:
             p = int(kwargs['p'][0])
             del kwargs['p']

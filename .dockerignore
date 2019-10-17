@@ -1,4 +1,4 @@
-env/
+env/*
 .vscode/
 .envvars
 */*.pyc
@@ -14,8 +14,11 @@ dumps/*
 app/models/__pycache__
 app/controllers/__pycache__
 app/tests/__pycache__
-.git
+.git*
 schemaT.sql
 spark-warehouse
 data/
 Dockerfile.local
+.env*
+Pip*
+*.dump

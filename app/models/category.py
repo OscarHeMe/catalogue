@@ -85,7 +85,7 @@ class Category(object):
                             for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM category WHERE {} LIMIT 1)"""\
+                            SELECT 1 FROM category WHERE {} LIMIT 1 FOR UPDATE SKIP LOCKED)"""\
                             .format(_where), commit=commit)\
                         .fetch()[0]['exists']
         except Exception as e:
@@ -110,18 +110,16 @@ class Category(object):
             -----
             _id : int
                 Category or Parent ID
-        """        
+        """
+        qry = """SELECT {} 
+                FROM category
+                WHERE key = '{}'
+                AND source = '{}'
+                LIMIT 1 FOR UPDATE SKIP LOCKED"""\
+                .format(_key, key_format(_cat), _source)
+        # logger.debug(qry)      
         try:
-            _res = g._db\
-                    .query("""SELECT {} 
-                        FROM category
-                        WHERE key = '{}'
-                        AND source = '{}'
-                        LIMIT 1"""\
-                        .format(_key,
-                            key_format(_cat),
-                            _source), commit=commit)\
-                    .fetch()
+            _res = g._db.query(qry, commit=commit).fetch()
             if _res:
                 return _res[0][_key]
         except Exception as e:

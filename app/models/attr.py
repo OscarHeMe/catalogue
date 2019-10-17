@@ -98,7 +98,7 @@ class Attr(object):
                             for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM attr WHERE {} LIMIT 1)"""\
+                            SELECT 1 FROM attr WHERE {} LIMIT 1 FOR UPDATE SKIP LOCKED)"""\
                             .format(_where), commit=commit)\
                         .fetch()[0]['exists']
         except Exception as e:
@@ -128,7 +128,7 @@ class Attr(object):
                         FROM attr
                         WHERE key = '{}'
                         AND source = '{}'
-                        LIMIT 1"""\
+                        LIMIT 1 FOR UPDATE SKIP LOCKED"""\
                         .format(key_format(_attr),
                             _source), commit=commit)\
                     .fetch()

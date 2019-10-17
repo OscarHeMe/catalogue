@@ -91,7 +91,7 @@ class Clss(object):
                             for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM clss WHERE {})"""\
+                            SELECT 1 FROM clss WHERE {} FOR UPDATE SKIP LOCKED)"""\
                             .format(_where), commit=commit)\
                         .fetch()[0]['exists']
         except Exception as e:
@@ -121,7 +121,7 @@ class Clss(object):
                         FROM clss
                         WHERE key = '{}'
                         AND source = '{}'
-                        LIMIT 1"""\
+                        LIMIT 1 FOR UPDATE SKIP LOCKED"""\
                         .format(_key,
                             _source), commit=commit)\
                     .fetch()
