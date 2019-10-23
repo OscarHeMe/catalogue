@@ -124,6 +124,13 @@ CREATE TABLE "item_vademecum_info" (
 );
 
 
+/* Search products */
+CREATE TABLE "search_by_source" (
+    name text,
+    source text
+);
+
+
 /* Indexes */
 /*
 CREATE INDEX ON product (source);

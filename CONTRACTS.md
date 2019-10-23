@@ -594,7 +594,59 @@ Reacciones adversas
 ]
 ```
 
+## Products to Search
 
+**Method**: GET
+
+**Endpoint**: `/search/products/by/source`
+
+**Query Params**:
+
+| Param | Description         | Condition |
+| ----- | ------------------- | --------- |
+| keys  | Source(s) comma sep | required  |
+
+
+
+
+**Response:**
+
+```json
+{
+    "products": [
+        {
+            "name":"<str>"
+        },
+        {
+            "name":"<str>"
+        }
+    ],
+    "status":"ok"
+}
+```
+
+## Save products to Search
+
+**Method**: POST
+
+**Endpoint**: `/search/products/save`
+
+**Query Params**:
+
+| Param  | Description         | Condition |
+| ------ | ------------------- | --------- |
+| name   | Product name        | required  |
+| source | Source(s) comma sep | required  |
+
+
+**Response:**
+
+```json
+{
+    "message": "<str>",
+    "status":"ok"
+}
+```
 ------
 
 # Errors
