@@ -179,87 +179,16 @@ def treat_batch(messages):
 
     return failed
 
-        # if not method.redelivered:
-        #     process(new_item, commit=commit)
-        #     try:            
-        #         ch.basic_ack(delivery_tag = method.delivery_tag)
-        #     except Exception as e:
-        #         logger.error("Error with the Delivery tag, method. [Basic Acknowledgment]")
-        #         logger.error(e)
-        # else:
-        #     # print(method.delivery_tag)
-        #     # logger.debug('-- Redelivered')
-        #     try:
-        #         # print('Channel number', ch.channel_number)
-        #         ch.basic_nack(delivery_tag=int(method.delivery_tag), multiple=False, requeue=False)
-        #         # print(dir(method))
-        #         resender.send(new_item)
-        #         # ch.basic_reject(delivery_tag = 0)
-        #     except Exception as e:
-        #         logger.error("Error with the Delivery tag, method. [Basic Not Acknowledgment]")
-        #         logger.error(e)
-
-
-
-
-
-
-        # process(msg[2], commit=commit)
-        # try:            
-        #     channel.basic_ack(delivery_tag = msg[0].delivery_tag)
-        # except Exception as e:
-        #     logger.error("Error with the Delivery tag, method. [Basic Acknowledgment]")
-        #     logger.error(e)
-
-
-    # #print('---counter: {}'.format(counter))
-    # if counter == 0:
-    #     #logger.debug("Commit")
-    #     commit = True
-    # counter += 1
-    # if counter == lim:
-    #     counter = 0
-    
-    # print(new_item.get('description'))
-    # if not method.redelivered:
-    #     process(new_item, commit=commit)
-    #     try:            
-    #         ch.basic_ack(delivery_tag = method.delivery_tag)
-    #     except Exception as e:
-    #         logger.error("Error with the Delivery tag, method. [Basic Acknowledgment]")
-    #         logger.error(e)
-    # else:
-    #     # print(method.delivery_tag)
-    #     logger.debug('-- Redelivered')
-    #     try:
-    #         # print('Channel number', ch.channel_number)
-    #         ch.basic_nack(delivery_tag=int(method.delivery_tag), multiple=False, requeue=False)
-    #         # print(dir(method))
-    #         resender.send(new_item)
-    #         # ch.basic_reject(delivery_tag = 0)
-    #     except Exception as e:
-    #         logger.error("Error with the Delivery tag, method. [Basic Not Acknowledgment]")
-    #         logger.error(e)
-
-def process_body(body):
-    new_item = json.loads(body.decode('utf-8'))
-    process(new_item, commit=True)
-
-
 
 def start():
     logger.info("Warming up caching IDS...")
     global cached_ps
-    cached_ps = {} #Product.create_cache_ids()
+    cached_ps = Product.create_cache_ids()
     logger.info("Done warmup, loaded {} values from {} sources"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
-    # consumer.set_callback_function(process_body)
     consumer.set_callback(callback)
-    # consumer.open_channel()
-    # consumer.connection.channel(on_open_callback=consumer.on_channel_open)
-    # # consumer.connection._channel.basic_qos(prefetch_count=100)
-    # print(dir(consumer.connection._channels[1]))
+
     try:
         consumer.run()
     except Exception as e:
