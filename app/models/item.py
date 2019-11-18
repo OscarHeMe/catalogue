@@ -384,7 +384,6 @@ class Item(object):
                 ",".join( [ """'{}'""".format(v) for v in valid ] )
             )
             logger.debug(iqry)
-            print(i)
             items = g._db.query(iqry).fetch()
             return items
         except Exception as e:
