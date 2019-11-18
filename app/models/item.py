@@ -312,7 +312,7 @@ class Item(object):
                 FROM item WHERE gtin IN ({})
             """.format(
                 ",".join(_cols),
-                ",".join( [ """'{}'""".format(v) for v in valid ] )
+                ",".join( [ """'{}'""".format(str(int(v))) for v in valid ] )
             )
             logger.debug(iqry)
             items = g._db.query(iqry).fetch()
