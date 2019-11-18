@@ -106,7 +106,7 @@ def get_by_like_gtin():
         @Example:
             /by/like/gtin?gtins=07501034691224,07501284858385
     """
-    logger.info("Searching by gtin")
+    logger.info("Searching by like gtin")
     params = request.args
     # Validation
     if not params:
