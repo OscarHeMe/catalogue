@@ -338,28 +338,53 @@ class Item(object):
         """
         valid = []
         # Variations of gtin
-        for gtin in gtins:
-            try:
-                code = str(int(gtin))
-                valid.append(gtin)
+        for gt in gtins:
+            '''try:
+                code = str(int(gt))
+                valid.append(gt)
             except Exception as e:
                 logger.error("Not a valid gtin format")
-                continue
+                continue'''
+
+            if is_valid_GTIN(gt):
+                gtin = str(gt)
+                gtin = gtin.zfill(14)
+                valid.append(gt)
+            elif str(gt).isdigit():
+                gtin = gt.add_check_digit(gt)
+                gtin = gtin.zfill(14)
+                gtin = gtin[len(gtin)-14:len(gtin)]
+                valid.append(gt)
          
         if not valid:
             raise Exception("No valid gtins")             
     
-        try:
+        '''try:
             items = []
             for v in valid:
                 iqry = """
                     SELECT {}
-                    FROM item WHERE gtin LIKE '{}'
+                    FROM item WHERE gtin LIKE '%%{}%%'
                 """.format(
                     ",".join(_cols), str(int(v))
                 )
                 logger.debug(iqry)
                 items = items + g._db.query(iqry).fetch()
+            return items
+        except Exception as e:
+            logger.error(e)
+            return []'''
+
+        try:
+            iqry = """
+                SELECT {}
+                FROM item WHERE gtin IN ({})
+            """.format(
+                ",".join(_cols),
+                ",".join( [ """'{}'""".format(v) for v in valid ] )
+            )
+            logger.debug(iqry)
+            items = g._db.query(iqry).fetch()
             return items
         except Exception as e:
             logger.error(e)

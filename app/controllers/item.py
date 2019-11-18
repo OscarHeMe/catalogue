@@ -93,7 +93,7 @@ def get_bygtin():
 
 
 @mod.route('/by/like/gtin', methods=['GET'])
-def get_by_like_gtin():
+def get_by_likegtin():
     """ Endpoint to get details of given items
 
         @Params:
