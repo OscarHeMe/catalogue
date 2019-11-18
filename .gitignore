@@ -5,6 +5,7 @@ env/
 *.pyc
 *.csv
 .vscode/
+.idea/
 .envvars
 __pycache__/
 app/__pycache__/

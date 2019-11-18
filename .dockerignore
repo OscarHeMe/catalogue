@@ -19,3 +19,6 @@ schemaT.sql
 spark-warehouse
 data/
 Dockerfile.local
+.env*
+Pip*
+*.dump
