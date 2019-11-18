@@ -312,10 +312,54 @@ class Item(object):
                 FROM item WHERE gtin IN ({})
             """.format(
                 ",".join(_cols),
-                ",".join( [ """'{}'""".format(str(int(v))) for v in valid ] )
+                ",".join( [ """'{}'""".format(v) for v in valid ] )
             )
             logger.debug(iqry)
             items = g._db.query(iqry).fetch()
+            return items
+        except Exception as e:
+            logger.error(e)
+            return []
+
+
+    @staticmethod
+    def get_by_like_gtin(gtins,  _cols=['item_uuid']):
+        """ Static method to get Items by gtins
+            Params:
+            -----
+            gtins : list of gtins
+                Values to compare
+            _cols : list
+                Columns to retrieve
+            Returns:
+            -----
+            _items : list
+                List of elements
+        """
+        valid = []
+        # Variations of gtin
+        for gtin in gtins:
+            try:
+                code = str(int(gtin))
+                valid.append(gtin)
+            except Exception as e:
+                logger.error("Not a valid gtin format")
+                continue
+         
+        if not valid:
+            raise Exception("No valid gtins")             
+    
+        try:
+            items = []
+            for v in valid:
+                iqry = """
+                    SELECT {}
+                    FROM item WHERE gtin LIKE '{}'
+                """.format(
+                    ",".join(_cols), str(int(v))
+                )
+                logger.debug(iqry)
+                items = items + g._db.query(iqry).fetch()
             return items
         except Exception as e:
             logger.error(e)

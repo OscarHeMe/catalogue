@@ -92,6 +92,51 @@ def get_bygtin():
     })
 
 
+@mod.route('/by/like/gtin', methods=['GET'])
+def get_bygtin():
+    """ Endpoint to get details of given items
+
+        @Params:
+            - gtins: <str> list of values
+            - cols: <str> can be item_uuid, gtin, name, description
+
+        @Response:
+            - resp: items list
+
+        @Example:
+            /by/like/gtin?gtins=07501034691224,07501284858385
+    """
+    logger.info("Searching by gtin")
+    params = request.args
+    # Validation
+    if not params:
+        raise errors.ApiError(70001, "Missing required key params")
+
+    # Verify needed key-values
+    _needed_params = {'gtins'}
+    if not _needed_params.issubset(params.keys()):
+        raise errors.ApiError(70001, "Missing required key params")
+
+    # Get columns
+    if 'cols' not in params:
+        cols = ['item_uuid', 'gtin', 'name', 'description']
+    else:
+        cols = list(set( ['item_uuid, gtin'] + params['cols'].split(",") )) 
+
+    # Call to delete Item
+    gtins = params['gtins'].split(",")
+    try:
+        _resp = Item.get_by_like_gtin(gtins, _cols=cols)
+    except Exception as e:
+        logger.error(e)
+        raise errors.ApiError(70001, "Could not query items by like gtin")
+        
+    return jsonify({
+        "status": "OK",
+        "items": _resp
+    })
+
+
 @mod.route('/query/<by>', methods=['GET'])
 def query_by(by):
     """ Endpoint to query items table by given values
