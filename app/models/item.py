@@ -349,12 +349,12 @@ class Item(object):
             if is_valid_GTIN(gt):
                 gtin = str(gt)
                 gtin = gtin.zfill(14)
-                valid.append(gt)
+                valid.append(gtin)
             elif str(gt).isdigit():
                 gtin = gt.add_check_digit(gt)
                 gtin = gtin.zfill(14)
                 gtin = gtin[len(gtin)-14:len(gtin)]
-                valid.append(gt)
+                valid.append(gtin)
          
         if not valid:
             raise Exception("No valid gtins")             
@@ -384,6 +384,7 @@ class Item(object):
                 ",".join( [ """'{}'""".format(v) for v in valid ] )
             )
             logger.debug(iqry)
+            print(i)
             items = g._db.query(iqry).fetch()
             return items
         except Exception as e:
