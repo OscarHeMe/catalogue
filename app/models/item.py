@@ -339,12 +339,14 @@ class Item(object):
         valid = []
         # Variations of gtin
         for gt in gtins:
-            '''try:
+            try:
                 code = str(int(gt))
                 valid.append(gt)
             except Exception as e:
                 logger.error("Not a valid gtin format")
-                continue'''
+                continue
+
+            '''gt = str(int(gt))
 
             if is_valid_GTIN(gt):
                 gtin = str(gt)
@@ -354,12 +356,12 @@ class Item(object):
                 gtin = gt.add_check_digit(gt)
                 gtin = gtin.zfill(14)
                 gtin = gtin[len(gtin)-14:len(gtin)]
-                valid.append(gtin)
+                valid.append(gtin)'''
          
         if not valid:
             raise Exception("No valid gtins")             
     
-        '''try:
+        try:
             items = []
             for v in valid:
                 iqry = """
@@ -373,9 +375,9 @@ class Item(object):
             return items
         except Exception as e:
             logger.error(e)
-            return []'''
+            return []
 
-        try:
+        '''try:
             iqry = """
                 SELECT {}
                 FROM item WHERE gtin IN ({})
@@ -388,7 +390,7 @@ class Item(object):
             return items
         except Exception as e:
             logger.error(e)
-            return []
+            return []'''
 
 
     @staticmethod
