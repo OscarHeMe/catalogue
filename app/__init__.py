@@ -83,7 +83,7 @@ def close_db(error):
 def main():
     return jsonify({
         'service' : 'ByPrice Catalogue',
-        'author' : 'Byprice Dev',
+        'author' : 'Byprice {}'.format(str(ENV).lower()),
         'date' : datetime.datetime.utcnow(),
         'version': __version__
     })
