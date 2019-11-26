@@ -1,4 +1,5 @@
 #-*- coding: utf-8 -*-
+from app.utils import cached_item
 from config import *
 import datetime
 import json
@@ -56,6 +57,7 @@ def process(new_item, reroute=True, commit=True):
     """ Method that processes all elements with defined rules
     """
     # Fetch Route key
+    item_uuid = None
     route_key = new_item['route_key']
     logger.debug('Evaluating: {}'.format(route_key))
     # Reformat Prod Values
@@ -73,14 +75,19 @@ def process(new_item, reroute=True, commit=True):
         prod_uuid = Product.get({
             'product_id': p.product_id,
             'source': p.source,
-            }, limit=1, commit=commit)
+            }, _cols=['product_uuid', 'item_uuid'], limit=1)
+        if prod_uuid and 'item_uuid' in prod_uuid[0]:
+            cached_item.add_key(prod_uuid[0]['product_uuid'], prod_uuid[0]['item_uuid'])
     else:
+        prod_uuid[0]['item_uuid'] = cached_item.get_item_uuid(prod_uuid[0]['product_uuid'])
         logger.debug("Got UUID from cache!")
+
     # if exists
     if prod_uuid:
         logger.debug('Found product ({} {})!'.format(p.source, prod_uuid if not isinstance(prod_uuid, list) else prod_uuid[0].get('product_uuid')))
         # Get product_uuid
         p.product_uuid = prod_uuid[0]['product_uuid']
+        item_uuid = prod_uuid[0]['item_uuid']
         # If `item` update item
         if route_key == 'item':
             logger.debug('Found product, batch updating...') 
@@ -97,7 +104,7 @@ def process(new_item, reroute=True, commit=True):
         logger.info('Created product ({} {})'.format(p.source, p.product_uuid))
     if route_key == 'price':
         # If price, update product_uuid and reroute
-        new_item.update({'product_uuid': p.product_uuid})
+        new_item.update({'product_uuid': p.product_uuid, "item_id": item_uuid})
         if reroute:
             producer.send(new_item)
             logger.info("[price] Rerouted back ({})".format(new_item['product_uuid']))
@@ -188,7 +195,7 @@ def start():
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
     consumer.set_callback(callback)
-
+    cached_item.item_cache(cached_item.MAXSIZE, cached_item.TTL)
     try:
         consumer.run()
     except Exception as e:

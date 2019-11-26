@@ -37,7 +37,9 @@ def consumer_cmd():
 
 @app.cli.command('initdb')
 def initdb_cmd():
+    ''' Creates db from cli '''
     db.initdb()
+    logger.info("Initialized database")
 
 @app.cli.command('dropdb')
 def dropdb_cmd():
@@ -75,20 +77,13 @@ def close_db(error):
     db = getattr(g, '_db', None)
     if db is not None:
         db.close()
-        
-        
-@app.cli.command('initdb')
-def initdb_cmd():
-    ''' Creates db from cli '''
-    db.initdb()
-    logger.info("Initialized database")
 
 
 @app.route('/')
 def main():
     return jsonify({
         'service' : 'ByPrice Catalogue',
-        'author' : 'Byprice Dev',
+        'author' : 'Byprice {}'.format(str(ENV).lower()),
         'date' : datetime.datetime.utcnow(),
         'version': __version__
     })

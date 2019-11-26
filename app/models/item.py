@@ -237,11 +237,10 @@ class Item(object):
         """
         logger.debug("Verifying Item existance...")
         _key, _val = list(k_param.items())[0]
+        qry = """SELECT EXISTS (SELECT 1 FROM item WHERE {} = '{}');""".format(_key, _val)
+        logger.debug(qry)
         try:
-            exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM item WHERE {} = '{}')""" \
-                                 .format(_key, _val)) \
-                .fetch()[0]['exists']
+            exists = g._db.query(qry).fetch()[0]['exists']
         except Exception as e:
             logger.error(e)
             return False
@@ -749,11 +748,12 @@ class Item(object):
             _details : dict
                 Product/Item Details
         """
+        item_uuid = None
         # Fetch info from all retailers
         try:
             if u_type == 'item_uuid':
                 _qry = """SELECT i.name, i.gtin, i.description,
-                    p.product_uuid,
+                    p.product_uuid, p.item_uuid as item_uuid,
                     p.images, p.ingredients, p.source,
                     s.hierarchy, s.retailer as show_label, s.name as r_name
                     FROM product p 
@@ -761,21 +761,23 @@ class Item(object):
                     ON (p.source = s.key)
                     INNER JOIN item i
                     ON (i.item_uuid = p.item_uuid)
-                    WHERE p.{} = '{}'
+                    WHERE p.{} = '{}';
                 """.format(u_type, _uuid)
             else:
                 _qry = """SELECT p.name, p.gtin, p.description,
                     p.product_uuid,
                     p.images, p.ingredients, p.source,
-                    s.hierarchy, s.retailer as show_label, s.name as r_name
+                    s.hierarchy, s.retailer as show_label,
+                    s.name as r_name, p.item_uuid as item_uuid
                     FROM product p 
                     INNER JOIN source s 
                     ON (p.source = s.key)
-                    WHERE p.{} = '{}'
+                    WHERE p.{} = '{}';
                 """.format(u_type, _uuid)
             logger.debug(_qry)
             info_rets = pd.read_sql(_qry, g._db.conn).to_dict(orient='records')
             logger.debug(info_rets)
+            item_uuid = info_rets[0].get('item_uuid')
             if not info_rets:
                 raise errors.ApiError(70008, "Not existing elements in DB!")
         except Exception as e:
@@ -832,7 +834,7 @@ class Item(object):
             df_rets = df_rets[df_rets.show_label == 1]
         if df_rets.empty:
             raise errors.ApiError(70003, "Issues fetching elements in DB", 404)
-        return {
+        data = {
             'name': sorted(df_rets['name'].tolist(),
                 key=lambda x: len(x) if x else 0,
                 reverse=True)[0].strip().capitalize(),
@@ -853,6 +855,11 @@ class Item(object):
             'categories': categs,
             'categories_options': categ_options
         }
+        if item_uuid:
+            data.update({'item_uuid':item_uuid})
+
+        return data
+
 
     @staticmethod
     def fetch_normalized_attrs(u_type, _uuid):
