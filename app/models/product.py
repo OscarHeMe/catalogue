@@ -50,6 +50,8 @@ class Product(object):
         self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
         self.product_id = str(self.product_id).zfill(20)[-255:] \
             if self.product_id else None
+        if len(self.name) > 250:
+            self.name = self.name[:250]            
         # Categories parsing
         if not isinstance(self.categories, str):
             if not (self.categories is None):
