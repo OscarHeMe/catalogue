@@ -14,6 +14,8 @@ import ast
 import json
 import uuid
 
+from pprint import pprint
+
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
 logger = applogger.get_logger()
 
@@ -47,6 +49,7 @@ class Product(object):
                 continue
             self.__dict__[_k] = None
         # Args Aggregation
+        self.last_modified = str(datetime.datetime.utcnow())
         self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
         self.product_id = str(self.product_id).zfill(20)[-255:] \
             if self.product_id else None
@@ -443,6 +446,80 @@ class Product(object):
             logger.error(e)
             return False
         return exists
+
+
+    @staticmethod
+    def insert_batch_qry(data_batch, table, pkey, cols=[]) -> list:
+        values = []
+        response = []
+        p_uuids = []
+        qry = ''
+        if len(cols) > 0:
+            for data in data_batch:
+                # pprint(data)
+                vs = []
+                for k in cols:
+                    value = data.get(k, None)
+                    if isinstance(value, str) or isinstance(value, list):
+                        value = "'" + str(value).replace('%', '%%').replace("'", "''") + "'"
+                    elif not value:
+                        value = 'NULL'
+
+                    vs.append(str(value))
+
+                if len(vs) > 0:
+                    values.append("(" + ",".join(vs) + ")")
+
+                if len(values) > 0:
+                    qry = """INSERT INTO {} ({}) VALUES {} RETURNING {};""".format(table,
+                                                                                ','.join(cols), 
+                                                                                ','.join(values),
+                                                                                pkey)
+                    # logger.debug(qry[:1000])
+                g._psql_db.cursor.execute(qry)
+                response = g._psql_db.cursor.fetchall()
+            for res in response:
+                if len(res) > 0:
+                    p_uuids.append(res[0])
+        g._psql_db.connection.commit() 
+        return p_uuids
+
+    
+    @staticmethod
+    def update_prod_query(data_batch, table, pkey, cols=[]) -> list:
+        values = []
+        p_uuids = []
+        qry = "UPDATE product SET ({}) = ({}) WHERE {} = '{}';"
+        if len(cols) > 0:
+            for data in data_batch:
+                pval = data.get(pkey)
+                vs = []
+                ks = []
+                for k in cols:
+                    value = data.get(k, None)
+                    if isinstance(value, str) or isinstance(value, list):
+                        value = "'" + str(value).replace('%', '%%').replace("'", "''") + "'"
+                    elif not value and not isinstance(value, bool):
+                        continue
+
+                    vs.append(str(value))
+                    ks.append(str(k))
+
+                tp = [','.join(ks), ",".join(vs), pkey, pval]
+                # print(tp)
+                values.append(tp)
+
+        if len(values) > 0:
+            for el in values:
+                try:
+                    g._psql_db.cursor.execute(qry.format(*el))
+                    p_uuids.append(el[-1])
+                except Exception as e:
+                    logger.error('Error while trying to update {}:\n   - {}'.format([-1], e))
+        g._psql_db.connection.commit()                   
+        return p_uuids
+
+
 
     @staticmethod
     def puuid_from_cache(cached_ps, _p):

@@ -9,6 +9,7 @@ import datetime
 from ByHelpers import applogger
 import app.utils.errors as errors
 import app.utils.db as db
+from app.utils.postgresql import Postgresql as psqldb
 from app.utils.proxy import ReverseProxied
 if APP_MODE == 'CONSUMER':
     from app import consumer
@@ -22,6 +23,7 @@ CORS(app)
 applogger.create_logger()
 logger = applogger.get_logger()
 
+
 @app.cli.command('new_retailer')
 def new_retailer_cmd():
     get_db()
@@ -33,6 +35,7 @@ def consumer_cmd():
     with app.app_context():
         # WIth App ctx, fetch DB connector
         get_db()
+        get_psqldb()
         consumer.start()
 
 @app.cli.command('initdb')
@@ -60,6 +63,22 @@ def get_db():
     return g._db
 
 
+@app.cli.command('init_psqldb')
+def init_psqldb_cmd():
+    ''' Creates db from cli '''
+    psqldb()
+    logger.info("Initialized database")
+
+
+def get_psqldb():
+    """ Opens a new database connection if there is none yet for the
+        current application context.
+    """
+    if not hasattr(g, '_psql_db'):
+        g._psql_db = psqldb()
+    return g._psql_db    
+
+
 # Connect to PostgreSQL Items DB
 # Before requests
 @app.before_request
@@ -77,6 +96,10 @@ def close_db(error):
     db = getattr(g, '_db', None)
     if db is not None:
         db.close()
+    psqldb = getattr(g, '_psql_db', None)
+    if psqldb is not None:
+        psqldb.connection.commit()
+        psqldb.connection.close()
 
 
 @app.route('/')
