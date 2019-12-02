@@ -1,5 +1,5 @@
 #FROM byprice/base-python-web:latest
-FROM byprice/base-data-services:v2_3.6.8
+FROM byprice/base-services:python3.6.8
 
 # Copy service content
 COPY ./ /catalogue/
