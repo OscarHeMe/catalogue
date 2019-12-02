@@ -1,6 +1,6 @@
 venv/
 env/
-.envvars
+.env*
 .dbvars
 *.pyc
 *.csv
