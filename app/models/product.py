@@ -14,6 +14,7 @@ import requests
 import ast
 import json
 import uuid
+from app.utils.postgresql_queries import *
 
 from pprint import pprint
 
@@ -32,7 +33,7 @@ class Product(object):
         'last_modified': 'str',
         'description' : 'str',
         'product_id' : 'str',
-        'categories' : 'json',
+        'categories' : 'str', ## change to json new schema
         'images': 'json',
         'source': 'str',
         'url': 'str',
@@ -52,6 +53,7 @@ class Product(object):
         "categories", "url", "brand", "provider", "attributes",
         "ingredients", "raw_html", "raw_product", "is_outdated"
         ]
+
     __extras__ = ['prod_attrs', 'prod_images', 'prod_categs', 'normalized']
     __base_q = ['product_uuid', 'product_id', 'name', 'source']
 
@@ -114,13 +116,16 @@ class Product(object):
             pass
         else:
             # If not verified, check if not already in DB
+            logger.debug('Getting product_uuid')
             if Product.exists({'product_id': self.product_id,
                              'source': self.source}, commit=pcommit):
                 self.message = 'Product already exists!'
+                logger.debug(self.message)
                 self.product_uuid = Product\
                     .get({'product_id': self.product_id,
                         'source': self.source})[0]['product_uuid']
                 return True
+        logger.debug('Loading model')
         # Load model
         m_prod = g._db.model('product', 'product_uuid')
         for _k in self.__attrs__:
@@ -220,15 +225,16 @@ class Product(object):
                 })
                 id_attr = attr.save(commit=pcommit)
             # Verify if product_attr exists
-            id_prod_attr = g._psql_db.cursor.execute("""SELECT id_product_attr
-                                        FROM product_attr
-                                        WHERE product_uuid = '{}'
-                                        AND id_attr = {} LIMIT 1
-                                        FOR UPDATE SKIP LOCKED"""
-                                .format(self.product_uuid, id_attr))\
-                            .fetchall()
+            _qry = """SELECT id_product_attr
+                    FROM product_attr
+                    WHERE product_uuid = '{}'
+                    AND id_attr = {} LIMIT 1
+                    FOR UPDATE SKIP LOCKED""".format(self.product_uuid, id_attr)
+            
+            id_prod_attr = execute_select(g._psql_db.connection, _qry).fetchone()
             # If not create product_attr
             if id_prod_attr:
+                id_prod_attr = id_prod_attr[0]
                 if not update:
                     logger.debug("Product Attr already in DB!")
                     continue
@@ -259,7 +265,6 @@ class Product(object):
         logger.debug('Saving all images')
         logger.debug(self.images)
         for _img in self.images:
-            
             try:
                 # Verify if prod image exists
                 #qry_txt = """SELECT id_product_image FROM product_image
@@ -270,11 +275,11 @@ class Product(object):
                                         AND image = %s FOR UPDATE SKIP LOCKED"""
                 # if '%' in qry_txt:
                 #     g_qry = g._psql_db.cursor.execute(qry_txt.replace('%','%%'))    
-                # else:
-                g_qry = g._psql_db.cursor.execute(qry_txt, (self.product_uuid, _img))         
-                _exist = g_qry.fetchall()             
-                if len(_exist) > 0:
-                    Product.save_pimage(self.product_uuid, _img, _exist[0]['id_product_image'],pcommit=pcommit)
+                # else:        
+                _exist = execute_select(g._psql_db.connection, qry_txt, (self.product_uuid, _img)).fetchone()
+                if _exist:
+                    _exist = _exist[0]
+                    Product.save_pimage(self.product_uuid, _img, _exist[0][0],pcommit=pcommit)
                     continue
                 # Load model
                 Product.save_pimage(self.product_uuid, _img, pcommit=pcommit)
@@ -389,14 +394,15 @@ class Product(object):
                     if not id_cat:
                         continue
                 # Verify product category does not exist
-                id_prod_categ = g._psql_db.cursor.execute("""SELECT id_product_category
-                                                            FROM product_category
-                                                            WHERE id_category = {}
-                                                            AND product_uuid = '{}' LIMIT 1"""
-                                                            .format(id_cat,
-                                                                self.product_uuid))\
-                                    .fetchall()
+                _qry = """SELECT id_product_category
+                        FROM product_category
+                        WHERE id_category = {}
+                        AND product_uuid = '{}' LIMIT 1""".format(id_cat, self.product_uuid)
+
+                id_prod_categ = execute_select(g._psql_db.connection, _qry).fetchone()
+
                 if id_prod_categ:
+                    id_prod_categ = id_prod_categ[0]
                     if not update:
                         logger.info("Category already assigned to Product!")
                         continue
@@ -435,11 +441,11 @@ class Product(object):
                                for z in list(k_param.items())])
         try:
             _q = """SELECT EXISTS (SELECT 1 FROM product 
-                    WHERE {} LIMIT 1""".format(_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
+                    WHERE {} LIMIT 1)""".format(_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
             logger.debug("Query: {}".format(_q))
-            exists = g._psql_db.cursor.execute(_q)\
-                .fetchall()[0]['exists']
+            exists = execute_select(g._psql_db.connection, _q).fetchone()[0]
         except Exception as e:
+            logger.error('Error in func=exist')
             logger.error(e)
             return False
         return exists
@@ -619,19 +625,25 @@ class Product(object):
             _items : list
                 List of elements
         """
-        _cols = ','.join(_cols) if _cols else 'product_uuid'
+        items = []
+        q_cols = ','.join(_cols) if _cols else 'product_uuid'
         _where = ' AND '.join(["{} IN {}"
                               .format(z[0], tuplify(z[1]))
                               for z in _by.items()])
         logger.debug("Fetching products...")
         _query = "SELECT {} FROM product WHERE {}"\
-            .format(_cols, _where)
+            .format(q_cols, _where)
         if limit:
             _query += ' LIMIT {}'.format(limit)
         logger.debug(_query)
         # print(_query)
         try:
-            _items = g._psql_db.cursor.execute(_query).fetchall()
+            _items = execute_select(g._psql_db.connection, _query).fetchall()
+            for it in _items:
+                d = {}
+                for i in range(len(_cols)):
+                    d[_cols[i]] = it[i]
+                items.append(d.copy())
             logger.debug("Got {} products".format(len(_items)))
         except Exception as e:
             logger.error(e)
@@ -640,7 +652,7 @@ class Product(object):
                 return False
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70003, "Issues fetching elements in DB")
-        return _items
+        return items
 
     @staticmethod
     def get_one(commit=True):
@@ -1193,7 +1205,7 @@ class Product(object):
                     rets=_rets)
         logger.debug(f_query)
         try:
-            _fres = g._psql_db.cursor.executef_query).fetchall()
+            _fres = g._psql_db.cursor.execute(f_query).fetchall()
             if not _fres:
                 return []
             logger.debug("Found {} prods by filters"

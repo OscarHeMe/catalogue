@@ -13,7 +13,7 @@ class Postgresql:
         self._connection = None
         self._cursor = None
 
-    def set_connection_parameter(self, kwargs):
+    def set_connection_parameter(self, **kwargs):
         self.connection_parameter = {
             "user": os.environ.get('SQL_USER') if not kwargs.get('user') else kwargs.get('user'),
             "password": os.environ.get('SQL_PASSWORD') if not kwargs.get('password') else kwargs.get('password'),
@@ -62,7 +62,7 @@ class Postgresql:
     def rollback(self):
         self.connection.rollback()
         
-    def disconnect(commit=True):
+    def disconnect(self, commit=True):
         if commit:
             self.commit()
         else:

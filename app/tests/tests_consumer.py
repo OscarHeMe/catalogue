@@ -27,23 +27,23 @@ prods_test_item = [
 
 # Dummy prod
 new_prod_test = {
-    "product_id": "00000000000000124901",
-    "gtin": "00000001249002",
-    "source": "chedraui",
-    "name": "refresco pepsi cola sin cafeina 354 ml",
-    "description": "refresco pepsi cola sin cafeina 354 ml",
-    "images" :  ['http://chedraui.com.mx/media/catalog/product/1/2/124900_00.jpg'],
-    "categories": "Despensa",
-    "url": "http://www.chedraui.com.mx/index.php/universidad/refresco-pepsi-cola-sin-cafeina-354ml.html",
-    "brand": "Pepsi Cola",
-    "provider": "Pepsico",
+    "product_id": "750101530083",
+    "gtin": "750101530083",
+    "source": "superama",
+    "name": "QUICK FIRE ALCOHOL LIQUIDO 480 ML.",
+    "description": "QUICK FIRE ALCOHOL LIQUIDO 480 ML.",
+    "images" :  ['https://www.superama.com.mx/Content/images/products/img_large/0750101530083L.jpg'],
+    "categories":  ["Lavanderia Hogar Y Mascotas", "Hogar", "Jardin"],
+    "url": "https://www.superama.com.mx/catalogo/d-lavanderia-hogar-y-mascotas/f-hogar/l-jardin/liquido-para-encender",
+    "brand": "quick fire",
+    "provider": "",
     "attributes": [{
-        "attr_name": "Despensa",
-        "attr_key": "despensa",
+        "attr_name": "Hogar",
+        "attr_key": "hogar",
         "clss_name": "Categoría",
         "clss_key": "category",
     }],
-    "raw_html": "<body>product_html</body>"
+    "raw_html": ""
     # "item_uuid": "" # Missing
 }
 
@@ -89,13 +89,14 @@ class CatalogueServiceTestCase(unittest.TestCase):
         self.ctx = app.app.app_context()
         self.ctx.push()
         app.get_db()
+        app.get_psqldb()
         print('----------------------------------------------------')
 
     def tearDown(self):
         # Dropping flask ctx
         self.ctx.pop()
 
-    #@unittest.skip('Already tested')
+    # @unittest.skip('Already tested')
     def test_000_source_creation(self):
         """ Testing Catalogue Source Creation
         """ 
@@ -108,7 +109,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
                             sm.save())
 
 
-    @unittest.skip('Already tested')
+    # @unittest.skip('Already tested')
     def test_00_product_validation(self):
         """ Testing Catalogue DB connection
         """ 
@@ -125,6 +126,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         except:
             self.assertFalse(True)
         # Delete product
+        print(prod.__dict__)
         print('Deleting test')
         _del = Product.delete(prod.product_uuid)
         self.assertTrue(_del)
@@ -174,7 +176,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         except:
             self.assertFalse(True)
     
-    #@unittest.skip('Already Tested')
+    @unittest.skip('Already Tested')
     def test_04_process_item(self):
         """ Testing Item type processs
         """ 

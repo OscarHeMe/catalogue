@@ -1,14 +1,17 @@
-from app import errors, logger
+from app import errors
+from ByHelpers import applogger
 import json
+
+logger = applogger.get_logger()
 
 class Formatter(object):
     """
         Model to format data in messaged dict
     """
 
-    def __init__(self, **kwargs):
-        for k in kwargs:
-            self.__dict__[k] = kwargs[k]   
+    def __init__(self, params):
+        for k in params:
+            self.__dict__[k] = params[k]   
 
     def set_key_type(self, key, data_type):
         self.__dict__[key] = data_type
@@ -16,8 +19,9 @@ class Formatter(object):
     def process(self, data):
         """ Get raw data to format
         """
+        ls_keys = list(data.keys())
         if isinstance(data, dict):
-            for k in data.keys():
+            for k in ls_keys:
                 output_type = self.__dict__.get(k, None)
                 if output_type:
                     try:
@@ -29,7 +33,10 @@ class Formatter(object):
                             if isinstance(data[k], list) or isinstance(data[k], dict):
                                 continue
                             else:
-                                data[k] = json.loads(str(data[k]))
+                                if '[' in str(data[k]) or ']' in str(data[k]) or '{' in str(data[k]) or '}' in str(data[k]):
+                                    data[k] = json.loads(str(data[k]))
+                                else:
+                                    data[k] = str(data[k]).split(',')
                         elif output_type == 'bool':
                             if isinstance(data[k], bool):
                                 continue

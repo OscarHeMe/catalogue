@@ -206,7 +206,6 @@ def callback(ch, method, properties, body):
     global ack
     global nack
     
-    lim = 150
     new_item = json.loads(body.decode('utf-8'))
     logger.debug("New incoming product..")
 
@@ -275,7 +274,6 @@ def clasify(new_item):
 
             
 
-
 def process_files():
     filepath = PATH + 'files/'
     dfs = [
@@ -326,7 +324,7 @@ def treat_batch(messages):
 def start():
     logger.info("Warming up caching IDS...")
     global cached_ps
-    cached_ps = {}#Product.create_cache_ids()
+    cached_ps = Product.create_cache_ids()
     logger.info("Done warmup, loaded {} values from {} sources"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
