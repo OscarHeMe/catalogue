@@ -54,12 +54,12 @@ class Attr(object):
         """
         logger.info("Saving attr...")
         if self.id_attr:
-            if not Attr.exists({'id_attr': self.id_attr}):
+            if not Attr.exists({'id_attr': self.id_attr}, commit=commit):
                 raise errors.ApiError(70006, "Cannot update, Attr not in DB!")
-        elif Attr.exists({'key': self.key, 'source': self.source}):
+        elif Attr.exists({'key': self.key, 'source': self.source}, commit=commit):
             self.message = 'Attr already exists!'
-            self.id_attr = Attr.get_id(self.key,
-                                        self.source)
+            self.id_attr = Attr.get_id(self.key, self.source,
+                                        commit=commit)
             return self.id_attr
         # Load model
         m_atr = g._db.model("attr", "id_attr")
@@ -80,7 +80,7 @@ class Attr(object):
             return None
 
     @staticmethod
-    def exists(k_param):
+    def exists(k_param, commit=False):
         """ Static method to verify Attr existance
 
             Params:
@@ -98,8 +98,8 @@ class Attr(object):
                             for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM attr WHERE {} LIMIT 1)"""\
-                            .format(_where))\
+                            SELECT 1 FROM attr WHERE {} LIMIT 1 FOR UPDATE SKIP LOCKED)"""\
+                            .format(_where), commit=commit)\
                         .fetch()[0]['exists']
         except Exception as e:
             logger.error(e)
@@ -107,7 +107,7 @@ class Attr(object):
         return exists
 
     @staticmethod
-    def get_id(_attr, _source):
+    def get_id(_attr, _source, commit=False):
         """ Fetch ID from attribute
 
             Params:
@@ -128,9 +128,9 @@ class Attr(object):
                         FROM attr
                         WHERE key = '{}'
                         AND source = '{}'
-                        LIMIT 1"""\
+                        LIMIT 1 FOR UPDATE SKIP LOCKED"""\
                         .format(key_format(_attr),
-                            _source))\
+                            _source), commit=commit)\
                     .fetch()
             if _res:
                 return _res[0]['id_attr']

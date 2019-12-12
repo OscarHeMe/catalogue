@@ -1,0 +1,62 @@
+# todo use rabbitmq - deploy rabbit in kubernetes and expose monitoring ingress for auto
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: catalogue-production-mex-autoscale
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: catalogue-production-mex-deployment
+  minReplicas: 3
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalogue-production-mex-deployment
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: catalogue-production-mex-deployment-template
+      labels:
+        application: catalogue
+        environment: production
+        application-type: data-services
+        owner: oscar
+        version: v0.1
+        type: deployment
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: catalogue-production-mex-container
+        image: gcr.io/byprice-backend/production/catalogue:master
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 512m
+          requests:
+            cpu: 512m
+            memory: 1024Mi
+        command: ['/bin/bash' , '-c', 'echo Starting container !! && .bin/run.sh']
+        env:
+        - name: "STREAMER_PASS_WRONG"
+          valueFrom:
+            secretKeyRef:
+              name: data-services-secret-production-mex
+              key: STREAMER_PASS_WRONG
+  selector:
+    matchLabels:
+      application: catalogue
+      environment: production
+      application-type: data-services
+      owner: oscar
+      version: v0.1
+      type: deployment

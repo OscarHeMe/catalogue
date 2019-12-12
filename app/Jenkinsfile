@@ -1,0 +1,47 @@
+node {
+  stage('Git changes trigger build')
+  {
+    checkout scm
+    sh 'sleep 1m'
+  }
+
+  stage('Delete previous Deployment') {
+    try {
+        withKubeConfig([credentialsId: 'jenkins-bot-data-services-token-9zdjd',
+                    serverUrl: 'https://35.230.97.28',
+                    clusterName: 'data-services-production-mex',
+                    namespace: 'default'
+                    ]) {
+
+            sh 'kubectl delete deployment catalogue-production-mex-deployment'
+            sh 'kubectl delete horizontalpodautoscaler catalogue-production-mex-autoscale'
+            sh 'sleep 5s'
+        }
+    }
+    catch (err) {
+        withKubeConfig([credentialsId: 'jenkins-bot-data-services-token-9zdjd',
+                    serverUrl: 'https://35.230.97.28',
+                    clusterName: 'data-services-production-mex',
+                    namespace: 'default'
+                    ]) {
+
+            sh 'kubectl get deployment'
+            sh 'kubectl get horizontalpodautoscaler'
+        }
+    }
+  }
+
+  stage('Apply new Deployment') {
+    withKubeConfig([credentialsId: 'jenkins-bot-data-services-token-9zdjd',
+                    serverUrl: 'https://35.230.97.28',
+                    clusterName: 'data-services-production-mex',
+                    namespace: 'default'
+                    ]) {
+      sh 'kubectl apply -f deployment-prod.yaml'
+      sh 'sleep 1m'
+      sh 'kubectl get deployment'
+      sh 'kubectl get horizontalpodautoscaler'
+
+    }
+  }
+}

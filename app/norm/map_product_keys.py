@@ -73,7 +73,7 @@ def item(data):
         return {}
     fdata = {}
     # Remap keys without modification
-    re_map = {'url': 'url', 'retailer': 'source',
+    re_map = {'url': 'url', 'retailer_key': 'source', 'retailer': 'source',
               'provider': 'provider', 'brand': 'brand', 'name': 'name',
               'description': 'description', 'raw_html': 'raw_html',
               'id': 'product_id', 'gtin': 'gtin'}

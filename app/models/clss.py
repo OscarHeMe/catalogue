@@ -47,12 +47,12 @@ class Clss(object):
         """
         logger.info("Saving clss...")
         if self.id_clss:
-            if not Clss.exists({'id_clss': self.id_clss}):
+            if not Clss.exists({'id_clss': self.id_clss}, commit=commit):
                 raise errors.ApiError(70006, "Cannot update, Clss not in DB!")
-        elif Clss.exists({'key': self.key, 'source': self.source}):
+        elif Clss.exists({'key': self.key, 'source': self.source}, commit=commit):
             self.message = 'Clss already exists!'
             self.id_clss = Clss.get_id(self.key,
-                                        self.source)
+                                        self.source, commit=commit)
             return self.id_clss
         # Load model
         m_cls = g._db.model("clss", "id_clss")
@@ -73,7 +73,7 @@ class Clss(object):
             return None
 
     @staticmethod
-    def exists(k_param):
+    def exists(k_param, commit=False):
         """ Static method to verify Clss existance
 
             Params:
@@ -91,8 +91,8 @@ class Clss(object):
                             for z in list(k_param.items())])
         try:
             exists = g._db.query("""SELECT EXISTS (
-                            SELECT 1 FROM clss WHERE {})"""\
-                            .format(_where))\
+                            SELECT 1 FROM clss WHERE {} FOR UPDATE SKIP LOCKED)"""\
+                            .format(_where), commit=commit)\
                         .fetch()[0]['exists']
         except Exception as e:
             logger.error(e)
@@ -100,7 +100,7 @@ class Clss(object):
         return exists
     
     @staticmethod
-    def get_id(_key, _source):
+    def get_id(_key, _source, commit=False):
         """ Fetch ID from Clss by key
 
             Params:
@@ -121,9 +121,9 @@ class Clss(object):
                         FROM clss
                         WHERE key = '{}'
                         AND source = '{}'
-                        LIMIT 1"""\
+                        LIMIT 1 FOR UPDATE SKIP LOCKED"""\
                         .format(_key,
-                            _source))\
+                            _source), commit=commit)\
                     .fetch()
             if _res:
                 return _res[0]['id_clss']
