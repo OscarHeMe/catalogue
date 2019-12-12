@@ -14,7 +14,7 @@ elif [[ $MODE == "CONSUMER" ]]
     then
     # Run as consumer
     echo "Starting $APP_NAME in CONSUMER mode"
-    pipenv run flask consumer
+    pipenv run flask consumerb
 fi
 
 if [[ $MODE == "SERVICE_LOCAL" ]]

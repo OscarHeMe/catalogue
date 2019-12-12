@@ -109,7 +109,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
                             sm.save())
 
 
-    # @unittest.skip('Already tested')
+    @unittest.skip('Already tested')
     def test_00_product_validation(self):
         """ Testing Catalogue DB connection
         """ 
@@ -176,7 +176,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         except:
             self.assertFalse(True)
     
-    @unittest.skip('Already Tested')
+    # @unittest.skip('Already Tested')
     def test_04_process_item(self):
         """ Testing Item type processs
         """ 
@@ -186,6 +186,7 @@ class CatalogueServiceTestCase(unittest.TestCase):
         import datetime
         t_0 = datetime.datetime.utcnow()
         for _ptest in (prods_test_item)*20:
+            # pprint(_ptest)
             try:
                 res_item = process(_ptest, False)
                 self.assertTrue(res_item)

@@ -279,7 +279,7 @@ class Product(object):
                 _exist = execute_select(g._psql_db.connection, qry_txt, (self.product_uuid, _img)).fetchone()
                 if _exist:
                     _exist = _exist[0]
-                    Product.save_pimage(self.product_uuid, _img, _exist[0][0],pcommit=pcommit)
+                    Product.save_pimage(self.product_uuid, _img, _exist, pcommit=pcommit)
                     continue
                 # Load model
                 Product.save_pimage(self.product_uuid, _img, pcommit=pcommit)
@@ -548,8 +548,8 @@ class Product(object):
                     p_uuids.append(pval)
 
         if len(values) > 0:
-            print(qry)
-            print(values[:2])
+            #print(qry)
+            #print(values[:2])
             try:
                 g._psql_db.cursor.executemany(qry, tuple(values))
             except Exception as e:
@@ -592,12 +592,14 @@ class Product(object):
             cache_ids : dict
                 Nested dict by source and product_id to product_uuid map
         """
-        _df = pd\
-            .read_sql("""SELECT product_uuid, source, product_id 
-                    FROM product WHERE source NOT IN ('ims','plm','nielsen','gs1') 
-                    FOR UPDATE SKIP LOCKED""",
-                    g._db.conn)
-        g._db.conn.commit()        
+        qry = """SELECT product_uuid, source, product_id 
+                 FROM product WHERE source NOT IN ('ims','plm','nielsen','gs1');"""
+        qry = """SELECT product_uuid, source, product_id 
+                 FROM product WHERE source IN (SELECT key 
+                 FROM source WHERE retailer = '1');"""
+        
+        _df = pd.read_sql(qry, g._psql_db.connection)
+        g._psql_db.connection.commit()        
         cache_ids = {}
         for y, gdf in _df.groupby('source'):
             cache_ids[y] = gdf[['product_uuid','product_id']]\
@@ -630,21 +632,21 @@ class Product(object):
         _where = ' AND '.join(["{} IN {}"
                               .format(z[0], tuplify(z[1]))
                               for z in _by.items()])
-        logger.debug("Fetching products...")
+        #logger.debug("Fetching products...")
         _query = "SELECT {} FROM product WHERE {}"\
             .format(q_cols, _where)
         if limit:
             _query += ' LIMIT {}'.format(limit)
-        logger.debug(_query)
+        #logger.debug(_query)
         # print(_query)
         try:
-            _items = execute_select(g._psql_db.connection, _query).fetchall()
+            _items = execute_select(g._psql_db.connection, _query + ';').fetchall()
             for it in _items:
                 d = {}
                 for i in range(len(_cols)):
                     d[_cols[i]] = it[i]
                 items.append(d.copy())
-            logger.debug("Got {} products".format(len(_items)))
+            #logger.debug("Got {} products".format(len(_items)))
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
