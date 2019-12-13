@@ -54,6 +54,3 @@ ENV SQL_USER='byprice'
 
 
 ENTRYPOINT /bin/bash /catalogue/bin/run.sh
-
-
-
