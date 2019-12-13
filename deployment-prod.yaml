@@ -10,7 +10,7 @@ spec:
     kind: Deployment
     name: catalogue-production-mex-deployment
   minReplicas: 1
-  maxReplicas: 1
+  maxReplicas: 4
   metrics:
     - type: Resource
       resource:
