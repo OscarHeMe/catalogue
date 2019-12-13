@@ -46,10 +46,10 @@ ENV C_FORCE_ROOT='true'
 
 # Postgres
 ENV SQL_DB='catalogue'
-ENV SQL_HOST='localhost'
+ENV SQL_HOST='35.233.170.43'
 ENV SQL_PASSWORD='byprice'
 ENV SQL_PORT=5432
-ENV SQL_USER='postgres'
+ENV SQL_USER='byprice'
 #ENV SQL_PASSWORD from secret
 
 ENTRYPOINT /bin/bash /catalogue/bin/run.sh
