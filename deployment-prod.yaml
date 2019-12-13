@@ -9,8 +9,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: catalogue-production-mex-deployment
-  minReplicas: 3
-  maxReplicas: 5
+  minReplicas: 1
+  maxReplicas: 1
   metrics:
     - type: Resource
       resource:
@@ -45,7 +45,7 @@ spec:
             requests:
               cpu: 256m
               memory: 1024Mi
-          command: ['/bin/bash' , '-c', 'echo Starting container !! && .bin/run.sh']
+          command: ['/bin/bash' , '-c', 'echo Starting container !! && source bin/run.sh']
           env:
             - name: "STREAMER_PASS"
               valueFrom:
