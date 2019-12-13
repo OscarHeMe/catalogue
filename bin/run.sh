@@ -1,25 +1,30 @@
 #!/bin/bash
+export MODE="CONSUMER"
+echo "[$(date)][CATALOGUE]: Activating virtual environment"
 
-# Init the database
+
+echo "[$(date)][CATALOGUE]: Loading env variables, if any"
+source .envvars
+
+# todo ?? Init the database
 pipenv run flask initdb
 
-# Evaluate the mode of execution and the 
-if [[ $MODE == "SERVICE" ]]
+
+is_running_gunicorn=$(ps aux | grep 'gunicorn' | wc -l)
+if [ $is_running_gunicorn -gt 1 ]
     then
-    # Run gunicorm
-    echo "Starting $APP_NAME in SERVICE mode"
-    pipenv run gunicorn --workers 3 --bind unix:$APP_NAME.sock -m 000 -t 200 wsgi:app &
-    nginx -g "daemon off;"
-elif [[ $MODE == "CONSUMER" ]]
-    then
-    # Run as consumer
-    echo "Starting $APP_NAME in CONSUMER mode"
-    pipenv run flask consumer
+            echo "[$(date)][CATALOGUE]: Already running with GUNICORN. Shutting down"
+            ps aux | grep 'gunicorn'
+            kill $(ps aux | grep 'gunicorn' | awk '{print $2}')
 fi
 
-if [[ $MODE == "SERVICE_LOCAL" ]]
+is_running_flask_run=$(ps aux | grep 'flask consumer' | wc -l)
+if [ $is_running_flask_run -gt 1 ]
     then
-    # Run gunicorm
-    echo "Starting $APP_NAME in SERVICE mode"
-    pipenv run gunicorn -b localhost:9000 wsgi:app --timeout=3600
+            echo "[$(date)][CATALOGUE]: Already running with FLASK CONSUMER. Shutting down"
+            ps aux | grep 'flask consumer'
+            kill $(ps aux | grep 'flask consumer' | awk '{print $2}')
 fi
+
+pipenv run flask consumer
+
