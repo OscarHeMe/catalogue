@@ -25,4 +25,4 @@ data/vademecum/
 Dockerfile.local
 .envvars_serv
 .docker*
-Pipfile*
+*secret.yaml
