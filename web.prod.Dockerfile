@@ -53,6 +53,8 @@ ENV SQL_USER='byprice'
 #ENV SQL_PASSWORD from secret
 
 # Map ports
+EXPOSE 80
+EXPOSE 8000
 EXPOSE 8003
 
 # Add Nginx configuration file
