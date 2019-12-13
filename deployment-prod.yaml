@@ -36,27 +36,27 @@ spec:
     spec:
       restartPolicy: Always
       containers:
-      - name: catalogue-production-mex-container
-        image: gcr.io/byprice-backend/production/catalogue:master
-        imagePullPolicy: Always
-        resources:
-          limits:
-            cpu: 256m
-          requests:
-            cpu: 256m
-            memory: 256Mi
-        command: ['/bin/bash' , '-c', 'echo Starting container !! && .bin/run.sh']
-        env:
-        - name: "STREAMER_PASS"
-          valueFrom:
-            secretKeyRef:
-              name: data-services-secret-production-mex
-              key: STREAMER_PASS
-        - name: "SQL_PASSWORD"
-            valueFrom:
-              secretKeyRef:
-                name: data-services-secret-production-mex
-                key: SQL_PASSWORD
+        - name: catalogue-production-mex-container
+          image: gcr.io/byprice-backend/production/catalogue:master
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 512m
+            requests:
+              cpu: 256m
+              memory: 1024Mi
+          command: ['/bin/bash' , '-c', 'echo Starting container !! && .bin/run.sh']
+          env:
+            - name: "STREAMER_PASS"
+              valueFrom:
+                secretKeyRef:
+                  name: data-service-secret-production-mex
+                  key: STREAMER_PASS
+            - name: "SQL_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: data-service-secret-production-mex
+                  key: SQL_PASSWORD
   selector:
     matchLabels:
       application: catalogue
