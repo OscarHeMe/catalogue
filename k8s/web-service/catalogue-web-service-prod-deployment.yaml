@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalogue-web-service-production-mex-deployment
+  namespace: default
+spec:
+  template:
+    metadata:
+      name: catalogue-web-service-production-mex-deployment-template
+      labels:
+        application: catalogue-web-service
+        environment: production
+        application-type: web-service
+        owner: yogesh
+        version: v0.1
+        type: deployment
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: catalogue-web-service-production-mex-container
+          image: gcr.io/byprice-backend/production/web-service/catalogue:master
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 512m
+            requests:
+              cpu: 256m
+              memory: 1024Mi
+          command: ['/bin/bash' , '-c', 'echo Starting container !! && source bin/run.sh']
+          env:
+            - name: "STREAMER_PASS"
+              valueFrom:
+                secretKeyRef:
+                  name: web-service-secret-production-mex
+                  key: STREAMER_PASS
+            - name: "SQL_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: web-service-secret-production-mex
+                  key: SQL_PASSWORD
+  selector:
+    matchLabels:
+      application: catalogue-web-service
+      environment: production
+      application-type: web-service
+      owner: yogesh
+      version: v0.1
+      type: deployment
