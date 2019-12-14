@@ -52,5 +52,4 @@ ENV SQL_PORT=5432
 ENV SQL_USER='byprice'
 #ENV SQL_PASSWORD from secret
 
-
 ENTRYPOINT /bin/bash /catalogue_item/bin/run_item_data_service.sh
