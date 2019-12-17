@@ -10,7 +10,7 @@ spec:
       labels:
         application: catalogue-data-service
         environment: production
-        application-type: data-services
+        application-type: data-service
         owner: yogesh
         version: v0.1
         type: deployment
@@ -42,7 +42,7 @@ spec:
     matchLabels:
       application: catalogue-data-service
       environment: production
-      application-type: data-services
+      application-type: data-service
       owner: yogesh
       version: v0.1
       type: deployment
