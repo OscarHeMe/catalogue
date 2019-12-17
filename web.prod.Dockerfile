@@ -54,8 +54,6 @@ ENV SQL_USER='byprice'
 
 # Map ports
 EXPOSE 80
-EXPOSE 8000
-EXPOSE 8003
 
 # Add Nginx configuration file
 RUN bash bin/nginx_conf.sh

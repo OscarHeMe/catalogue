@@ -1,12 +1,18 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: web-service-service
+  name: catalogue-web-service-production-mex-deployment-service
 spec:
   selector:
-    app: catalogue-web-service-production-mex-deployment
+    application: "catalogue-web-service"
+    environment: "production"
+    application-type: "web-service"
+    owner: "yogesh"
+    version: "v0.1"
+    type: "deployment"
   ports:
-    - name: http
+    - name: catalogue-web-service-port
       protocol: TCP
       port: 80
       targetPort: 80
+  type: "LoadBalancer"
