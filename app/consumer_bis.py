@@ -125,7 +125,7 @@ def process(new_item, reroute=True, commit=True):
         to_insert.append(p.__dict__)
         insrt_count += 1
 
-    if updt_count > CONSUMER_BATCH_SZ:
+    if updt_count >= CONSUMER_BATCH_SZ:
         try:
             logger.info('-------------- Batch updating ---------------------') 
             cols = ['product_uuid', 'product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
@@ -138,7 +138,7 @@ def process(new_item, reroute=True, commit=True):
         
         can_ack = True
         
-    if insrt_count > CONSUMER_BATCH_SZ:
+    if insrt_count >= CONSUMER_BATCH_SZ:
         try:
             logger.info('-------------- Batch inserting ---------------------') 
             cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
@@ -166,7 +166,7 @@ def process(new_item, reroute=True, commit=True):
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
     global counter
-    
+
     t_0 = datetime.datetime.utcnow()
     
     new_item = json.loads(body.decode('utf-8'))

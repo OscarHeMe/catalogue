@@ -522,39 +522,63 @@ class Product(object):
         values = []
         p_uuids = []
         sets = []
-        if len(cols) > 0:
-            for el in cols:
-                sets.append('{} = %({})s'.format(el, el))
-            qry = "UPDATE product SET {} WHERE {} = %({})s".format(','.join(sets), pkey, pkey)    
-            for data in data_batch:
+        tmp = []
+        dic_vals = []
+
+        #execute_bulk_insert(conn, query, values, template, page_size=BULK_INSERT_CHUNKSIZE)
+        #execute_values(cursor, query, values, template=template, page_size=page_size)
+
+        update_query = """UPDATE product AS prod
+                    SET {}
+                    FROM (VALUES %s) AS new({}) 
+                    WHERE CAST (new.{} AS UUID) = prod.{};"""
+
+        cols_change = cols.copy()
+        cols_change.remove(pkey)
+
+        if len(cols_change) > 0:
+            for el in cols_change:
+                if 'uuid' in el:
+                    sets.append(' {} = CAST (new.{} AS UUID)'.format(el, el))
+                else:
+                    sets.append(' {} = new.{}'.format(el, el))
+
+            qry = update_query.format(','.join(sets), ','.join(cols), pkey, pkey)
+
+            for i in range(len(data_batch)):
                 n_data = {}
-                pval = data.get(pkey)
+                pval = data_batch[i].get(pkey)
                 vs = []
                 ks = []
+                tmp = []
+                d = {}
                 for k in cols:
-                    value = data.get(k, None)
-                    if isinstance(value, str) or isinstance(value, list):
-                        value = "'" + str(value).replace('%', '%%').replace("'", "''") + "'"
+                    value = data_batch[i].get(k, None)
+                    d[k] = value
+                    tmp.append(' %({})s'.format(el))
+                    # if isinstance(value, str) or isinstance(value, list):
+                    #     value = "'" + str(value).replace('%', '%%').replace("'", "''") + "'"
+                    #     value = str(value).replace('%', '%%').replace("'", "''")
                     # elif not value and not isinstance(value, bool):
                     #     continue
 
                     vs.append(str(value))
-                    ks.append(str(k))
-                    n_data[k] = value
-
-                if n_data:
+                    # ks.append(str(k))
+                    # n_data[k] = value
+                dic_vals.append(d)
+                if vs:
                     # print(tp)
-                    values.append(data)
+                    values.append(tuple(vs))
                     p_uuids.append(pval)
-
+        print(qry)
+        print(tuple(values)[0:2])
         if len(values) > 0:
             #print(qry)
             #print(values[:2])
             try:
-                g._psql_db.cursor.executemany(qry, tuple(values))
+                execute_bulk_insert(g._psql_db.connection, qry, tuple(dic_vals), '('+ ','.join(tmp) + ')')
             except Exception as e:
-                logger.error('Error while trying to update {}:\n   - {}'.format([-1], e))
-        g._psql_db.connection.commit()                   
+                logger.error('Error while trying to update {}:\n   - {}'.format([-1], e))             
         return p_uuids
 
 
