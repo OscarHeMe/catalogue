@@ -1,6 +1,6 @@
 venv/
 env/
-.envvars
+.env*
 .dbvars
 *.pyc
 *.csv
@@ -25,3 +25,4 @@ data/vademecum/
 Dockerfile.local
 .envvars_serv
 .docker*
+Pipfile*
