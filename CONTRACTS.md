@@ -375,7 +375,7 @@ Same as previous [endpoint](#get_resp).
 
 | Param | Description | Condition |
 | ----- | ----------- | --------- |
-| items  | Comma Separated Product UUIDs | required |
+| items  | Comma Separated Item UUIDs | required |
 | cols  | Comma separated Product fields | optional |
 | retailers | Comma separated Retailers | required |
 

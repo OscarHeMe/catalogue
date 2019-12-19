@@ -141,7 +141,45 @@ class Item(object):
                 raise errors.ApiError(70003, "Issues fetching elements in DB")
 
         return _resp
-    
+
+
+    @staticmethod
+    def intel_query(**kwargs):
+        """ Static method to query by defined column values
+
+            Params:
+            -----
+            kwargs : dict
+                Arguments, must be iuuids
+            
+            Returns:
+            -----
+            _resp : list
+                List of product objects
+        """
+        logger.debug('fetching: {}'.format(kwargs))
+
+        # get item info
+        query = "SELECT item_uuid, gtin, name FROM item WHERE item_uuid IN {}".format(tuplify(kwargs['iuuids']))
+        logger.debug(query)
+        item_res = g._db.query(query).fetch()
+
+        # get product ims info
+        query = "SELECT item_uuid, name AS ims_name FROM product WHERE item_uuid IN {} AND source = 'ims'".format(tuplify(kwargs['iuuids']))
+        logger.debug(query)
+        prod_res = g._db.query(query).fetch()
+
+        #merge results
+        item_df = pd.DataFrame(item_res)
+        product_df = pd.DataFrame(prod_res)
+        res_df = pd.merge(item_df, product_df, on="item_uuid", how="left")
+        res_df.fillna('', inplace=True)
+        
+        resp = res_df.to_dict(orient='records')
+
+        return _resp
+
+
     @staticmethod
     def it_list(**kwargs):
         """ Static method to get all items by query

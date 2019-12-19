@@ -47,6 +47,25 @@ def get_byitem():
         })
 
 
+@mod.route("/intel/by/iuuid", methods=['GET'])
+def get_byitem_intel():
+    """ Endpoint to fetch items by item_uuids
+    """
+    logger.info("Query Intel Items by Item UUID's...")
+    params = request.args.to_dict()
+    logger.debug(params)
+    # Validate required params
+    _needed_params = {'iuuids'}
+    if not _needed_params.issubset(params):
+        raise errors.ApiError(70001, "Missing required key params")
+
+    _items = Item.intel_query(**params)
+    return jsonify({
+        'status': 'OK',
+        'items': _items
+        })
+
+
 @mod.route('/by/gtin', methods=['GET'])
 def get_bygtin():
     """ Endpoint to get details of given items
