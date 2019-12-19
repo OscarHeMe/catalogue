@@ -175,7 +175,7 @@ class Item(object):
         res_df = pd.merge(item_df, product_df, on="item_uuid", how="left")
         res_df.fillna('', inplace=True)
         
-        resp = res_df.to_dict(orient='records')
+        _resp = res_df.to_dict(orient='records')
 
         return _resp
 
