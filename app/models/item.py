@@ -160,7 +160,7 @@ class Item(object):
         logger.debug('fetching: {}'.format(kwargs))
 
         # get item info
-        query = "SELECT item_uuid, gtin, name FROM item WHERE item_uuid IN {}".format(tuplify(kwargs['iuuids']))
+        query = "SELECT item_uuid, gtin, name AS item_name FROM item WHERE item_uuid IN {}".format(tuplify(kwargs['iuuids']))
         logger.debug(query)
         item_res = g._db.query(query).fetch()
 
@@ -174,6 +174,12 @@ class Item(object):
         product_df = pd.DataFrame(prod_res)
         res_df = pd.merge(item_df, product_df, on="item_uuid", how="left")
         res_df.fillna('', inplace=True)
+        #res_df = res_df.assign(final_name=[ if x >= 50 else 'no' for x in res_df['salary']])
+        res_df['name'] = res_df.apply(
+            lambda row: row['item_name'] if row['ims_name'] == '' else row['ims_name'],
+            axis=1
+        )
+        res_df.drop(['ims_name', 'item_name'], axis=1, inplace=True)
         
         _resp = res_df.to_dict(orient='records')
 
