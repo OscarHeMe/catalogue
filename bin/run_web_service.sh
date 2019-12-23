@@ -29,4 +29,4 @@ fi
 
 
 echo "[$(date)][$APP_NAME]: Starting with GUNICORN in $MODE mode..."
-pipenv run gunicorn --workers 3 --bind unix:catalogue.sock -m 000 -t 200 wsgi:app & nginx -g "daemon off;"
+pipenv run gunicorn --workers 3 --bind unix:catalogue.sock -m 000 -t 500 wsgi:app & nginx -g "daemon off;"
