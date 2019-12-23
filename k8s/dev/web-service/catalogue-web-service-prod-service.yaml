@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalogue-web-service-development-mex-deployment-service
+spec:
+  selector:
+    application: "catalogue-web-service"
+    environment: "development"
+    application-type: "web-service"
+    owner: "yogesh"
+    version: "v0.1"
+    type: "deployment"
+  ports:
+    - name: catalogue-web-service-port
+      protocol: TCP
+      port: 80
+      targetPort: 80
+  type: "LoadBalancer"
