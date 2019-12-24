@@ -105,8 +105,8 @@ def close_db(error):
 @app.route('/')
 def main():
     return jsonify({
-        'service' : 'ByPrice Catalogue',
-        'author' : 'Byprice {}'.format(str(ENV).lower()),
+        'service' : 'ByPrice Catalogue {} {}'.format(str(ENV), str(REGION)),
+        'author' : 'Byprice Dev Team',
         'date' : datetime.datetime.utcnow(),
         'version': __version__
     })
