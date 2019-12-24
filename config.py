@@ -15,6 +15,7 @@ PATH = os.path.dirname(os.path.realpath(__file__)) + "/"
 # Env
 TESTING=False
 ENV = os.getenv('ENV','DEV')
+REGION = os.getenv('REGION', '')
 
 # Logging and remote logging
 LOG_LEVEL = os.getenv('LOG_LEVEL', ('DEBUG' if ENV != 'PRODUCTION' else 'INFO'))
