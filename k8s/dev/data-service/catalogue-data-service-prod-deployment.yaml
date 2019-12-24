@@ -18,7 +18,7 @@ spec:
       restartPolicy: Always
       containers:
         - name: catalogue-data-service-development-mex-container
-          image: gcr.io/byprice-backend/development/data-service/catalogue:master
+          image: gcr.io/byprice-backend/development/data-service/catalogue:dev
           imagePullPolicy: Always
           resources:
             limits:
