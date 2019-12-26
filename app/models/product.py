@@ -549,6 +549,12 @@ class Product(object):
             -----
             cache_ids : dict
                 Nested dict by source and product_id to product_uuid map
+                {
+                    source_1 : {
+                        product_id_1 : <product_uuid>,
+                        product_id_2 : <product_uuid>
+                    },...
+                }
         """
         _df = pd\
             .read_sql("""SELECT product_uuid, source, product_id 
@@ -562,6 +568,7 @@ class Product(object):
                             .set_index('product_id')\
                             .to_dict()['product_uuid']
         # Clean GC
+        
         del _df
         return cache_ids
 

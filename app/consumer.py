@@ -23,6 +23,7 @@ ack = []
 nack = []
 to_update = []
 to_insert = []
+insert_dic = {}
 updt_count = 0
 insrt_count = 0
 
@@ -68,6 +69,7 @@ def process(new_item, reroute=True, commit=True):
     """
     global to_update
     global to_insert
+    global insert_dic
     global updt_count
     global insrt_count
     # Fetch Route key
@@ -87,7 +89,8 @@ def process(new_item, reroute=True, commit=True):
         # logger.debug('Getting from db')
         # Verify if product exist
         ############  NEW  ###############
-
+        
+        # Select qry
         query = """SELECT product_uuid, item_uuid FROM product p WHERE p.product_id = %s AND p.source = %s;"""
 
         psql_db.cursor.execute(query, (str(new_item['id']).zfill(20), new_item['retailer']))
@@ -108,17 +111,18 @@ def process(new_item, reroute=True, commit=True):
         #     'product_id': p.product_id,
         #     'source': p.source,
         #     }, _cols=['product_uuid', 'item_uuid'], limit=1)
-        # if prod_uit_uuiduid and 'item_uuid' in prod_uuid[0]:
-        #     cached_item.add_key(prod_uuid[0]['product_uuid'], prod_uuid[0]['item_uuid'])
+        if prod_uuid and item_uuid:
+            cached_item.add_key(prod_uuid, item_uuid)
     else:
         #### old ###### prod_uuid[0]['item_uuid'] = cached_item.get_item_uuid(prod_uuid[0]['product_uuid'])
         item_uuid = cached_item.get_item_uuid(prod_uuid[0]['product_uuid'])
+        prod_uuid = prod_uuid[0]['product_uuid']
         logger.debug("Got UUID from cache!")
 
     # if exists
     if prod_uuid:
 
-        logger.debug('Found product ({} {})!'.format(p.source, prod_uuid if not isinstance(prod_uuid, list) else prod_uuid[0].get('product_uuid')))
+        logger.debug('Found product ({} {})!'.format(p.source, prod_uuid))
         # Get product_uuid
 
         #######  OLD ###########
@@ -137,12 +141,16 @@ def process(new_item, reroute=True, commit=True):
             #     raise Exception("Could not update product!")
             # logger.info('Updated ({} {}) product!'.format(p.source, p.product_uuid))
     else:
-        logger.debug('Could not find product, creating new one..')
+        logger.debug('---------------------------------------\nCould not find product, creating new one..')
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
-        to_insert.append(p.__dict__)
-        insrt_count += 1
+        if route_key == 'price':
+            cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
+            Product.insert_batch_qry([p.__dict__], 'product', 'product_uuid', cols=cols)
+        else:
+            to_insert.append(p.__dict__)
+            insrt_count += 1
         # if not p.save(pcommit=commit, verified=True):
         #     raise Exception('Unable to create new Product ({} {})!'.format(p.source, p.product_uuid))
         # logger.info('Created product ({} {})'.format(p.source, p.product_uuid))
@@ -210,6 +218,7 @@ def callback(ch, method, properties, body):
 def clasify(new_item):
     global to_update
     global to_insert
+    global insert_dic
     global updt_count
     global insrt_count
     
@@ -301,7 +310,7 @@ def treat_batch(messages):
 def start():
     logger.info("Warming up caching IDS...")
     global cached_ps
-    cached_ps = {}#Product.create_cache_ids()
+    cached_ps = Product.create_cache_ids()
     logger.info("Done warmup, loaded {} values from {} sources"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
