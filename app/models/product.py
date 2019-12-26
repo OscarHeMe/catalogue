@@ -556,12 +556,14 @@ class Product(object):
                     },...
                 }
         """
-        _df = pd\
-            .read_sql("""SELECT product_uuid, source, product_id 
-                    FROM product WHERE source NOT IN ('ims','plm','nielsen','gs1') 
-                    FOR UPDATE SKIP LOCKED""",
-                    g._db.conn)
-        g._db.conn.commit()        
+        qry = """SELECT product_uuid, source, product_id 
+                 FROM product WHERE source IN (SELECT key 
+                 FROM source WHERE retailer = '1');"""
+
+        _df = pd.read_sql(qry,g._db.conn)
+
+        g._db.conn.commit()
+
         cache_ids = {}
         for y, gdf in _df.groupby('source'):
             cache_ids[y] = gdf[['product_uuid','product_id']]\

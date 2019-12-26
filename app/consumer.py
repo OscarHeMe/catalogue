@@ -84,9 +84,10 @@ def process(new_item, reroute=True, commit=True):
     if p.product_id is None:
         logger.warning("Incomming product has no Product ID: [{}]".format(p.source))
         return
+    logger.debug("Getting UUID from cache!")
     prod_uuid = Product.puuid_from_cache(cached_ps, p)
     if not prod_uuid:
-        # logger.debug('Getting from db')
+        logger.debug('Not UUID, Getting from db')
         # Verify if product exist
         ############  NEW  ###############
         
@@ -99,58 +100,55 @@ def process(new_item, reroute=True, commit=True):
             for tup in result:
                 prod_uuid = tup[0]
                 item_uuid = tup[1]
-                # if prod_uuid:
-                #     data = new_item.copy()
-                #     data.update({
-                #         'product_uuid' : p_uuid
-                #     })
 
 
-        #########old ####
-        # prod_uuid = Product.get({
-        #     'product_id': p.product_id,
-        #     'source': p.source,
-        #     }, _cols=['product_uuid', 'item_uuid'], limit=1)
         if prod_uuid and item_uuid:
             cached_item.add_key(prod_uuid, item_uuid)
+        
     else:
-        #### old ###### prod_uuid[0]['item_uuid'] = cached_item.get_item_uuid(prod_uuid[0]['product_uuid'])
         item_uuid = cached_item.get_item_uuid(prod_uuid[0]['product_uuid'])
-        prod_uuid = prod_uuid[0]['product_uuid']
+       
         logger.debug("Got UUID from cache!")
 
     # if exists
     if prod_uuid:
+        # Get product_uuid
+        if isinstance(prod_uuid, list):
+            prod_uuid = prod_uuid[0]['product_uuid']
 
         logger.debug('Found product ({} {})!'.format(p.source, prod_uuid))
-        # Get product_uuid
 
-        #######  OLD ###########
-        # p.product_uuid = prod_uuid[0]['product_uuid']
-        # item_uuid = prod_uuid[0]['item_uuid']
-
-        
         p.product_uuid = prod_uuid
+        
+        update_cache(p)
 
         # If `item` update item
         if route_key == 'item':
             to_update.append(p.__dict__)
             updt_count += 1
             
-            # if not p.save(pcommit=commit, _is_update=True, verified=True):
-            #     raise Exception("Could not update product!")
-            # logger.info('Updated ({} {}) product!'.format(p.source, p.product_uuid))
     else:
-        logger.debug('---------------------------------------\nCould not find product, creating new one..')
+        logger.info('Could not find product, creating new one..')
+        
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
         if route_key == 'price':
             cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
-            Product.insert_batch_qry([p.__dict__], 'product', 'product_uuid', cols=cols)
+            p_uuid_ls = Product.insert_batch_qry([p.__dict__], 'product', 'product_uuid', cols=cols)
+            p.product_uuid = p_uuid_ls[0]
+            update_cache(p)
         else:
-            to_insert.append(p.__dict__)
-            insrt_count += 1
+            if _p.source in insert_dic.keys():
+                if _p.product_id not in insert_dic[_p.source]:
+                    insert_dic[_p.source].add(_p.product_id)
+                    to_insert.append(p.__dict__)
+                    insrt_count += 1
+                else:
+                    logger.info('Element already to be inserted')
+            else:
+                insert_dic[_p.source] = {}
+
         # if not p.save(pcommit=commit, verified=True):
         #     raise Exception('Unable to create new Product ({} {})!'.format(p.source, p.product_uuid))
         # logger.info('Created product ({} {})'.format(p.source, p.product_uuid))
@@ -166,25 +164,34 @@ def process(new_item, reroute=True, commit=True):
             logger.error(e)
         
     if insrt_count > CONSUMER_BATCH_SZ:
-        if True:
+        try:
             logger.info('Batch inserting...') 
             cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
             # print(to_insert)
             Product.insert_batch_qry(to_insert, 'product', 'product_uuid', cols=cols)
             insrt_count = 0
             to_insert = []
-        # except Exception as e:
-        #     logger.error('Error inserting batch')
-        #     logger.error(e)
+        except Exception as e:
+            logger.error('Error inserting batch')
+            logger.error(e)
         
     if route_key == 'price':
         # If price, update product_uuid and reroute
         new_item.update({'product_uuid': p.product_uuid, "item_id": item_uuid})
         if reroute:
             producer.send(new_item)
-            logger.info("[price] Rerouted back ({})".format(new_item['product_uuid']))
+            logger.debug("[price] Rerouted back ({})".format(new_item['product_uuid']))
     if not reroute:
         return new_item
+
+
+def update_cache(_p):
+    global cached_ps
+    if _p.source not in cached_ps.keys():
+        cached_ps[_p.source] = {}
+    cached_ps[_p.source][_p.product_id] = _p.product_uuid
+    logger.debug('Updated cache')
+
 
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
@@ -205,106 +212,6 @@ def callback(ch, method, properties, body):
     except Exception as e:
         logger.error("Error with the Delivery tag, method. [Basic Acknowledgment]")
         logger.error(e)
-        #nack.append(tag)
-
-    # if len(messages) >= CONSUMER_BATCH_SZ:
-    #     messages = treat_batch(messages)
-    #     logger.info('{} ACK messages\n{} NACK messages'.format(len(ack), len(nack)))
-    #     logger.info('{} failed messages'.format(len(messages)))
-    #     ack = []
-    #     nack = []
-
-
-def clasify(new_item):
-    global to_update
-    global to_insert
-    global insert_dic
-    global updt_count
-    global insrt_count
-    
-    query = """SELECT product_uuid FROM product p WHERE p.product_id = %s AND p.source = %s;"""
-    
-    route_key = new_item['route_key']
-    _frmted = mpk.product(route_key, new_item)
-    logger.debug('Formatted product!')
-    p = Product(_frmted)
-
-
-    psql_db.cursor.execute(query, (new_item['product_id'], new_item['source']))
-    result = psql_db.cursor.fetchall()
-    if len(result) > 0:
-        for tup in result:
-            p_uuid = tup[0]
-            if p_uuid:
-                data = new_item.copy()
-                data.update({
-                    'product_uuid' : p_uuid
-                })
-                to_update.append(data)
-                updt_count += 1
-    else:
-        data = new_item.copy()
-        to_insert.append(data)
-        insrt_count += 1
-
-    if updt_count > CONSUMER_BATCH_SZ:
-        Product.update_prod_query(to_update, 'product', 'product_uuid', cols=Product.__attrs__)  
-        updt_count = 0
-        to_update = []
-        
-    if insrt_count > CONSUMER_BATCH_SZ:
-        Product.insert_batch_qry(to_insert, 'product', 'product_uuid', cols=Product.__attrs__)
-        insrt_count = 0
-        to_insert = []
-
-            
-
-
-def process_files():
-    filepath = PATH + 'files/'
-    dfs = [
-        {
-            'name':filepath + f,
-            'dataframe':pd.read_csv(filepath + f).fillna('')
-        }
-        for f in listdir(filepath) if (isfile(join(filepath, f)) and APP_NAME.lower() in f)
-    ]
-    return dfs
-
-
-def treat_batch(messages):
-    commit = False
-    failed = []
-    dataframes = []
-    
-    fname = PATH + 'files/' + APP_NAME.lower() + str(datetime.datetime.utcnow()).replace(' ', '_').replace('.', '_').replace(':', '_') + '.csv'
-
-    pd.DataFrame(messages).to_csv(fname, index=False, quoting=csv.QUOTE_ALL)
-
-    dfs = process_files()
-
-    result = pd.concat([
-        element['dataframe'] for element in dfs
-    ])
-
-    mx_len = result['name'].count()
-
-    for i, row in result.iterrows():
-        if i == (mx_len-1):
-            commit = True
-
-        # print(messages[i].get('description'))
-        # print('Commit this?', commit)
-        try:
-            process(row.to_dict(), commit=commit)
-        except Exception as ex:
-            logger.error('Some process failed')
-            logger.error(ex)
-            failed.append(row.to_dict())
-    
-    [os.remove(element['name']) for element in dfs]
-
-    return failed
 
 
 def start():
