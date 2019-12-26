@@ -82,7 +82,6 @@ def process(new_item, reroute=True, commit=True):
     _frmted = mpk.product(route_key, new_item)
     logger.debug('Formatted product!')
     p = Product(_frmted)
-    logger.debug('Created product object!')
     p_data = {}
     prod_res = []
     # Verify if product in Cache
@@ -142,6 +141,7 @@ def process(new_item, reroute=True, commit=True):
     if prod_uuid:
         if isinstance(prod_uuid, list):
             prod_uuid = prod_uuid[0]['product_uuid']
+            item_uuid = prod_uuid[0]['item_uuid']
 
         logger.debug('Found product ({} {})!'.format(p.source, prod_uuid))
         # Get product_uuid
@@ -149,9 +149,6 @@ def process(new_item, reroute=True, commit=True):
         #######  OLD ###########
         # p.product_uuid = prod_uuid[0]['product_uuid']
 
-        if prod_uuid[0].get('item_uuid'):
-            item_uuid = prod_uuid[0]['item_uuid']
-        
         p.product_uuid = prod_uuid
 
         # If `item` update item
