@@ -171,15 +171,18 @@ class Item(object):
 
         #merge results
         item_df = pd.DataFrame(item_res)
-        product_df = pd.DataFrame(prod_res)
-        res_df = pd.merge(item_df, product_df, on="item_uuid", how="left")
-        res_df.fillna('', inplace=True)
-        #res_df = res_df.assign(final_name=[ if x >= 50 else 'no' for x in res_df['salary']])
-        res_df['name'] = res_df.apply(
-            lambda row: row['item_name'] if row['ims_name'] == '' else row['ims_name'],
-            axis=1
-        )
-        res_df.drop(['ims_name', 'item_name'], axis=1, inplace=True)
+        if len(prod_res) > 0:
+            product_df = pd.DataFrame(prod_res)
+            res_df = pd.merge(item_df, product_df, on="item_uuid", how="left")
+            res_df.fillna('', inplace=True)
+            #res_df = res_df.assign(final_name=[ if x >= 50 else 'no' for x in res_df['salary']])
+            res_df['name'] = res_df.apply(
+                lambda row: row['item_name'] if row['ims_name'] == '' else row['ims_name'],
+                axis=1
+            )
+            res_df.drop(['ims_name', 'item_name'], axis=1, inplace=True)
+        else:
+            res_df = item_df.rename(columns={"item_name": "name"})
         
         _resp = res_df.to_dict(orient='records')
 
