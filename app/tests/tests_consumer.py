@@ -10,6 +10,9 @@ from pprint import pprint
 from app.models.product import Product
 from app.models.source import Source
 from app.norm import map_product_keys as mpk
+from flask import g
+from app.utils.postgresql_queries import *
+
 
 # Incoming Product Test (PRICE)
 prods_test_price = [
@@ -191,9 +194,12 @@ class CatalogueServiceTestCase(unittest.TestCase):
             if True:
                 res_item = process(_ptest, False)
                 print('Can ack {}'.format(res_item))
-                #self.assertTrue(res_item)
-            #except:
-                #self.assertFalse(True)
+                ######## Get count
+                _where = "last_modified > '2019-12-29'"
+                _query = "SELECT COUNT(*) FROM product WHERE {}".format(_where)
+                _items = execute_select(g._psql_db.connection, _query + ';').fetchall()
+                print(_items)
+
         print("LASTED FOR:")
         print((datetime.datetime.utcnow()-t_0))
     

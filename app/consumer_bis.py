@@ -110,6 +110,7 @@ def process(new_item, reroute=True, commit=True):
     
     # If product actually exists
     if prod_uuid:
+        logger.debug('Found product')
         #logger.debug('Found product ({} {})!'.format(p.source, prod_uuid))
         prod_uuid = prod_uuid[0]['product_uuid']   
         p.product_uuid = prod_uuid
@@ -122,22 +123,23 @@ def process(new_item, reroute=True, commit=True):
     
     # If product is not in DB 
     else:
-        logger.debug('Could not find product, creating new one..')
+        logger.debug('Could not find product, trying to create new one..')
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
 
         if route_key == 'item':
             # Make sure this product was not already included in the insert list
-            if _p.source in insert_dic.keys():
-                    if _p.product_id not in insert_dic[_p.source]:
-                        insert_dic[_p.source].add(_p.product_id)
-                        to_insert.append(p.__dict__)
-                        insrt_count += 1
-                    else:
-                        logger.info('Element already to be inserted')
-                else:
-                    insert_dic[_p.source] = {}
+            if p.source not in insert_dic.keys():
+                insert_dic[p.source] = set()
+            if p.product_id not in insert_dic[p.source]:
+                insert_dic[p.source].add(p.product_id)
+                to_insert.append(p.__dict__)
+                insrt_count += 1
+                logger.debug('To Insert: {}'.format(insrt_count))
+            else:
+                logger.debug('Element already to be inserted')
+                
 
         if route_key == 'price':
             cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
@@ -162,7 +164,7 @@ def process(new_item, reroute=True, commit=True):
         try:
             logger.info('-------------- Batch inserting ---------------------') 
             cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
-            # print(to_insert)
+            # pprint(to_insert)
             Product.insert_batch_qry(to_insert, 'product', 'product_uuid', cols=cols)
             insrt_count = 0
             to_insert = []

@@ -488,7 +488,6 @@ class Product(object):
         qry = ''
         if len(cols) > 0:
             for data in data_batch:
-                # pprint(data)
                 vs = []
                 for k in cols:
                     value = data.get(k, None)
@@ -502,12 +501,12 @@ class Product(object):
                 if len(vs) > 0:
                     values.append("(" + ",".join(vs) + ")")
 
-                if len(values) > 0:
-                    qry = """INSERT INTO {} ({}) VALUES {} RETURNING {};""".format(table,
-                                                                                ','.join(cols), 
-                                                                                ','.join(values),
-                                                                                pkey)
-                    # logger.debug(qry[:1000])
+            if len(values) > 0:
+                qry = """INSERT INTO {} ({}) VALUES {} RETURNING {};""".format(table,
+                                                                            ','.join(cols), 
+                                                                            ','.join(values),
+                                                                            pkey)
+
                 g._psql_db.cursor.execute(qry)
                 response = g._psql_db.cursor.fetchall()
             for res in response:
@@ -540,6 +539,10 @@ class Product(object):
             for el in cols_change:
                 if 'uuid' in el:
                     sets.append(' {} = CAST (new.{} AS UUID)'.format(el, el))
+                elif 'raw_product' in el:
+                    sets.append(' {} = CAST (new.{} AS JSON)'.format(el, el))
+                elif 'last_modified' in el:
+                    sets.append(' {} = CAST (new.{} AS TIMESTAMP)'.format(el, el))                    
                 else:
                     sets.append(' {} = new.{}'.format(el, el))
 
@@ -555,26 +558,18 @@ class Product(object):
                 for k in cols:
                     value = data_batch[i].get(k, None)
                     d[k] = value
-                    tmp.append(' %({})s'.format(el))
-                    # if isinstance(value, str) or isinstance(value, list):
-                    #     value = "'" + str(value).replace('%', '%%').replace("'", "''") + "'"
-                    #     value = str(value).replace('%', '%%').replace("'", "''")
-                    # elif not value and not isinstance(value, bool):
-                    #     continue
-
+                    tmp.append(' %({})s'.format(k))
                     vs.append(str(value))
-                    # ks.append(str(k))
-                    # n_data[k] = value
+
                 dic_vals.append(d)
                 if vs:
                     # print(tp)
                     values.append(tuple(vs))
                     p_uuids.append(pval)
-        print(qry)
-        print(tuple(values)[0:2])
+        # print(qry)
+        # print(tmp)
+        # print(tuple(values)[0:2])
         if len(values) > 0:
-            #print(qry)
-            #print(values[:2])
             try:
                 execute_bulk_insert(g._psql_db.connection, qry, tuple(dic_vals), '('+ ','.join(tmp) + ')')
             except Exception as e:
