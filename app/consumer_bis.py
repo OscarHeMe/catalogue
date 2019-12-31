@@ -105,7 +105,8 @@ def process(new_item, reroute=True, commit=True):
     else:
         item_uuid = cached_item.get_item_uuid(prod_uuid[0]['product_uuid'])
         #logger.debug("Got UUID from cache!")
-
+    
+    # If product actually exists
     if prod_uuid:
         #logger.debug('Found product ({} {})!'.format(p.source, prod_uuid))
         prod_uuid = prod_uuid[0]['product_uuid']   
@@ -116,16 +117,25 @@ def process(new_item, reroute=True, commit=True):
             to_update.append(p.__dict__)
             updt_count += 1
             logger.debug('To Update: {}'.format(updt_count))
-
+    
+    # If product is not in DB 
     else:
         logger.debug('Could not find product, creating new one..')
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
+        # Make sure this product was not already included in the insert list
+
+        
         if route_key == 'item':
             to_insert.append(p.__dict__)
             insrt_count += 1
             logger.debug('To Update: {}'.format(updt_count))
+        if route_key == 'price':
+            cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
+            p_uuid_ls = Product.insert_batch_qry([p.__dict__], 'product', 'product_uuid', cols=cols)
+            p.product_uuid = p_uuid_ls[0]
+            update_cache(p)
 
     if updt_count >= CONSUMER_BATCH_SZ:
         try:
