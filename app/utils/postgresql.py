@@ -13,13 +13,13 @@ class Postgresql:
         self._connection = None
         self._cursor = None
 
-    def set_connection_parameter(self):
+    def set_connection_parameter(self, **kwargs):
         self.connection_parameter = {
-            "user": os.environ.get('SQL_USER'),
-            "password": os.environ.get('SQL_PASSWORD'),
-            "host": os.environ.get('SQL_HOST'),
-            "port": os.environ.get('SQL_PORT'),
-            "database": os.environ.get('SQL_DB')
+            "user": os.environ.get('SQL_USER') if not kwargs.get('user') else kwargs.get('user'),
+            "password": os.environ.get('SQL_PASSWORD') if not kwargs.get('password') else kwargs.get('password'),
+            "host": os.environ.get('SQL_HOST') if not kwargs.get('host') else kwargs.get('host'),
+            "port": os.environ.get('SQL_PORT') if not kwargs.get('port') else kwargs.get('port'),
+            "database": os.environ.get('SQL_DB') if not kwargs.get('database') else kwargs.get('database')
         }
 
         return self.connection_parameter
@@ -55,6 +55,19 @@ class Postgresql:
             except Exception as e:
                 logger.warn('Unable to close connection. May be the connection is already closed', exc_info=True)
             self._connection = None
+
+    def commit(self):
+        self.connection.commit()
+    
+    def rollback(self):
+        self.connection.rollback()
+        
+    def disconnect(self, commit=True):
+        if commit:
+            self.commit()
+        else:
+            self.rollback()
+        self.connection.close()        
 
     @property
     def connection(self):

@@ -22,3 +22,4 @@ Dockerfile.local
 .env*
 Pip*
 *.dump
+*.csv
