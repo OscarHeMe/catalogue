@@ -60,6 +60,7 @@ last_updt = datetime.datetime.utcnow()
 
 to_update = []
 to_insert = []
+insert_dic = {}
 updt_count = 0
 insrt_count = 0
 can_ack = False
@@ -71,6 +72,7 @@ def process(new_item, reroute=True, commit=True):
     global to_update
     global to_insert
     global updt_count
+    global insert_dic
     global insrt_count
     global cached_ps
     
@@ -124,13 +126,19 @@ def process(new_item, reroute=True, commit=True):
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
-        # Make sure this product was not already included in the insert list
 
-        
         if route_key == 'item':
-            to_insert.append(p.__dict__)
-            insrt_count += 1
-            logger.debug('To Update: {}'.format(updt_count))
+            # Make sure this product was not already included in the insert list
+            if _p.source in insert_dic.keys():
+                    if _p.product_id not in insert_dic[_p.source]:
+                        insert_dic[_p.source].add(_p.product_id)
+                        to_insert.append(p.__dict__)
+                        insrt_count += 1
+                    else:
+                        logger.info('Element already to be inserted')
+                else:
+                    insert_dic[_p.source] = {}
+
         if route_key == 'price':
             cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
             p_uuid_ls = Product.insert_batch_qry([p.__dict__], 'product', 'product_uuid', cols=cols)
