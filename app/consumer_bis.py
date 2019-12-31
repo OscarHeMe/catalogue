@@ -27,8 +27,6 @@ from .norm import map_product_keys as mpk
 
 # sys.exit()
 
-
-
 CONSUMER_BATCH_SZ = 100
 
 # Logging
@@ -140,7 +138,6 @@ def process(new_item, reroute=True, commit=True):
             else:
                 logger.debug('Element already to be inserted')
                 
-
         if route_key == 'price':
             cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
             p_uuid_ls = Product.insert_batch_qry([p.__dict__], 'product', 'product_uuid', cols=cols)
