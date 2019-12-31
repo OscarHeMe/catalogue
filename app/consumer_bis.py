@@ -122,8 +122,10 @@ def process(new_item, reroute=True, commit=True):
         _needed_params = {'source','product_id', 'name'}
         if not _needed_params.issubset(p.__dict__.keys()):
             raise Exception("Required columns to create are missing in product. (source, product_id, name)")
-        to_insert.append(p.__dict__)
-        insrt_count += 1
+        if route_key == 'item':
+            to_insert.append(p.__dict__)
+            insrt_count += 1
+            logger.debug('To Update: {}'.format(updt_count))
 
     if updt_count >= CONSUMER_BATCH_SZ:
         try:
@@ -182,6 +184,14 @@ def callback(ch, method, properties, body):
         logger.error(e)
     print("LASTED FOR:")
     print((datetime.datetime.utcnow()-t_0))
+
+
+def update_cache(_p):
+    global cached_ps
+    if _p.source not in cached_ps.keys():
+        cached_ps[_p.source] = {}
+    cached_ps[_p.source][_p.product_id] = _p.product_uuid
+    logger.debug('Updated cache')
 
 
 def start():
