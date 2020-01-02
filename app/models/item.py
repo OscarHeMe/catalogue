@@ -1042,7 +1042,7 @@ class Item(object):
                 SELECT COUNT(DISTINCT(i.item_uuid)) AS count_, 'items' AS type_
             """
             qry_select_product = """
-                SELECT COUNT(DISTINCT(p.product_uuid)) AS count_, 'products' AS type_
+                SELECT COUNT(DISTINCT(p.source, p.product_id)) AS count_, 'products' AS type_
             """
             qry_group=""
         else:
@@ -1065,7 +1065,7 @@ class Item(object):
         qry_item_uuids = """
             {qry_select_item}
                     FROM item i 
-                    INNER JOIN product p ON i.item_uuid=p.item_uuid
+                    INNER JOIN unique_by_source_product_id p ON i.item_uuid=p.item_uuid
                     {qry_join_categories}
                     WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
                     AND p.item_uuid IS NOT NULL
@@ -1074,7 +1074,7 @@ class Item(object):
             UNION ALL
             
             {qry_select_product}
-                FROM product p
+                FROM unique_by_source_product_id p
                     {qry_join_categories}
                     WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
                     AND p.item_uuid IS NULL
