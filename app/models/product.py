@@ -252,8 +252,7 @@ class Product(object):
                     m_prod_at.precision = _attr['precision']
                 m_prod_at.last_modified = str(datetime.datetime.utcnow())
                 m_prod_at.save(commit=pcommit)
-                logger.debug("Product Attr correctly saved! ({})"
-                            .format(m_prod_at.last_id))
+                logger.debug("Product Attr correctly saved! ({})".format(m_prod_at.last_id))
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product attr!")
@@ -302,8 +301,7 @@ class Product(object):
             m_prod_im.descriptor = json.dumps(descs)
         m_prod_im.last_modified = str(datetime.datetime.utcnow())
         m_prod_im.save(commit=pcommit)
-        logger.debug("Product Image correctly saved! ({})"
-                    .format(m_prod_im.last_id))
+        logger.debug("Product Image correctly saved! ({})".format(m_prod_im.last_id))
         return True
 
     @staticmethod
@@ -419,8 +417,7 @@ class Product(object):
                 m_prod_cat.id_category = id_cat
                 m_prod_cat.last_modified = str(datetime.datetime.utcnow())
                 m_prod_cat.save(commit=pcommit)
-                logger.debug("Product Category correctly saved! ({})"
-                            .format(m_prod_cat.last_id))
+                logger.debug("Product Category correctly saved! ({})".format(m_prod_cat.last_id))
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product category!")
@@ -650,8 +647,7 @@ class Product(object):
         """
         items = []
         q_cols = ','.join(_cols) if _cols else 'product_uuid'
-        _where = ' AND '.join(["{} IN {}"
-                              .format(z[0], tuplify(z[1]))
+        _where = ' AND '.join(["{} IN {}".format(z[0], tuplify(z[1]))
                               for z in _by.items()])
         #logger.debug("Fetching products...")
         _query = "SELECT {} FROM product WHERE {}"\
@@ -1232,8 +1228,7 @@ class Product(object):
             _fres = execute_select(g._psql_db.connection, f_query).fetchall()
             if not _fres:
                 return []
-            logger.debug("Found {} prods by filters"
-                        .format(len(_fres)))
+            logger.debug("Found {} prods by filters".format(len(_fres)))
         except Exception as e:
             logger.error(e)
             logger.warning("Could not fetch Filters!")
@@ -1266,10 +1261,9 @@ class Product(object):
             _qry = """SELECT EXISTS (
                     SELECT 1 FROM {table}
                     WHERE product_uuid = '{uuid}'
-                    AND id_{table} = {_id}"""
-                    .format(table=_table,
-                            uuid=_uuid,
-                            _id=_id)
+                    AND id_{table} = {_id}""".format(table=_table,
+                                                    uuid=_uuid,
+                                                    _id=_id)
 
             _exists = execute_select(g._psql_db.connection, _qry).fetchall()[0]['exists']
             if not _exists:
@@ -1279,8 +1273,7 @@ class Product(object):
             # Delete from Product extra record
             _qry = """DELETE FROM {table}
                     WHERE product_uuid='{uuid}'
-                    AND id_{table}={_id}"""
-                    .format(table=_table,
+                    AND id_{table}={_id}""".format(table=_table,
                                 uuid=_uuid,
                                 _id=_id))
 
@@ -1368,8 +1361,7 @@ class Product(object):
             logger.warning("Missing columns!")
             raise errors.ApiError(70009, "Wrong file format!")
         try:
-            _eng = create_engine("postgresql://{}:{}@{}:{}/{}"
-                                 .format(SQL_USER,
+            _eng = create_engine("postgresql://{}:{}@{}:{}/{}".format(SQL_USER,
                                          SQL_PASSWORD,
                                          SQL_HOST,
                                          SQL_PORT,
