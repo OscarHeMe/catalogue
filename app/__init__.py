@@ -13,7 +13,6 @@ from app.utils.postgresql import Postgresql as psqldb
 from app.utils.proxy import ReverseProxied
 if APP_MODE == 'CONSUMER':
     from app import consumer
-    from app import consumer_bis
 
 app = Flask(__name__)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
@@ -38,16 +37,6 @@ def consumer_cmd():
         get_db()
         get_psqldb()
         consumer.start()
-
-####TEST
-@app.cli.command('consumerb')
-def consumerb_cmd():
-    with app.app_context():
-        # WIth App ctx, fetch DB connector
-        get_db()
-        get_psqldb()
-        consumer_bis.start()
-
 
 @app.cli.command('initdb')
 def initdb_cmd():

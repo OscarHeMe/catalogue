@@ -217,7 +217,7 @@ def start():
     cached_ps = Product.create_cache_ids()
     logger.info("Done warmup, loaded {} values from {} sources: ({} MB)"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps), (sys.getsizeof(cached_ps)* 1000000 / 10**6)))
-    logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m "))
+    logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m ") + 'from {}'.format(QUEUE_CATALOGUE))
     consumer.set_callback(callback)
     cached_item.item_cache(cached_item.MAXSIZE, cached_item.TTL)
     consumer.run()
