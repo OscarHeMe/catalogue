@@ -20,6 +20,5 @@ spark-warehouse
 data/
 Dockerfile.local
 .env*
-Pip*
 *.dump
 *.csv
