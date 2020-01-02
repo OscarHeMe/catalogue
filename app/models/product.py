@@ -1275,7 +1275,7 @@ class Product(object):
                     WHERE product_uuid='{uuid}'
                     AND id_{table}={_id}""".format(table=_table,
                                 uuid=_uuid,
-                                _id=_id))
+                                _id=_id)
 
             execute_select(g._psql_db.connection, _qry)
         except Exception as e:
