@@ -1,32 +1,32 @@
 FROM byprice/base-data-services:v2_3.6.8
 
 # Copy service content
-COPY ./ /catalogue/
+COPY ./ /catalogue_item/
 RUN mkdir /logs
 
 # Change workdir
-WORKDIR /catalogue
+WORKDIR /catalogue_item
 
 # Install project dependencies
 RUN pipenv install
 
-VOLUME /var/log/catalogue
+VOLUME /var/log/catalogue_item
 
 # App , environment & Logging
-ENV APP_NAME='catalogue-development-gcp'
+ENV APP_NAME='catalogue_item-development-gcp'
 ENV APP_DIR='/'
 # Bug with rabbit_engine file , not adding _dev for LOCAL
 ENV ENV='DEV'
 ENV FLASK_APP=app/__init__.py
 ENV REGION='MEX'
-ENV LOG_LEVEL='DEBUG'
+ENV LOG_LEVEL='ERROR'
 
 # Streamer
 ENV STREAMER='rabbitmq'
 ENV STREAMER_HOST='rmq-dev.byprice.com'
 ENV STREAMER_PORT=5222
-ENV STREAMER_QUEUE='catalogue'
-ENV STREAMER_ROUTING_KEY='catalogue'
+ENV STREAMER_QUEUE='catalogue_item'
+ENV STREAMER_ROUTING_KEY='catalogue_item'
 ENV STREAMER_EXCHANGE='data'
 ENV STREAMER_EXCHANGE_TYPE='direct'
 ENV STREAMER_VIRTUAL_HOST='mx'
@@ -51,6 +51,3 @@ ENV SQL_PASSWORD='byprice'
 ENV SQL_PORT=5432
 ENV SQL_USER='byprice'
 #ENV SQL_PASSWORD from secret
-
-
-ENTRYPOINT /bin/bash /catalogue/bin/run.sh

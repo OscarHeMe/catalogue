@@ -12,67 +12,79 @@ products = [
         'name'  : 'Limpiador Multiusos Fabuloso Pasión de Frutas 1 L',
         'source': 'rappi',
         'gtin'  : '07509546008295',
-        'product_id': '00000000000975397655',
+        'product_id': '00000000975397655',
     },
     {
         'name'  : 'Limpiador Multiusos Fabuloso Pasión de Frutas 1 L',
         'source': 'chedraui',
         'gtin'  : '07509546008295',
-        'product_id': '75397655',
+        'product_id': '7539q55',
     },
-    # {
-    #     'name'  : 'FABULOSO PASION DE FRUTAS 1 LT',
-    #     'source': 'paris',
-    #     'gtin'  : '07509546008295',
-    #     'product_id': '7509546008295',
-    # },
+    {
+        'name'  : 'FABULOSO PASION DE FRUTAS 1 LT',
+        'source': 'paris',
+        'gtin'  : '07509546008295',
+        'product_id': '7509546008295',
+    },
     {
         'name'  : 'Limpiador multiusos',
         'source': 'fresko',
         'gtin'  : '',
         'product_id': '00000007509546008295',
     },
-    # {
-    #     'name'  : 'Limpiador Multiusos FaPasión de frutas',
-    #     'source': 'chedraui',
-    #     'gtin'  : '0750954600829',
-    #     'product_id': '00000000750954600829',
-    # },
-    # {
-    #     'name'  : 'Frazada Cola de Sirena Mermaids 123  Arcoíris',
-    #     'source': 'walmart_online',
-    #     'gtin'  : '0750032690296',
-    #     'product_id': '00000000750032690296',
-    # }
+    {
+        'name'  : 'Limpiador Multiusos FaPasión de frutas',
+        'source': 'chedraui',
+        'gtin'  : '0750954600829',
+        'product_id': '00000000750954600829',
+    },
+    {
+        'name'  : 'Frazada Cola de Sirena Mermaids 123  Arcoíris',
+        'source': 'walmart_online',
+        'gtin'  : '0750032690296',
+        'product_id': '00000000750032690296',
+    }
 ]
 
 
-def update_prod_query(data_batch, table, pkey, cols=[]):
+def update_prod_query(data_batch, table, pkey, cols=[]) -> list:
     values = []
-    qry = "UPDATE product SET ({}) = ({}) WHERE {} = '{}'"
+    p_uuids = []
+    sets = []
     if len(cols) > 0:
+        for el in cols:
+            sets.append('{} = %({})s'.format(el, el))
+        qry = "UPDATE product SET {} WHERE {} = %({})s".format(','.join(sets), pkey, pkey)    
         for data in data_batch:
+            n_data = {}
             pval = data.get(pkey)
             vs = []
             ks = []
             for k in cols:
                 value = data.get(k, None)
-                if isinstance(value, str):
-                    value = "'" + value.replace('%', '%%') + "'"
-                elif not value and not isinstance(value, bool):
-                    continue
+                if isinstance(value, str) or isinstance(value, list):
+                    value = "'" + str(value).replace('%', '%%').replace("'", "''") + "'"
+                # elif not value and not isinstance(value, bool):
+                #     continue
 
                 vs.append(str(value))
                 ks.append(str(k))
+                n_data[k] = value
 
-            tp = (','.join(ks), ",".join(vs), pkey, pval)
-            # print(tp)
-            values.append(qry.format(*tp))
+            if n_data:
+                # print(tp)
+                values.append(data)
+                p_uuids.append(pval)
 
     if len(values) > 0:
-        for qry in values:
-            psql_db._cursor.execute(qry)
-    return 
+        print(qry)
+        print(values[:2])
+        try:
+            psql_db.cursor.executemany(qry, tuple(values))
+        except Exception as e:
+            logger.error('Error while trying to update {}:\n   - {}'.format([-1], e))
+    psql_db.connection.commit()                   
+    return p_uuids
 
 
 def insert_batch_qry(data_batch, table, pkey, cols=[]):
@@ -162,7 +174,7 @@ if True:
             
         print('{} elements to insert'.format(len(to_insert)))
 
-        cols = ['name', 'source', 'description', 'product_id', 'brand']
+        cols = ['name', 'source', 'product_id']
         #pprint(to_insert)
         insert_batch_qry(to_insert, 'product', 'product_uuid', cols)
 

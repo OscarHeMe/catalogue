@@ -1,5 +1,6 @@
 from app.models.category import Category
 from app.models.attr import Attr
+from app.models.formatter import Formatter
 from app.norm.normalize_text import key_format, tuplify
 from app.utils import errors
 from ByHelpers import applogger
@@ -13,6 +14,7 @@ import requests
 import ast
 import json
 import uuid
+from app.utils.postgresql_queries import *
 
 from pprint import pprint
 
@@ -24,15 +26,37 @@ class Product(object):
     """ Class perform insert, update and query methods
         on PSQL Catalogue.product
     """
+    _formatter_spec = {
+        'gtin': 'int',
+        'product_id': 'str',
+        'name': 'str',
+        'last_modified': 'str',
+        'description' : 'str',
+        'product_id' : 'str',
+        'categories' : 'str', ## change to json new schema
+        'images': 'json',
+        'source': 'str',
+        'url': 'str',
+        'attributes': 'json',
+        'ingredients': 'json',
+        'last_modified' : 'str',
+        'brand':'str',
+        'provider': 'str',
+        'is_outdated': 'bool'
+    }
+
+    _fmtr = Formatter(_formatter_spec)
 
     __attrs__ = [
         'product_uuid', "product_id", "gtin", "item_uuid",
         "source", "name", "description", "images",
         "categories", "url", "brand", "provider", "attributes",
-        "ingredients", "raw_html", "raw_product"
+        "ingredients", "raw_html", "raw_product", "is_outdated"
         ]
+
     __extras__ = ['prod_attrs', 'prod_images', 'prod_categs', 'normalized']
     __base_q = ['product_uuid', 'product_id', 'name', 'source']
+
 
     def __init__(self, _args):
         """ Product constructor
@@ -42,33 +66,22 @@ class Product(object):
             _args : dict
                 All arguments to build a `Product` record
         """
-        # Arguments verification and addition
-        for _k in self.__attrs__:
-            if _k in _args:
-                self.__dict__[_k] = _args[_k]
-                continue
-            self.__dict__[_k] = None
-        # Args Aggregation
-        self.last_modified = str(datetime.datetime.utcnow())
-        self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
-        self.product_id = str(self.product_id).zfill(20)[-255:] \
-            if self.product_id else None
-        if len(self.name) > 250:
-            self.name = self.name[:250]            
-        # Categories parsing
-        if not isinstance(self.categories, str):
-            if not (self.categories is None):
-                try:
-                    self.categories = ','.join(self.categories)
-                except Exception as e:
-                    logger.error(e)
-                    logger.warning("Categories with unvalid format!")
-                    logger.debug(self.categories)
-                    self.categories = None
-        # Raw Product construction
+        # Format
+        _args = self._fmtr.process(_args)
         try:
-            if not self.raw_product:
-                self.raw_product = json.dumps(_args)
+            # Arguments verification and addition
+            for _k in self.__attrs__:
+                if _k in _args:
+                    self.__dict__[_k] = _args[_k]
+                    continue
+                self.__dict__[_k] = None
+            # Args Aggregation
+            self.last_modified = str(datetime.datetime.utcnow())
+            self.gtin = str(self.gtin).zfill(14)[-14:] if self.gtin else None
+            self.product_id = str(self.product_id).zfill(20)[-255:] \
+                if self.product_id else None
+            if len(self.name) > 250:
+                self.name = self.name[:250]   
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
@@ -77,21 +90,7 @@ class Product(object):
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70005,
                     "Wrong DataType to serialize for Product!")
-        # Args validation
-        try:
-            assert isinstance(self.images, list) or (self.images is None)
-            assert isinstance(self.categories, str) \
-                or (self.categories is None)
-            assert isinstance(self.attributes, list) \
-                or (self.attributes is None)
-            assert isinstance(self.raw_html, str) or (self.raw_html is None)
-        except Exception as e:
-            logger.error(e)
-            if APP_MODE == "CONSUMER":
-                logger.warning("Wrong Dataype to save Product ({} {})!".format(self.source, self.product_uuid))
-                raise Exception("Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
-            if APP_MODE == "SERVICE":
-                raise errors.ApiError(70005, "Wrong DataType to save Product ({} {})!".format(self.source, self.product_uuid))
+    
 
     def save(self, pcommit=True, _is_update=False, verified=False):
         """ Class method to save Product record in DB
@@ -117,13 +116,16 @@ class Product(object):
             pass
         else:
             # If not verified, check if not already in DB
+            logger.debug('Getting product_uuid')
             if Product.exists({'product_id': self.product_id,
                              'source': self.source}, commit=pcommit):
                 self.message = 'Product already exists!'
+                logger.debug(self.message)
                 self.product_uuid = Product\
                     .get({'product_id': self.product_id,
                         'source': self.source})[0]['product_uuid']
                 return True
+        logger.debug('Loading model')
         # Load model
         m_prod = g._db.model('product', 'product_uuid')
         for _k in self.__attrs__:
@@ -223,15 +225,16 @@ class Product(object):
                 })
                 id_attr = attr.save(commit=pcommit)
             # Verify if product_attr exists
-            id_prod_attr = g._db.query("""SELECT id_product_attr
-                                        FROM product_attr
-                                        WHERE product_uuid = '{}'
-                                        AND id_attr = {} LIMIT 1
-                                        FOR UPDATE SKIP LOCKED"""
-                                .format(self.product_uuid, id_attr), commit=pcommit)\
-                            .fetch()
+            _qry = """SELECT id_product_attr
+                    FROM product_attr
+                    WHERE product_uuid = '{}'
+                    AND id_attr = {} LIMIT 1
+                    FOR UPDATE SKIP LOCKED""".format(self.product_uuid, id_attr)
+            
+            id_prod_attr = execute_select(g._psql_db.connection, _qry).fetchone()
             # If not create product_attr
             if id_prod_attr:
+                id_prod_attr = id_prod_attr[0]
                 if not update:
                     logger.debug("Product Attr already in DB!")
                     continue
@@ -249,8 +252,7 @@ class Product(object):
                     m_prod_at.precision = _attr['precision']
                 m_prod_at.last_modified = str(datetime.datetime.utcnow())
                 m_prod_at.save(commit=pcommit)
-                logger.debug("Product Attr correctly saved! ({})"
-                            .format(m_prod_at.last_id))
+                logger.debug("Product Attr correctly saved! ({})".format(m_prod_at.last_id))
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product attr!")
@@ -262,7 +264,6 @@ class Product(object):
         logger.debug('Saving all images')
         logger.debug(self.images)
         for _img in self.images:
-            
             try:
                 # Verify if prod image exists
                 #qry_txt = """SELECT id_product_image FROM product_image
@@ -272,12 +273,12 @@ class Product(object):
                                         WHERE product_uuid = %s
                                         AND image = %s FOR UPDATE SKIP LOCKED"""
                 # if '%' in qry_txt:
-                #     g_qry = g._db.query(qry_txt.replace('%','%%'))    
-                # else:
-                g_qry = g._db.query(qry_txt, (self.product_uuid, _img), commit=pcommit)         
-                _exist = g_qry.fetch()             
-                if len(_exist) > 0:
-                    Product.save_pimage(self.product_uuid, _img, _exist[0]['id_product_image'],pcommit=pcommit)
+                #     g_qry = g._psql_db.cursor.execute(qry_txt.replace('%','%%'))    
+                # else:        
+                _exist = execute_select(g._psql_db.connection, qry_txt, (self.product_uuid, _img)).fetchone()
+                if _exist:
+                    _exist = _exist[0]
+                    Product.save_pimage(self.product_uuid, _img, _exist, pcommit=pcommit)
                     continue
                 # Load model
                 Product.save_pimage(self.product_uuid, _img, pcommit=pcommit)
@@ -300,8 +301,7 @@ class Product(object):
             m_prod_im.descriptor = json.dumps(descs)
         m_prod_im.last_modified = str(datetime.datetime.utcnow())
         m_prod_im.save(commit=pcommit)
-        logger.debug("Product Image correctly saved! ({})"
-                    .format(m_prod_im.last_id))
+        logger.debug("Product Image correctly saved! ({})".format(m_prod_im.last_id))
         return True
 
     @staticmethod
@@ -310,10 +310,12 @@ class Product(object):
             of a given product to NULL
         """
         try:
-            g._db.query("""UPDATE product
-                SET item_uuid = NULL
-                WHERE product_uuid = '{}'
-                """.format(puuid))
+            _qry = """UPDATE product
+                    SET item_uuid = NULL
+                    WHERE product_uuid = '{}'
+                    """.format(puuid)
+
+            execute_select(g._psql_db.connection, _qry)
             return {
                 'status': 'OK',
                 'msg': 'Product ({}) correctly reset!'.format(puuid)
@@ -333,14 +335,16 @@ class Product(object):
         """
         try:
             # Verify if prod image exists
-            id_pimg = g._db.query("""SELECT id_product_image
+            _qry = """SELECT id_product_image
                     FROM product_image
                     WHERE product_uuid = '{}'
                     AND image = '{}'
                     LIMIT 1 
                     FOR UPDATE SKIP LOCKED"""\
-                    .format(p_obj['product_uuid'], p_obj['image']))\
-                .fetch()
+                    .format(p_obj['product_uuid'], p_obj['image'])
+
+            id_pimg = execute_select(g._psql_db.connection, _qry).fetchall()
+            
             if not id_pimg:
                 if not or_create:
                     logger.warning("Cannot update, image not in DB!")
@@ -392,14 +396,15 @@ class Product(object):
                     if not id_cat:
                         continue
                 # Verify product category does not exist
-                id_prod_categ = g._db.query("""SELECT id_product_category
-                                            FROM product_category
-                                            WHERE id_category = {}
-                                            AND product_uuid = '{}' LIMIT 1"""
-                                            .format(id_cat,
-                                                    self.product_uuid), commit=pcommit)\
-                                    .fetch()
+                _qry = """SELECT id_product_category
+                        FROM product_category
+                        WHERE id_category = {}
+                        AND product_uuid = '{}' LIMIT 1""".format(id_cat, self.product_uuid)
+
+                id_prod_categ = execute_select(g._psql_db.connection, _qry).fetchone()
+
                 if id_prod_categ:
+                    id_prod_categ = id_prod_categ[0]
                     if not update:
                         logger.info("Category already assigned to Product!")
                         continue
@@ -412,8 +417,7 @@ class Product(object):
                 m_prod_cat.id_category = id_cat
                 m_prod_cat.last_modified = str(datetime.datetime.utcnow())
                 m_prod_cat.save(commit=pcommit)
-                logger.debug("Product Category correctly saved! ({})"
-                            .format(m_prod_cat.last_id))
+                logger.debug("Product Category correctly saved! ({})".format(m_prod_cat.last_id))
             except Exception as e:
                 logger.error(e)
                 logger.warning("Could not save Product category!")
@@ -438,14 +442,42 @@ class Product(object):
                                for z in list(k_param.items())])
         try:
             _q = """SELECT EXISTS (SELECT 1 FROM product 
-                    WHERE {} LIMIT 1""".format(_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
+                    WHERE {} LIMIT 1)""".format(_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
             logger.debug("Query: {}".format(_q))
-            exists = g._db.query(_q, commit=commit)\
-                .fetch()[0]['exists']
+            exists = execute_select(g._psql_db.connection, _q).fetchone()[0]
         except Exception as e:
+            logger.error('Error in func=exist')
             logger.error(e)
             return False
         return exists
+
+    @staticmethod
+    def select(k_param, cols=[], commit=True):
+        """ Static method to verify Product existance
+
+            Params:
+            -----
+            k_param : dict
+                Key-value element to query in Product table
+            cols : list
+                Columns to get from query
+
+            Returns:
+            -----
+            result : list of resulting elements from query
+        """
+        logger.debug("Verifying Product existance...")
+        _where = ' AND '.join(["{}='{}'".format(*z)
+                               for z in list(k_param.items())])
+        try:
+            _q = """SELECT {} FROM product 
+                    WHERE {} """.format(','.join(cols),_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
+            logger.debug("Query: {}".format(_q))
+            result = execute_select(g._psql_db.connection, _q).fetchall()
+        except Exception as e:
+            logger.error(e)
+            return False
+        return result
 
 
     @staticmethod
@@ -456,7 +488,6 @@ class Product(object):
         qry = ''
         if len(cols) > 0:
             for data in data_batch:
-                # pprint(data)
                 vs = []
                 for k in cols:
                     value = data.get(k, None)
@@ -470,14 +501,13 @@ class Product(object):
                 if len(vs) > 0:
                     values.append("(" + ",".join(vs) + ")")
 
-                if len(values) > 0:
-                    qry = """INSERT INTO {} ({}) VALUES {} RETURNING {};""".format(table,
-                                                                                ','.join(cols), 
-                                                                                ','.join(values),
-                                                                                pkey)
-                    # logger.debug(qry[:1000])
-                g._psql_db.cursor.execute(qry)
-                response = g._psql_db.cursor.fetchall()
+            if len(values) > 0:
+                qry = """INSERT INTO {} ({}) VALUES {} RETURNING {};""".format(table,
+                                                                            ','.join(cols), 
+                                                                            ','.join(values),
+                                                                            pkey)
+
+                response = execute_select(g._psql_db.connection, qry).fetchall()
             for res in response:
                 if len(res) > 0:
                     p_uuids.append(res[0])
@@ -489,36 +519,66 @@ class Product(object):
     def update_prod_query(data_batch, table, pkey, cols=[]) -> list:
         values = []
         p_uuids = []
-        qry = "UPDATE product SET ({}) = ({}) WHERE {} = '{}';"
-        if len(cols) > 0:
-            for data in data_batch:
-                pval = data.get(pkey)
+        sets = []
+        tmp = []
+        dic_vals = []
+
+        #execute_bulk_insert(conn, query, values, template, page_size=BULK_INSERT_CHUNKSIZE)
+        #execute_values(cursor, query, values, template=template, page_size=page_size)
+
+        update_query = """UPDATE product AS prod
+                    SET {}
+                    FROM (VALUES %s) AS new({}) 
+                    WHERE CAST (new.{} AS UUID) = prod.{};"""
+
+        cols_change = cols.copy()
+        cols_change.remove(pkey)
+
+        if len(cols_change) > 0:
+            for el in cols_change:
+                if 'uuid' in el:
+                    sets.append(' {} = CAST (new.{} AS UUID)'.format(el, el))
+                elif 'raw_product' in el:
+                    sets.append(' {} = CAST (new.{} AS JSON)'.format(el, el))
+                elif 'last_modified' in el:
+                    sets.append(' {} = CAST (new.{} AS TIMESTAMP)'.format(el, el))                    
+                else:
+                    sets.append(' {} = new.{}'.format(el, el))
+
+            qry = update_query.format(','.join(sets), ','.join(cols), pkey, pkey)
+
+            for i in range(len(data_batch)):
+                n_data = {}
+                pval = data_batch[i].get(pkey)
                 vs = []
                 ks = []
+                tmp = []
+                d = {}
                 for k in cols:
-                    value = data.get(k, None)
-                    if isinstance(value, str) or isinstance(value, list):
-                        value = "'" + str(value).replace('%', '%%').replace("'", "''") + "'"
-                    elif not value and not isinstance(value, bool):
-                        continue
-
+                    value = data_batch[i].get(k, None)
+                    d[k] = value
+                    tmp.append(' %({})s'.format(k))
                     vs.append(str(value))
-                    ks.append(str(k))
 
-                tp = [','.join(ks), ",".join(vs), pkey, pval]
-                # print(tp)
-                values.append(tp)
-
+                dic_vals.append(d)
+                if vs:
+                    # print(tp)
+                    values.append(tuple(vs))
+                    p_uuids.append(pval)
+        # print(qry)
+        # print(tmp)
+        # print(tuple(values)[0:2])
         if len(values) > 0:
-            for el in values:
-                try:
-                    g._psql_db.cursor.execute(qry.format(*el))
-                    p_uuids.append(el[-1])
-                except Exception as e:
-                    logger.error('Error while trying to update {}:\n   - {}'.format([-1], e))
-        g._psql_db.connection.commit()                   
+            try:
+                execute_bulk_insert(g._psql_db.connection, qry, tuple(dic_vals), '('+ ','.join(tmp) + ')')
+            except Exception as e:
+                logger.error('Error while trying to update {}:\n   - {}'.format([-1], e))             
         return p_uuids
 
+
+    @staticmethod
+    def save_all():
+        g._psql_db.connection.commit()
 
 
     @staticmethod
@@ -536,9 +596,9 @@ class Product(object):
             puuid : str
                 Product UUID or None
         """
-        if _p.source in cached_ps.keys():
-            if _p.product_id in cached_ps[_p.source]:
-                return [{'product_uuid': cached_ps[_p.source][_p.product_id]}]
+        if _p['source'] in cached_ps.keys():
+            if _p['product_id'] in cached_ps[_p['source']]:
+                return [{'product_uuid': cached_ps[_p['source']][_p['product_id']]}]
         return None
     
     @staticmethod
@@ -559,11 +619,9 @@ class Product(object):
         qry = """SELECT product_uuid, source, product_id 
                  FROM product WHERE source IN (SELECT key 
                  FROM source WHERE retailer = '1');"""
-
-        _df = pd.read_sql(qry,g._db.conn)
-
-        g._db.conn.commit()
-
+        
+        _df = pd.read_sql(qry, g._psql_db.connection)
+        g._psql_db.connection.commit()        
         cache_ids = {}
         for y, gdf in _df.groupby('source'):
             cache_ids[y] = gdf[['product_uuid','product_id']]\
@@ -592,20 +650,25 @@ class Product(object):
             _items : list
                 List of elements
         """
-        _cols = ','.join(_cols) if _cols else 'product_uuid'
-        _where = ' AND '.join(["{} IN {}"
-                              .format(z[0], tuplify(z[1]))
+        items = []
+        q_cols = ','.join(_cols) if _cols else 'product_uuid'
+        _where = ' AND '.join(["{} IN {}".format(z[0], tuplify(z[1]))
                               for z in _by.items()])
-        logger.debug("Fetching products...")
+        #logger.debug("Fetching products...")
         _query = "SELECT {} FROM product WHERE {}"\
-            .format(_cols, _where)
+            .format(q_cols, _where)
         if limit:
             _query += ' LIMIT {}'.format(limit)
-        logger.debug(_query)
+        #logger.debug(_query)
         # print(_query)
         try:
-            _items = g._db.query(_query, commit=commit).fetch()
-            logger.debug("Got {} products".format(len(_items)))
+            _items = execute_select(g._psql_db.connection, _query + ';').fetchall()
+            for it in _items:
+                d = {}
+                for i in range(len(_cols)):
+                    d[_cols[i]] = it[i]
+                items.append(d.copy())
+            #logger.debug("Got {} products".format(len(_items)))
         except Exception as e:
             logger.error(e)
             if APP_MODE == "CONSUMER":
@@ -613,14 +676,15 @@ class Product(object):
                 return False
             if APP_MODE == "SERVICE":
                 raise errors.ApiError(70003, "Issues fetching elements in DB")
-        return _items
+        return items
 
     @staticmethod
     def get_one(commit=True):
         """ Static Method to verify correct connection with Items Postgres DB
         """
         try:
-            q = g._db.query("SELECT * FROM product LIMIT 1", commit=commit).fetch()
+            _qry = "SELECT * FROM product LIMIT 1"
+            q = execute_select(g._psql_db.connection, _qry).fetchall()
         except:
             logger.error("Postgres Catalogue Connection error")
             return False
@@ -652,7 +716,7 @@ class Product(object):
         logger.debug(_qry)
         # Query DB
         try:
-            _resp = g._db.query(_qry).fetch()[0]
+            _resp = execute_select(g._psql_db.connection, _qry).fetchall()[0]
             logger.debug(_resp)
             logger.debug("Found {} products".format(_resp.get('products')))
             logger.debug("Found {} items".format(_resp.get('items')))
@@ -727,7 +791,7 @@ class Product(object):
         logger.debug(_qry)
         # Query DB
         try:
-            _resp = g._db.query(_qry).fetch()
+            _resp = execute_select(g._psql_db.connection, _qry).fetchall()
             logger.debug("Found {} products".format(len(_resp)))
         except Exception as e:
             logger.error(e)
@@ -778,7 +842,7 @@ class Product(object):
         logger.debug(_qry)
         # Query DB
         try:
-            _resp = g._db.query(_qry).fetch()
+            _resp = execute_select(g._psql_db.connection, _qry).fetchall()
             logger.debug("Found {} products".format(len(_resp)))
         except Exception as e:
             logger.error(e)
@@ -854,7 +918,7 @@ class Product(object):
         logger.debug(_qry)
         # Query DB
         try:
-            _resp = g._db.query(_qry).fetch()
+            _resp = execute_select(g._psql_db.connection, _qry).fetchall()
             logger.debug("Found {} products".format(len(_resp)))
         except Exception as e:
             logger.error(e)
@@ -985,7 +1049,7 @@ class Product(object):
             ORDER BY product_uuid""".format(tuplify(p_uuids))
         logger.debug(_qry)
         try:
-            resp_at = g._db.query(_qry).fetch()
+            resp_at = execute_select(g._psql_db.connection, _qry).fetchall()
             for _rat in resp_at:
                 _pu = _rat['product_uuid']
                 del _rat['product_uuid']
@@ -1022,7 +1086,7 @@ class Product(object):
                 WHERE product_uuid IN {}""".format(tuplify(p_uuids[i: i+1000]))
             logger.debug(_qry)
             try:
-                resp_norm = g._db.query(_qry).fetch()
+                resp_norm = execute_select(g._psql_db.connection, _qry).fetchall()
                 for _rnom in resp_norm:
                     _pu = _rnom['product_uuid']
                     del _rnom['product_uuid']
@@ -1058,7 +1122,7 @@ class Product(object):
             ORDER BY product_uuid""".format(tuplify(p_uuids))
         logger.debug(_qry)
         try:
-            resp_im = g._db.query(_qry).fetch()
+            resp_im = execute_select(g._psql_db.connection, _qry).fetchall()
             for _rim in resp_im:
                 _pu = _rim['product_uuid']
                 del _rim['product_uuid']
@@ -1100,7 +1164,7 @@ class Product(object):
             ORDER BY product_uuid""".format(tuplify(p_uuids))
         logger.debug(_qry)
         try:
-            resp_ca = g._db.query(_qry).fetch()
+            resp_ca = execute_select(g._psql_db.connection, _qry).fetchall()
             for _rca in resp_ca:
                 _pu = _rca['product_uuid']
                 del _rca['product_uuid']
@@ -1166,11 +1230,10 @@ class Product(object):
                     rets=_rets)
         logger.debug(f_query)
         try:
-            _fres = g._db.query(f_query).fetch()
+            _fres = execute_select(g._psql_db.connection, f_query).fetchall()
             if not _fres:
                 return []
-            logger.debug("Found {} prods by filters"
-                        .format(len(_fres)))
+            logger.debug("Found {} prods by filters".format(len(_fres)))
         except Exception as e:
             logger.error(e)
             logger.warning("Could not fetch Filters!")
@@ -1200,25 +1263,26 @@ class Product(object):
                 Transaction status
         """
         try:
-            _exists = g._db.query("""SELECT EXISTS (
-                                    SELECT 1 FROM {table}
-                                    WHERE product_uuid = '{uuid}'
-                                    AND id_{table} = {_id}"""
-                                  .format(table=_table,
-                                          uuid=_uuid,
-                                          _id=_id))\
-                                .fetch()[0]['exists']
+            _qry = """SELECT EXISTS (
+                    SELECT 1 FROM {table}
+                    WHERE product_uuid = '{uuid}'
+                    AND id_{table} = {_id}""".format(table=_table,
+                                                    uuid=_uuid,
+                                                    _id=_id)
+
+            _exists = execute_select(g._psql_db.connection, _qry).fetchall()[0]['exists']
             if not _exists:
                 return {
                     'message': "Product Image ID not in DB!"
                 }
             # Delete from Product extra record
-            g._db.query("""DELETE FROM {table}
-                        WHERE product_uuid='{uuid}'
-                        AND id_{table}={_id}"""
-                        .format(table=_table,
+            _qry = """DELETE FROM {table}
+                    WHERE product_uuid='{uuid}'
+                    AND id_{table}={_id}""".format(table=_table,
                                 uuid=_uuid,
-                                _id=_id))
+                                _id=_id)
+
+            execute_select(g._psql_db.connection, _qry)
         except Exception as e:
             logger.error(e)
             raise errors.ApiError(70004, "Could not apply transaction in DB")
@@ -1247,17 +1311,17 @@ class Product(object):
             }
         try:
             # Delete from Product image
-            g._db.query("DELETE FROM product_image WHERE product_uuid='{}'"
-                        .format(p_uuid))
+            _qry = "DELETE FROM product_image WHERE product_uuid='{}'".format(p_uuid)
+            execute_select(g._psql_db.connection, _qry)
             # Delete from Product Category
-            g._db.query("DELETE FROM product_category WHERE product_uuid='{}'"
-                        .format(p_uuid))
+            _qry = "DELETE FROM product_category WHERE product_uuid='{}'".format(p_uuid)
+            execute_select(g._psql_db.connection, _qry)
             # Delete from Product Attr
-            g._db.query("DELETE FROM product_attr WHERE product_uuid='{}'"
-                        .format(p_uuid))
+            _qry = "DELETE FROM product_attr WHERE product_uuid='{}'".format(p_uuid)
+            execute_select(g._psql_db.connection, _qry)
             # Delete from Product
-            g._db.query("DELETE FROM product WHERE product_uuid='{}'"
-                        .format(p_uuid))
+            _qry = "DELETE FROM product WHERE product_uuid='{}'".format(p_uuid)
+            execute_select(g._psql_db.connection, _qry)
         except Exception as e:
             logger.error(e)
             if APP_MODE == 'SERVICE':
@@ -1302,8 +1366,7 @@ class Product(object):
             logger.warning("Missing columns!")
             raise errors.ApiError(70009, "Wrong file format!")
         try:
-            _eng = create_engine("postgresql://{}:{}@{}:{}/{}"
-                                 .format(SQL_USER,
+            _eng = create_engine("postgresql://{}:{}@{}:{}/{}".format(SQL_USER,
                                          SQL_PASSWORD,
                                          SQL_HOST,
                                          SQL_PORT,
@@ -1391,7 +1454,7 @@ class Product(object):
         )
 
         try:
-            rows = g._db.query(qry).fetch()
+            rows = execute_select(g._psql_db.connection, qry).fetchall()
         except Exception as e:
             logger.error(e)
             logger.error("Could not execute intersect query: {}".format(qry))
@@ -1405,11 +1468,13 @@ class Product(object):
         """ Insert or update product id to match
         """
         prod = g._db.model('product','product_uuid')
-        rows = g._db.query("""
-            select product_uuid, product_id from product 
-            where item_uuid = %s
-            and source = %s
-        """,(item_uuid, source)).fetch()
+
+        _qry = """select product_uuid, product_id from product 
+                where item_uuid = %s
+                and source = %s
+                """
+
+        rows = execute_select(g._psql_db.connection, _qry, (item_uuid, source)).fetchall()
         
         if rows:
             logger.info("Editing {} from {} to {}".format(
@@ -1423,11 +1488,11 @@ class Product(object):
             logger.info("New product for {} id {}".format(
                 source, new_product_id
             ))
-            # Get item info to populate name
-            _item = g._db.query("""
-                select name, gtin from item
-                where item_uuid = %s
-            """,(item_uuid,)).fetch()
+            # Get item info to populate 
+            _qry = """select name, gtin from item
+                    where item_uuid = %s"""
+            _item = execute_select(g._psql_db.connection, _qry, (item_uuid,)).fetchall()
+            
             # Values
             if _item:
                 prod.name  = _item[0]['name']
@@ -1523,22 +1588,25 @@ class Product(object):
             ))
                 
         # Get list of items with query and all
-        prod_rows = g._db.query("""
-            select product_uuid, product_id, gtin, name, description, source, item_uuid
-            from product p {} {}
-            limit %s offset %s
-        """.format(
-            """ """ if not where else """where {}""".format(
-                """ and """.join(where)
-            ),
-            """ """ if not order else """ order by p.name asc """
-        ), (ipp ,(p-1)*ipp)).fetch()
+        _qry = """
+                select product_uuid, product_id, gtin, name, description, source, item_uuid
+                from product p {} {}
+                limit %s offset %s
+            """.format(
+                """ """ if not where else """where {}""".format(
+                    """ and """.join(where)
+                ),
+                """ """ if not order else """ order by p.name asc """
+            )
+        
+        prod_rows = execute_select(g._psql_db.connection, _qry, (ipp ,(p-1)*ipp)).fetchall()
 
         # Get all sources
-        row_srcs = g._db.query("""
-            select key from source 
-            order by key asc
-        """, commit=False).fetch()
+        _qry = """select key from source
+                order by key asc
+                """
+        row_srcs = execute_select(g._psql_db.connection, _qry).fetchall()
+
         srcs_base = list([ row['key'] for row in row_srcs ])
         srcs = [ r['key'] for r in row_srcs]
 

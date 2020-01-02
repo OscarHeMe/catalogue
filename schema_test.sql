@@ -69,14 +69,15 @@ CREATE TABLE "product" (
     description text,
     raw_product json,
     raw_html text,
-    categories text,
+    categories json,
     ingredients text,
     brand text,
     provider text,
     url text,
-    images text,
+    images json,
     is_outdated boolean DEFAULT '0' NOT NULL,
-    last_modified timestamp
+    last_modified timestamp,
+    CONSTRAINT unique_prod UNIQUE(product_id, source, is_outdated)
 );
 
 CREATE TABLE "product_image" (
