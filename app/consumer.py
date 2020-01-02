@@ -186,7 +186,7 @@ def process(new_item, reroute=True, commit=True):
 def callback(ch, method, properties, body):
     global counter
 
-    t_0 = datetime.datetime.utcnow()
+    #t_0 = datetime.datetime.utcnow()
     
     new_item = json.loads(body.decode('utf-8'))
     #logger.debug("New incoming product..")
@@ -194,13 +194,13 @@ def callback(ch, method, properties, body):
 
     try:
         if can_ack:
-            print('----------- CAN ACK ------------')
+            logger.debug('Ack messages')
             ch.basic_ack(delivery_tag=method.delivery_tag, multiple=True)
     except Exception as e:
         logger.error("Error with the Delivery tag, method. [Basic Acknowledgment]")
         logger.error(e)
-    print("LASTED FOR:")
-    print((datetime.datetime.utcnow()-t_0))
+    # print("LASTED FOR:")
+    # print((datetime.datetime.utcnow()-t_0))
 
 
 def update_cache(_p):
@@ -214,7 +214,7 @@ def update_cache(_p):
 def start():
     global cached_ps
     logger.info("Warming up caching IDS...")
-    cached_ps = Product.create_cache_ids()
+    cached_ps = {}#Product.create_cache_ids()
     logger.info("Done warmup, loaded {} values from {} sources: ({} MB)"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps), (sys.getsizeof(cached_ps)* 1000000 / 10**6)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m ") + 'from {}'.format(QUEUE_CATALOGUE))
