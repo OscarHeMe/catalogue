@@ -89,7 +89,7 @@ def process(new_item, reroute=True, commit=True):
         logger.warning("Incomming product has no Product ID: [{}]".format(p.source))
         return
     logger.debug('Getting product_uuid!')
-    prod_uuid = Product.puuid_from_cache(cached_ps, p)
+    prod_uuid = Product.puuid_from_cache(cached_ps, p.__dict__)
     
     if not prod_uuid:
         # logger.debug('Getting from db')
