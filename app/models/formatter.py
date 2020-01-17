@@ -43,7 +43,9 @@ class Formatter(object):
                             else:
                                 data[k] = bool(str(data[k]))
                     except Exception as e:
-                        logger.error('Error trying to convert {}, {} to {}'.format(data[k], k, output_type))
+                        retailer = data['source'] if 'source' in data else 'unknown'
+                        logger.error('Error trying to convert {}, {} to {} retailer={}'.format(
+                            data[k], k, output_type, retailer))
                         del data[k]
                 else:
                     del data[k]
