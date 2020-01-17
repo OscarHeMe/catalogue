@@ -43,7 +43,7 @@ class Formatter(object):
                             else:
                                 data[k] = bool(str(data[k]))
                     except Exception as e:
-                        logger.error('Error trying to convert {} to {}'.format(data[k], output_type))
+                        logger.error('Error trying to convert {}, {} to {}'.format(data[k], k, output_type))
                         del data[k]
                 else:
                     del data[k]
