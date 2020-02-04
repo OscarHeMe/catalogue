@@ -185,6 +185,9 @@ def process(new_item, reroute=True, commit=True):
     if route_key == 'price':
         # If price, update product_uuid and reroute
         new_item.update({'product_uuid': p.product_uuid, "item_id": item_uuid})
+        if not new_item.get('location', {}).get('zip', []):
+            if new_item.get('location', {}).get('coords', []):
+                del new_item['location']['coords']
         can_ack = True
         if reroute:
             producer.send(new_item)
