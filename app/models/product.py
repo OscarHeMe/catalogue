@@ -228,8 +228,7 @@ class Product(object):
             _qry = """SELECT id_product_attr
                     FROM product_attr
                     WHERE product_uuid = '{}'
-                    AND id_attr = {} LIMIT 1
-                    FOR UPDATE SKIP LOCKED""".format(self.product_uuid, id_attr)
+                    AND id_attr = {} LIMIT 1""".format(self.product_uuid, id_attr)
             
             id_prod_attr = execute_select(g._psql_db.connection, _qry).fetchone()
             # If not create product_attr

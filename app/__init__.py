@@ -85,6 +85,7 @@ def get_psqldb():
 def before_request():
     logger.debug("Before Request")
     g._db = get_db()
+    g._psql_db = get_psqldb()
 
 # After requests
 @app.teardown_appcontext
