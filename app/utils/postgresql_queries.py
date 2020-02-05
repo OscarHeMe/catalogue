@@ -1,14 +1,17 @@
 import logging
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_values, RealDictCursor
 
 logger = logging.getLogger()
 BULK_INSERT_CHUNKSIZE = 1000
 
 
-def execute_select(conn, query, values=None):
+def execute_select(conn, query, values=None, get_dict=False):
     logger.debug(query)
     try:
-        cursor = conn.cursor()
+        if get_dict:
+            cursor = conn.cursor(cursor_factory = RealDictCursor)
+        else:
+            cursor = conn.cursor()
         cursor.execute(query, values)
         return cursor
     except Exception as e:

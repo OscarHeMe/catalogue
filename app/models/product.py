@@ -342,7 +342,7 @@ class Product(object):
                     FOR UPDATE SKIP LOCKED"""\
                     .format(p_obj['product_uuid'], p_obj['image'])
 
-            id_pimg = execute_select(g._psql_db.connection, _qry).fetchall()
+            id_pimg = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
             
             if not id_pimg:
                 if not or_create:
@@ -443,7 +443,7 @@ class Product(object):
             _q = """SELECT EXISTS (SELECT 1 FROM product 
                     WHERE {} LIMIT 1)""".format(_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
             logger.debug("Query: {}".format(_q))
-            exists = execute_select(g._psql_db.connection, _q).fetchone()[0]
+            exists = execute_select(g._psql_db.connection, _q, get_dict=True).fetchone()[0]
         except Exception as e:
             logger.error('Error in func=exist')
             logger.error(e)
@@ -472,7 +472,7 @@ class Product(object):
             _q = """SELECT {} FROM product 
                     WHERE {} """.format(','.join(cols),_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
             logger.debug("Query: {}".format(_q))
-            result = execute_select(g._psql_db.connection, _q).fetchall()
+            result = execute_select(g._psql_db.connection, _q, get_dict=True).fetchall()
         except Exception as e:
             logger.error(e)
             return False
@@ -661,12 +661,7 @@ class Product(object):
         #logger.debug(_query)
         # print(_query)
         try:
-            _items = execute_select(g._psql_db.connection, _query + ';').fetchall()
-            for it in _items:
-                d = {}
-                for i in range(len(_cols)):
-                    d[_cols[i]] = it[i]
-                items.append(d.copy())
+            items = execute_select(g._psql_db.connection, _query + ';', get_dict=True).fetchall()
             #logger.debug("Got {} products".format(len(_items)))
         except Exception as e:
             logger.error(e)
@@ -683,7 +678,7 @@ class Product(object):
         """
         try:
             _qry = "SELECT * FROM product LIMIT 1"
-            q = execute_select(g._psql_db.connection, _qry).fetchall()
+            q = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
         except:
             logger.error("Postgres Catalogue Connection error")
             return False
@@ -790,7 +785,7 @@ class Product(object):
         logger.debug(_qry)
         # Query DB
         try:
-            _resp = execute_select(g._psql_db.connection, _qry).fetchall()
+            _resp = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
             logger.debug("Found {} products".format(len(_resp)))
         except Exception as e:
             logger.error(e)
@@ -805,13 +800,14 @@ class Product(object):
         if extra_cols and _resp:
             p_uuids = [_u['product_uuid'] for _u in _resp]
             _extras = Product.fetch_extras(p_uuids, extra_cols)
-        # Aggregate extra columns
+        # Aggregate extra columns        
         for _i, _r in enumerate(_resp):
             _tmp_extras = {}
             for _ex in extra_cols:
                 _tmp_extras.update({
                     _ex : _extras[_r['product_uuid']][_ex]
                 })
+            print(_tmp_extras)
             _resp[_i].update(_tmp_extras)
         return _resp
 
@@ -917,7 +913,7 @@ class Product(object):
         logger.debug(_qry)
         # Query DB
         try:
-            _resp = execute_select(g._psql_db.connection, _qry).fetchall()
+            _resp = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
             logger.debug("Found {} products".format(len(_resp)))
         except Exception as e:
             logger.error(e)
@@ -1048,7 +1044,7 @@ class Product(object):
             ORDER BY product_uuid""".format(tuplify(p_uuids))
         logger.debug(_qry)
         try:
-            resp_at = execute_select(g._psql_db.connection, _qry).fetchall()
+            resp_at = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
             for _rat in resp_at:
                 _pu = _rat['product_uuid']
                 del _rat['product_uuid']
@@ -1085,7 +1081,7 @@ class Product(object):
                 WHERE product_uuid IN {}""".format(tuplify(p_uuids[i: i+1000]))
             logger.debug(_qry)
             try:
-                resp_norm = execute_select(g._psql_db.connection, _qry).fetchall()
+                resp_norm = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
                 for _rnom in resp_norm:
                     _pu = _rnom['product_uuid']
                     del _rnom['product_uuid']
@@ -1121,7 +1117,7 @@ class Product(object):
             ORDER BY product_uuid""".format(tuplify(p_uuids))
         logger.debug(_qry)
         try:
-            resp_im = execute_select(g._psql_db.connection, _qry).fetchall()
+            resp_im = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
             for _rim in resp_im:
                 _pu = _rim['product_uuid']
                 del _rim['product_uuid']
@@ -1163,7 +1159,7 @@ class Product(object):
             ORDER BY product_uuid""".format(tuplify(p_uuids))
         logger.debug(_qry)
         try:
-            resp_ca = execute_select(g._psql_db.connection, _qry).fetchall()
+            resp_ca = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
             for _rca in resp_ca:
                 _pu = _rca['product_uuid']
                 del _rca['product_uuid']
@@ -1229,7 +1225,7 @@ class Product(object):
                     rets=_rets)
         logger.debug(f_query)
         try:
-            _fres = execute_select(g._psql_db.connection, f_query).fetchall()
+            _fres = execute_select(g._psql_db.connection, f_query, get_dict=True).fetchall()
             if not _fres:
                 return []
             logger.debug("Found {} prods by filters".format(len(_fres)))
@@ -1269,7 +1265,7 @@ class Product(object):
                                                     uuid=_uuid,
                                                     _id=_id)
 
-            _exists = execute_select(g._psql_db.connection, _qry).fetchall()[0]['exists']
+            _exists = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()[0]['exists']
             if not _exists:
                 return {
                     'message': "Product Image ID not in DB!"
@@ -1453,7 +1449,7 @@ class Product(object):
         )
 
         try:
-            rows = execute_select(g._psql_db.connection, qry).fetchall()
+            rows = execute_select(g._psql_db.connection, qry, get_dict=True).fetchall()
         except Exception as e:
             logger.error(e)
             logger.error("Could not execute intersect query: {}".format(qry))
@@ -1473,7 +1469,7 @@ class Product(object):
                 and source = %s
                 """
 
-        rows = execute_select(g._psql_db.connection, _qry, (item_uuid, source)).fetchall()
+        rows = execute_select(g._psql_db.connection, _qry, (item_uuid, source), get_dict=True).fetchall()
         
         if rows:
             logger.info("Editing {} from {} to {}".format(
@@ -1490,7 +1486,7 @@ class Product(object):
             # Get item info to populate 
             _qry = """select name, gtin from item
                     where item_uuid = %s"""
-            _item = execute_select(g._psql_db.connection, _qry, (item_uuid,)).fetchall()
+            _item = execute_select(g._psql_db.connection, _qry, (item_uuid,), get_dict=True).fetchall()
             
             # Values
             if _item:
@@ -1598,13 +1594,13 @@ class Product(object):
                 """ """ if not order else """ order by p.name asc """
             )
         
-        prod_rows = execute_select(g._psql_db.connection, _qry, (ipp ,(p-1)*ipp)).fetchall()
+        prod_rows = execute_select(g._psql_db.connection, _qry, (ipp ,(p-1)*ipp), get_dict=True).fetchall()
 
         # Get all sources
         _qry = """select key from source
                 order by key asc
                 """
-        row_srcs = execute_select(g._psql_db.connection, _qry).fetchall()
+        row_srcs = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
 
         srcs_base = list([ row['key'] for row in row_srcs ])
         srcs = [ r['key'] for r in row_srcs]
