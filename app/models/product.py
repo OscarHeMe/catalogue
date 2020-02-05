@@ -807,7 +807,7 @@ class Product(object):
                 _tmp_extras.update({
                     _ex : _extras[_r['product_uuid']][_ex]
                 })
-            print(_tmp_extras)
+            # print(_tmp_extras)
             _resp[_i].update(_tmp_extras)
         return _resp
 
