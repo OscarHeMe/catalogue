@@ -23,6 +23,12 @@ nginx_block = """server {
         rewrite ^/%s/%s/(.*)$ /$1 break;
         include proxy_params;
         proxy_pass http://unix:/catalogue/catalogue.sock;
+        proxy_set_header X-Script-Name /bpcatalogue;
+        proxy_read_timeout 500;
+        proxy_connect_timeout 500;
+        proxy_send_timeout 500;
+        send_timeout 500;
+
     }
 }
 """
@@ -35,6 +41,12 @@ nginx_block_def = """server {
         rewrite ^/%s/(.*)$ /$1 break;
         include proxy_params;
         proxy_pass http://unix:/catalogue/catalogue.sock;
+        proxy_set_header X-Script-Name /bpcatalogue;
+        proxy_read_timeout 500;
+        proxy_connect_timeout 500;
+        proxy_send_timeout 500;
+        send_timeout 500;
+
     }
 }
 """
