@@ -837,7 +837,7 @@ class Product(object):
         logger.debug(_qry)
         # Query DB
         try:
-            _resp = execute_select(g._psql_db.connection, _qry).fetchall()
+            _resp = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()
             logger.debug("Found {} products".format(len(_resp)))
         except Exception as e:
             logger.error(e)
