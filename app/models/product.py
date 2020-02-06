@@ -710,7 +710,7 @@ class Product(object):
         logger.debug(_qry)
         # Query DB
         try:
-            _resp = execute_select(g._psql_db.connection, _qry).fetchall()[0]
+            _resp = execute_select(g._psql_db.connection, _qry, get_dict=True).fetchall()[0]
             logger.debug(_resp)
             logger.debug("Found {} products".format(_resp.get('products')))
             logger.debug("Found {} items".format(_resp.get('items')))
