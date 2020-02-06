@@ -18,7 +18,7 @@ ENV APP_DIR='/'
 # Bug with rabbit_engine file , not adding _dev for LOCAL
 ENV ENV='PROD'
 ENV FLASK_APP=app/__init__.py
-ENV REGION='MEX'
+ENV ROUTE='bpcatalogue'
 ENV LOG_LEVEL='INFO'
 
 # Streamer
