@@ -29,10 +29,11 @@ class Product(object):
     _formatter_spec = {
         'gtin': 'int',
         'product_id': 'str',
+        'product_uuid': 'str',
+        'item_uuid': 'str',
         'name': 'str',
         'last_modified': 'str',
         'description' : 'str',
-        'product_id' : 'str',
         'categories' : 'str', ## change to json new schema
         'images': 'json',
         'source': 'str',
@@ -100,6 +101,7 @@ class Product(object):
         # Verify for update
         if self.product_uuid:
             # If already validated for updated, dont do it again
+            logger.debug('Has product_uuid')
             if _is_update:
                 pass
             elif not Product.exists({'product_uuid': self.product_uuid}, commit=pcommit):
@@ -135,6 +137,7 @@ class Product(object):
         m_prod.last_modified = str(datetime.datetime.utcnow())
         # Always add what Item UUID is set
         m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
+        print(m_prod.item_uuid)
         step = 'Start'
         try:
             cmt = pcommit
@@ -443,7 +446,7 @@ class Product(object):
             _q = """SELECT EXISTS (SELECT 1 FROM product 
                     WHERE {} LIMIT 1)""".format(_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
             logger.debug("Query: {}".format(_q))
-            exists = execute_select(g._psql_db.connection, _q, get_dict=True).fetchone()[0]
+            exists = execute_select(g._psql_db.connection, _q, get_dict=True).fetchone().get('exists')
         except Exception as e:
             logger.error('Error in func=exist')
             logger.error(e)
