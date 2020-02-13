@@ -88,7 +88,7 @@ def process(new_item, reroute=True, commit=False):
     route_key = new_item['route_key']
     #logger.debug('Evaluating: {}'.format(route_key))
     # Reformat Prod Values
-    _frmted = mpk.product(route_key, new_item)
+    _frmted = mpk.pr        oduct(route_key, new_item)
     #logger.debug('Formatted product!')
     p = Product(_frmted)
     #logger.debug('Created product object!')
