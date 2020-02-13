@@ -274,9 +274,7 @@ class Product(object):
                 qry_txt = """SELECT id_product_image FROM product_image
                                         WHERE product_uuid = %s
                                         AND image = %s FOR UPDATE SKIP LOCKED"""
-                # if '%' in qry_txt:
-                #     g_qry = g._psql_db.cursor.execute(qry_txt.replace('%','%%'))    
-                # else:        
+                                                
                 _exist = execute_select(g._psql_db.connection, qry_txt, (self.product_uuid, _img)).fetchone()
                 if _exist:
                     _exist = _exist[0]

@@ -23,7 +23,7 @@ class Formatter(object):
         if isinstance(data, dict):
             for k in ls_keys:
                 output_type = self.__dict__.get(k, None)
-                if output_type:
+                if output_type and data[k] is not None:
                     try:
                         if output_type == 'str':
                             data[k] = str(data[k])

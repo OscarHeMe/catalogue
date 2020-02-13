@@ -60,8 +60,7 @@ cached_ps = {}
 counter = 0
 
 # Product Acumulator
-pstack = []
-last_updt = datetime.datetime.utcnow()
+last_commit = datetime.datetime.utcnow()
 
 to_update = []
 to_insert = []
@@ -71,9 +70,10 @@ insrt_count = 0
 can_ack = False
 
 
-def process(new_item, reroute=True, commit=True):
+def process(new_item, reroute=True, commit=False):
     """ Method that processes all elements with defined rules
     """
+    global last_commit
     global to_update
     global to_insert
     global insert_dic
@@ -154,7 +154,7 @@ def process(new_item, reroute=True, commit=True):
             p.product_uuid = p_uuid_ls[0]
             update_cache(p)
 
-    if updt_count >= CONSUMER_BATCH_SZ:
+    if updt_count >= CONSUMER_BATCH_SZ or commit:
         try:
             logger.info('-------------- Batch updating ---------------------') 
             cols = ['product_uuid', 'product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
@@ -164,10 +164,10 @@ def process(new_item, reroute=True, commit=True):
         except Exception as e:
             logger.error('Error updating batch')
             logger.error(e)
-        
+
         can_ack = True
         
-    if insrt_count >= CONSUMER_BATCH_SZ:
+    if insrt_count >= CONSUMER_BATCH_SZ or commit:
         try:
             logger.info('-------------- Batch inserting ---------------------') 
             cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
@@ -181,6 +181,9 @@ def process(new_item, reroute=True, commit=True):
             logger.error(e)
 
         can_ack = True
+
+    if can_ack:
+        last_commit = datetime.datetime.utcnow()
 
     if route_key == 'price':
         # If price, update product_uuid and reroute
@@ -208,6 +211,7 @@ def update_cache(_p):
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
     global counter
+    global last_commit
 
     #t_0 = datetime.datetime.utcnow()
     
