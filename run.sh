@@ -1,8 +1,8 @@
 #!/bin/bash
 
-deactivate
+cd ~/iqvia-colombia/web-services/catalogue
 
-source ../.envvars-data
+source ../.envvars-web
 source ./.envvars
 
 pipenv run flask initdb
@@ -18,8 +18,8 @@ elif [[ $MODE == "SERVICE" ]]
     then
     # Run gunicorm
     echo "Starting $APP_NAME in SERVICE mode"
-    pipenv run gunicorn --workers 3 --bind unix:$APP_NAME.sock -m 000 -t 200 wsgi:app &
-    nginx -g "daemon off;"
+    pipenv run gunicorn --workers 3 --bind unix:$APP_NAME.sock -m 000 -t 200 wsgi:app > logs/gunicorn.log 2>&1 & #&
+    #nginx -g "daemon off;"
 elif [[ $MODE == "SERVICE_LOCAL" ]]
     then
     # Run gunicorm

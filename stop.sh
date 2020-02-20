@@ -1,6 +1,8 @@
 #!/bin/bash
+export APP_DIR="/iqvia-colombia/web-services/catalogue"
+cd ~$APP_DIR
 source .envvars
 # Stop Processes
-kill -9 $(ps aux | grep flask | grep $APP_NAME | grep consum | awk '{print $2}')
+kill -9 $(ps aux | grep gunicorn | grep $APP_NAME | grep $APP_DIR | awk '{print $2}')
 # Clear Log Files
-rm $PWD/logs/consumer_*.log
+rm $PWD/logs/gunicorn*.log
