@@ -57,10 +57,12 @@ class Postgresql:
             self.set_connection()
         return self._connection
         
-    def close_connection(self):
+    def close_connection(self, commit=True):
+        logger.debug('Closing connection')
         if self._connection is not None and self._connection.closed == 0:
             try:
-                self._connection.commit()
+                if commit:
+                    self._connection.commit()
                 self._connection.close()
             except Exception as e:
                 logger.warning('Unable to close postgres connection. Connection might be already closed', exc_info=True)

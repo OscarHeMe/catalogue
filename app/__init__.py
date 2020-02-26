@@ -99,8 +99,7 @@ def close_db(error):
         db.close()
     psqldb = getattr(g, '_psql_db', None)
     if psqldb is not None:
-        psqldb.connection.commit()
-        psqldb.connection.close()
+        psqldb.close_connection(commit=False)
 
 
 @app.route('/')
