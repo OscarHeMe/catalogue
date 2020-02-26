@@ -9,8 +9,7 @@ source .envvars
 # todo ?? Init the database
 pipenv run flask initdb
 
-
-is_running_gunicorn=$(ps aux | grep 'gunicorn' | wc -l)
+is_running_gunicorn=$(ps aux | grep 'gunicorn' | grep $APP_NAME | wc -l)
 if [ $is_running_gunicorn -gt 1 ]
     then
             echo "[$(date)][$APP_NAME]: Already running with GUNICORN. Shutting down"
@@ -18,7 +17,7 @@ if [ $is_running_gunicorn -gt 1 ]
             kill $(ps aux | grep 'gunicorn' | awk '{print $2}')
 fi
 
-is_running_flask_run=$(ps aux | grep 'flask consumer' | wc -l)
+is_running_flask_run=$(ps aux | grep 'flask consumer' | grep $APP_NAME | wc -l)
 if [ $is_running_flask_run -gt 1 ]
     then
             echo "[$(date)][$APP_NAME]: Already running with FLASK CONSUMER. Shutting down"
