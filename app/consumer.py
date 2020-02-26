@@ -59,8 +59,7 @@ cached_ps = {}
 
 counter = 0
 
-# Product Acumulator
-last_commit = datetime.datetime.utcnow()
+# last_received = datetime.datetime.utcnow()
 
 to_update = []
 to_insert = []
@@ -73,7 +72,6 @@ can_ack = False
 def process(new_item, reroute=True, commit=False):
     """ Method that processes all elements with defined rules
     """
-    global last_commit
     global to_update
     global to_insert
     global insert_dic
@@ -81,78 +79,90 @@ def process(new_item, reroute=True, commit=False):
     global insert_dic
     global insrt_count
     global cached_ps
+    # global last_received
     
     can_ack = False
     item_uuid = None
-    # Fetch Route key
-    route_key = new_item['route_key']
-    #logger.debug('Evaluating: {}'.format(route_key))
-    # Reformat Prod Values
-    _frmted = mpk.product(route_key, new_item)
-    #logger.debug('Formatted product!')
-    p = Product(_frmted)
-    #logger.debug('Created product object!')
 
-    # Verify if product in Cache
-    if p.product_id is None:
-        logger.warning("Incomming product has no Product ID: [{}]".format(p.source))
-        return
+    if new_item:
+        # Fetch Route key
+        route_key = new_item['route_key']
+        #logger.debug('Evaluating: {}'.format(route_key))
+        # Reformat Prod Values
+        _frmted = mpk.product(route_key, new_item)
+        #logger.debug('Formatted product!')
+        p = Product(_frmted)
+        #logger.debug('Created product object!')
 
-    #logger.debug('Getting product_uuid from cache!')    
-    prod_uuid = Product.puuid_from_cache(cached_ps, p.__dict__)
+        # Verify if product in Cache
+        if p.product_id is None:
+            logger.warning("Incomming product has no Product ID: [{}]".format(p.source))
+            return
 
-    if not prod_uuid:
-        prod_uuid = Product.get({
-            'product_id': p.product_id,
-            'source': p.source,
-            }, _cols=['product_uuid', 'item_uuid'], limit=1)
+        #logger.debug('Getting product_uuid from cache!')    
+        prod_uuid = Product.puuid_from_cache(cached_ps, p.__dict__)
 
-        if prod_uuid and prod_uuid[0].get('item_uuid'):
-            cached_item.add_key(prod_uuid[0]['product_uuid'], prod_uuid[0]['item_uuid'])
-            item_uuid = prod_uuid[0]['item_uuid']
-    else:
-        item_uuid = cached_item.get_item_uuid(prod_uuid[0]['product_uuid'])
-        #logger.debug("Got UUID from cache!")
-    
-    # If product actually exists
-    if prod_uuid:
-        logger.debug('Found product')
-        #logger.debug('Found product ({} {})!'.format(p.source, prod_uuid))
-        prod_uuid = prod_uuid[0]['product_uuid']   
-        p.product_uuid = prod_uuid
+        if not prod_uuid:
+            prod_uuid = Product.get({
+                'product_id': p.product_id,
+                'source': p.source,
+                }, _cols=['product_uuid', 'item_uuid'], limit=1)
 
-        update_cache(p)
+            if prod_uuid and prod_uuid[0].get('item_uuid'):
+                cached_item.add_key(prod_uuid[0]['product_uuid'], prod_uuid[0]['item_uuid'])
+                item_uuid = prod_uuid[0]['item_uuid']
+        else:
+            item_uuid = cached_item.get_item_uuid(prod_uuid[0]['product_uuid'])
+            #logger.debug("Got UUID from cache!")
+        
+        # If product actually exists
+        if prod_uuid:
+            logger.debug('Found product')
+            #logger.debug('Found product ({} {})!'.format(p.source, prod_uuid))
+            prod_uuid = prod_uuid[0]['product_uuid']   
+            p.product_uuid = prod_uuid
 
-        # If `item` update item
-        if route_key == 'item':
-            to_update.append(p.__dict__)
-            updt_count += 1
-            logger.debug('To Update: {}'.format(updt_count))
-    
-    # If product is not in DB 
-    else:
-        logger.debug('Could not find product, trying to create new one..')
-        _needed_params = {'source','product_id', 'name'}
-        if not _needed_params.issubset(p.__dict__.keys()):
-            raise Exception("Required columns to create are missing in product. (source, product_id, name)")
-
-        if route_key == 'item':
-            # Make sure this product was not already included in the insert list
-            if p.source not in insert_dic.keys():
-                insert_dic[p.source] = set()
-            if p.product_id not in insert_dic[p.source]:
-                insert_dic[p.source].add(p.product_id)
-                to_insert.append(p.__dict__)
-                insrt_count += 1
-                logger.debug('To Insert: {}'.format(insrt_count))
-            else:
-                logger.debug('Element already to be inserted')
-                
-        if route_key == 'price':
-            cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
-            p_uuid_ls = Product.insert_batch_qry([p.__dict__], 'product', 'product_uuid', cols=cols)
-            p.product_uuid = p_uuid_ls[0]
             update_cache(p)
+
+            # If `item` update item
+            if route_key == 'item':
+                to_update.append(p.__dict__)
+                updt_count += 1
+                logger.debug('To Update: {}'.format(updt_count))
+        
+        # If product is not in DB 
+        else:
+            logger.debug('Could not find product, trying to create new one..')
+            _needed_params = {'source','product_id', 'name'}
+            if not _needed_params.issubset(p.__dict__.keys()):
+                raise Exception("Required columns to create are missing in product. (source, product_id, name)")
+
+            if route_key == 'item':
+                # Make sure this product was not already included in the insert list
+                if p.source not in insert_dic.keys():
+                    insert_dic[p.source] = set()
+                if p.product_id not in insert_dic[p.source]:
+                    insert_dic[p.source].add(p.product_id)
+                    to_insert.append(p.__dict__)
+                    insrt_count += 1
+                    logger.debug('To Insert: {}'.format(insrt_count))
+                else:
+                    logger.debug('Element already to be inserted')
+                    
+            if route_key == 'price':
+                cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
+                p_uuid_ls = Product.insert_batch_qry([p.__dict__], 'product', 'product_uuid', cols=cols)
+                p.product_uuid = p_uuid_ls[0]
+                update_cache(p)
+
+        
+        if route_key == 'price':
+            # If price, update product_uuid and reroute
+            new_item.update({'product_uuid': p.product_uuid, "item_id": item_uuid})
+            can_ack = True
+            if reroute:
+                producer.send(new_item)
+                logger.info("[price] Rerouted back ({})".format(new_item['product_uuid']))
 
     if updt_count >= CONSUMER_BATCH_SZ or commit:
         try:
@@ -180,21 +190,8 @@ def process(new_item, reroute=True, commit=False):
             logger.error('Error inserting batch')
             logger.error(e)
 
-        can_ack = True
+        can_ack = True        
 
-    if can_ack:
-        last_commit = datetime.datetime.utcnow()
-
-    if route_key == 'price':
-        # If price, update product_uuid and reroute
-        new_item.update({'product_uuid': p.product_uuid, "item_id": item_uuid})
-        if not new_item.get('location', {}).get('zip', []):
-            if new_item.get('location', {}).get('coords', []):
-                del new_item['location']['coords']
-        can_ack = True
-        if reroute:
-            producer.send(new_item)
-            logger.info("[price] Rerouted back ({})".format(new_item['product_uuid']))
 
     return can_ack
  
@@ -211,9 +208,9 @@ def update_cache(_p):
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
     global counter
-    global last_commit
+    # global last_received
 
-    #t_0 = datetime.datetime.utcnow()
+    # last_received = datetime.datetime.utcnow()
     
     new_item = json.loads(body.decode('utf-8'))
     #logger.debug("New incoming product..")
