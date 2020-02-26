@@ -241,7 +241,7 @@ def update_cache(_p):
 def start():
     global cached_ps
     logger.info("Warming up caching IDS...")
-    cached_ps = {} #Product.create_cache_ids()
+    cached_ps = Product.create_cache_ids()
     logger.info("Done warmup, loaded {} values from {} sources: ({} MB)"\
         .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps), (sys.getsizeof(cached_ps)* 1000000 / 10**6)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m ") + 'from {}'.format(QUEUE_CATALOGUE))

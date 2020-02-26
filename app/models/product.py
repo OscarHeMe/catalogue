@@ -474,6 +474,7 @@ class Product(object):
                     WHERE {} """.format(','.join(cols),_where) # FOR UPDATE SKIP LOCKED)""".format(_where)
             logger.debug("Query: {}".format(_q))
             result = execute_select(g._psql_db.connection, _q, get_dict=True).fetchall()
+            g._psql_db.connection.commit()
         except Exception as e:
             logger.error(e)
             return False
@@ -572,7 +573,8 @@ class Product(object):
             try:
                 execute_bulk_insert(g._psql_db.connection, qry, tuple(dic_vals), '('+ ','.join(tmp) + ')')
             except Exception as e:
-                logger.error('Error while trying to update {}:\n   - {}'.format([-1], e))             
+                logger.error('Error while trying to update {}:\n   - {}'.format([-1], e))
+        g._psql_db.connection.commit()           
         return p_uuids
 
 
@@ -621,7 +623,7 @@ class Product(object):
                  FROM source WHERE retailer = '1');"""
         
         _df = pd.read_sql(qry, g._psql_db.connection)
-        g._psql_db.connection.commit()        
+        g._psql_db.connection.commit()       
         cache_ids = {}
         for y, gdf in _df.groupby('source'):
             cache_ids[y] = gdf[['product_uuid','product_id']]\
