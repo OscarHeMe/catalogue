@@ -56,7 +56,7 @@ ENV SQL_USER='byprice'
 EXPOSE 80
 
 # Add Nginx configuration file
-RUN bash bin/nginx_conf.sh
+#RUN bash bin/nginx_conf.sh
 ADD cfn/nginx/conf.d/ /etc/nginx/conf.d
 RUN rm -rf /etc/nginx/sites-available/default && rm -rf /etc/nginx/sites-enabled/default
 
