@@ -1,22 +1,24 @@
-from app.models.category import Category
+import ast
+import datetime
+import json
+import sys
+import uuid
+from pprint import pprint
+
+import pandas as pd
+import requests
+from ByHelpers import applogger
+from flask import g
+from sqlalchemy import Text, create_engine
+from sqlalchemy.dialects.postgresql import UUID
+
 from app.models.attr import Attr
+from app.models.category import Category
 from app.models.formatter import Formatter
 from app.norm.normalize_text import key_format, tuplify
 from app.utils import errors
-from ByHelpers import applogger
-from config import *
-from flask import g
-import pandas as pd
-from sqlalchemy import create_engine, Text
-from sqlalchemy.dialects.postgresql import UUID
-import datetime
-import requests
-import ast
-import json
-import uuid
 from app.utils.postgresql_queries import *
-
-from pprint import pprint
+from config import *
 
 geo_stores_url = 'http://'+SRV_GEOLOCATION+'/store/retailer?key=%s'
 logger = applogger.get_logger()
@@ -604,7 +606,7 @@ class Product(object):
         return None
     
     @staticmethod
-    def create_cache_ids():
+    def create_cache_ids(source=None):
         """ Static method to initialize cache ids
 
             Returns:
@@ -621,7 +623,11 @@ class Product(object):
         qry = """SELECT product_uuid, source, product_id 
                  FROM product WHERE source IN (SELECT key 
                  FROM source WHERE retailer = '1');"""
-        
+    
+        if source:
+            qry = """SELECT product_uuid, source, product_id 
+                 FROM product WHERE source IN ('{}');""".format(source)
+
         _df = pd.read_sql(qry, g._psql_db.connection)
         g._psql_db.connection.commit()       
         cache_ids = {}
@@ -629,8 +635,10 @@ class Product(object):
             cache_ids[y] = gdf[['product_uuid','product_id']]\
                             .set_index('product_id')\
                             .to_dict()['product_uuid']
-        # Clean GC
         
+        logger.info("Done warmup, loaded {} values from {} sources: ({} MB)".format(sum([len(_c) for _c in cache_ids.values()]), len(cache_ids), (sys.getsizeof(cache_ids)* 1000000 / 10**6)))
+
+        # Clean GC
         del _df
         return cache_ids
 

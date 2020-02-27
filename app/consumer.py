@@ -91,6 +91,9 @@ def process(new_item, reroute=True, commit=False):
         # Reformat Prod Values
         _frmted = mpk.product(route_key, new_item)
         #logger.debug('Formatted product!')
+        if _frmted['source'] not in cached_ps.keys():
+            cached_ps.update(Product.create_cache_ids(_frmted['source']))
+
         p = Product(_frmted)
         #logger.debug('Created product object!')
 
@@ -108,9 +111,13 @@ def process(new_item, reroute=True, commit=False):
                 'source': p.source,
                 }, _cols=['product_uuid', 'item_uuid'], limit=1)
 
-            if prod_uuid and prod_uuid[0].get('item_uuid'):
-                cached_item.add_key(prod_uuid[0]['product_uuid'], prod_uuid[0]['item_uuid'])
-                item_uuid = prod_uuid[0]['item_uuid']
+            if prod_uuid:
+                p.prod_uuid = prod_uuid[0]['product_uuid']
+                update_cache(p)
+                if prod_uuid[0].get('item_uuid'):
+                    cached_item.add_key(prod_uuid[0]['product_uuid'], prod_uuid[0]['item_uuid'])
+                    item_uuid = prod_uuid[0]['item_uuid']            
+
         else:
             item_uuid = cached_item.get_item_uuid(prod_uuid[0]['product_uuid'])
             #logger.debug("Got UUID from cache!")
@@ -121,8 +128,6 @@ def process(new_item, reroute=True, commit=False):
             #logger.debug('Found product ({} {})!'.format(p.source, prod_uuid))
             prod_uuid = prod_uuid[0]['product_uuid']   
             p.product_uuid = prod_uuid
-
-            update_cache(p)
 
             # If `item` update item
             if route_key == 'item':
@@ -236,11 +241,6 @@ def update_cache(_p):
 
 
 def start():
-    global cached_ps
-    logger.info("Warming up caching IDS...")
-    cached_ps = Product.create_cache_ids()
-    logger.info("Done warmup, loaded {} values from {} sources: ({} MB)"\
-        .format(sum([len(_c) for _c in cached_ps.values()]), len(cached_ps), (sys.getsizeof(cached_ps)* 1000000 / 10**6)))
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m ") + 'from {}'.format(QUEUE_CATALOGUE))
     consumer.set_callback(callback)
     cached_item.item_cache(cached_item.MAXSIZE, cached_item.TTL)

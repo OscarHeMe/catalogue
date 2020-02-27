@@ -30,7 +30,7 @@ Jinja2 = "==2.10"
 MarkupSafe = "==1.0"
 SQLAlchemy = "==1.2.8"
 Werkzeug = "==0.14.1"
-ByHelpers = "==0.1.2"
+ByHelpers = "==0.1.5"
 
 [requires]
 python_version = "3.6"
