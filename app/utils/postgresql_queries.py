@@ -5,7 +5,7 @@ logger = logging.getLogger()
 BULK_INSERT_CHUNKSIZE = 1000
 
 
-def execute_select(conn, query, values=None, get_dict=False):
+def execute_select(conn, query, values=None, get_dict=False, obj=None):
     logger.debug(query)
     try:
         if get_dict:

@@ -76,7 +76,8 @@ def get_psqldb():
     """
     if not hasattr(g, '_psql_db'):
         g._psql_db = psqldb()
-    return g._psql_db    
+        g._psql_db.set_connection()
+    return g._psql_db
 
 
 # Connect to PostgreSQL Items DB

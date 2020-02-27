@@ -4,6 +4,7 @@ import json
 import sys
 from os import listdir
 import time
+import multiprocessing
 from os.path import isfile, join
 from pprint import pprint
 
@@ -67,6 +68,7 @@ insert_dic = {}
 updt_count = 0
 insrt_count = 0
 can_ack = False
+g_met = None
 
 
 def process(new_item, reroute=True, commit=False):
@@ -208,6 +210,8 @@ def update_cache(_p):
 #Rabbit MQ callback function
 def callback(ch, method, properties, body):
     global counter
+    global g_met 
+    g_met = method
     # global last_received
 
     # last_received = datetime.datetime.utcnow()
@@ -215,7 +219,6 @@ def callback(ch, method, properties, body):
     new_item = json.loads(body.decode('utf-8'))
     #logger.debug("New incoming product..")
     can_ack = process(new_item)
-
     try:
         if can_ack:
             logger.debug('Ack messages')
@@ -235,6 +238,16 @@ def update_cache(_p):
     logger.debug('Updated cache')
 
 
+def periodically_commit():
+    while True:
+        global g_met
+        time.sleep(60)
+        print('Send to commit')
+        process(None, reroute=False, commit=True)
+        print(g_met)
+        if g_met is not None:
+            consumer._channel.basic_ack(delivery_tag=g_met.delivery_tag, multiple=True)
+
 def start():
     global cached_ps
     logger.info("Warming up caching IDS...")
@@ -244,4 +257,11 @@ def start():
     logger.info("Starting listener at " + datetime.datetime.now().strftime("%y %m %d - %H:%m ") + 'from {}'.format(QUEUE_CATALOGUE))
     consumer.set_callback(callback)
     cached_item.item_cache(cached_item.MAXSIZE, cached_item.TTL)
-    consumer.run()
+
+    process1 = multiprocessing.Process(target=consumer.run)
+    #process2 = multiprocessing.Process(target=periodically_commit)
+
+    process1.start()
+    #process2.start()
+
+    #consumer.run()

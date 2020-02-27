@@ -11,7 +11,7 @@ source .envvars
 pipenv run flask initdb
 
 
-is_running_gunicorn=$(ps aux | grep 'gunicorn'| grep $APP_NAME | wc -l)
+is_running_gunicorn=$(ps aux | grep 'gunicorn' | grep $APP_NAME | wc -l)
 if [ $is_running_gunicorn -gt 1 ]
     then
             echo "[$(date)][$APP_NAME]: Already running with GUNICORN. Shutting down"
