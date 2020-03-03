@@ -1068,7 +1068,7 @@ class Item(object):
         qry_item_uuids = """
             {qry_select_item}
                     FROM item i 
-                    INNER JOIN unique_by_source_product_id p ON i.item_uuid=p.item_uuid
+                    INNER JOIN product p ON i.item_uuid=p.item_uuid
                     {qry_join_categories}
                     WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
                     AND p.item_uuid IS NOT NULL
@@ -1077,7 +1077,7 @@ class Item(object):
             UNION ALL
             
             {qry_select_product}
-                FROM unique_by_source_product_id p
+                FROM product p
                     {qry_join_categories}
                     WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
                     AND p.item_uuid IS NULL
