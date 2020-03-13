@@ -33,4 +33,4 @@ Werkzeug = "==0.14.1"
 ByHelpers = "==0.1.5"
 
 [requires]
-python_version = "3.6.8"
+python_version = "3.6"

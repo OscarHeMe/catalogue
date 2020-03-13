@@ -13,17 +13,17 @@ RUN pipenv install
 VOLUME /var/log/catalogue
 
 # App , environment & Logging
-ENV APP_NAME='catalogue-web-service-development'
+ENV APP_NAME='catalogue-web-service-production'
 ENV APP_DIR='/'
 # Bug with rabbit_engine file , not adding _dev for LOCAL
 ENV ENV='DEV'
 ENV FLASK_APP=app/__init__.py
-ENV REGION='MEX'
-ENV LOG_LEVEL='DEBUG'
+ENV ROUTE='bpcatalogue'
+ENV LOG_LEVEL='INFO'
 
 # Streamer
 ENV STREAMER='rabbitmq'
-ENV STREAMER_HOST='rmq-dev.byprice.com'
+ENV STREAMER_HOST='rmq-prod.byprice.com'
 ENV STREAMER_PORT=5222
 ENV STREAMER_QUEUE='catalogue'
 ENV STREAMER_ROUTING_KEY='catalogue'
