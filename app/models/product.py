@@ -32,7 +32,7 @@ class Product(object):
         'gtin': 'int',
         'product_id': 'str',
         'product_uuid': 'str',
-        'item_uuid': 'str',
+        #'item_uuid': 'str',
         'name': 'str',
         'last_modified': 'str',
         'description' : 'str',
@@ -51,11 +51,11 @@ class Product(object):
     _fmtr = Formatter(_formatter_spec)
 
     __attrs__ = [
-        'product_uuid', "product_id", "gtin", "item_uuid",
+        'product_uuid', "product_id", "gtin",
         "source", "name", "description", "images",
         "categories", "url", "brand", "provider", "attributes",
         "ingredients", "raw_html", "raw_product", "is_outdated"
-        ]
+        ]  #"item_uuid",
 
     __extras__ = ['prod_attrs', 'prod_images', 'prod_categs', 'normalized']
     __base_q = ['product_uuid', 'product_id', 'name', 'source']
@@ -139,7 +139,7 @@ class Product(object):
         m_prod.last_modified = str(datetime.datetime.utcnow())
         # Always add what Item UUID is set
         m_prod.item_uuid = str(self.item_uuid) if self.item_uuid else None
-        print(m_prod.item_uuid)
+        #print(m_prod.item_uuid)
         step = 'Start'
         try:
             cmt = pcommit

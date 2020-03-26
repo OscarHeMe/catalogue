@@ -128,6 +128,7 @@ def process(new_item, reroute=True, commit=False):
             #logger.debug('Found product ({} {})!'.format(p.source, prod_uuid))
             prod_uuid = prod_uuid[0]['product_uuid']   
             p.product_uuid = prod_uuid
+            p.item_uuid = item_uuid
 
             # If `item` update item
             if route_key == 'item':
