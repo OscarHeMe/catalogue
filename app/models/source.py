@@ -91,7 +91,8 @@ class Source(object):
             cols = [
                 "i.item_uuid as item_uuid", 
                 "p.product_uuid as product_uuid", 
-                "i.gtin as gtin"
+                "i.gtin as gtin",
+                "p.name as name"
             ] 
             cols += [ c for c in kwargs['cols'].split(",") \
                     if c not in ['item_uuid', 'product_uuid', 'gtin', 'name'] ] 
