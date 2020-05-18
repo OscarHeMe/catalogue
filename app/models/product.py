@@ -51,11 +51,11 @@ class Product(object):
     _fmtr = Formatter(_formatter_spec)
 
     __attrs__ = [
-        'product_uuid', "product_id", "gtin",
+        'product_uuid', "product_id", "gtin", "item_uuid",
         "source", "name", "description", "images",
         "categories", "url", "brand", "provider", "attributes",
         "ingredients", "raw_html", "raw_product", "is_outdated"
-        ]  #"item_uuid",
+        ]
 
     __extras__ = ['prod_attrs', 'prod_images', 'prod_categs', 'normalized']
     __base_q = ['product_uuid', 'product_id', 'name', 'source']
