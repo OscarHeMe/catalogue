@@ -9,10 +9,10 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: catalogue-web-service-production-mex-deployment
-  minReplicas: 3
+  minReplicas: 2
   maxReplicas: 4
   metrics:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: 50
+        targetAverageUtilization: 70

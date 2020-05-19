@@ -22,9 +22,9 @@ spec:
           imagePullPolicy: Always
           resources:
             limits:
-              cpu: 512m
+              cpu: 720m
             requests:
-              cpu: 256m
+              cpu: 512m
               memory: 1024Mi
           command: ['/bin/bash' , '-c', 'echo Starting container !! && source bin/run_web_service.sh']
           env:
