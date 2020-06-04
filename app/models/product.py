@@ -32,7 +32,7 @@ class Product(object):
         'gtin': 'int',
         'product_id': 'str',
         'product_uuid': 'str',
-        #'item_uuid': 'str',
+        'item_uuid': 'str',
         'name': 'str',
         'last_modified': 'str',
         'description' : 'str',
