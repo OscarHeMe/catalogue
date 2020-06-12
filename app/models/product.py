@@ -45,7 +45,7 @@ class Product(object):
         'last_modified' : 'str',
         'brand':'str',
         'provider': 'str',
-        'is_outdated': 'bool'
+        'is_active': 'bool'
     }
 
     _fmtr = Formatter(_formatter_spec)
@@ -54,7 +54,7 @@ class Product(object):
         'product_uuid', "product_id", "gtin", "item_uuid",
         "source", "name", "description", "images",
         "categories", "url", "brand", "provider", "attributes",
-        "ingredients", "raw_html", "raw_product", "is_outdated"
+        "ingredients", "raw_html", "raw_product", "is_active"
         ]
 
     __extras__ = ['prod_attrs', 'prod_images', 'prod_categs', 'normalized']

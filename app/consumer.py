@@ -173,7 +173,7 @@ def process(new_item, reroute=True, commit=False):
     if updt_count >= CONSUMER_BATCH_SZ or commit:
         try:
             logger.info('-------------- Batch updating ---------------------') 
-            cols = ['product_uuid', 'product_id', 'gtin', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
+            cols = ['product_uuid', 'product_id', 'gtin', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified', 'is_active']
             Product.update_prod_query(to_update, 'product', 'product_uuid', cols=cols)  
             updt_count = 0
             to_update = []
@@ -186,7 +186,7 @@ def process(new_item, reroute=True, commit=False):
     if insrt_count >= CONSUMER_BATCH_SZ or commit:
         try:
             logger.info('-------------- Batch inserting ---------------------') 
-            cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified']
+            cols = ['product_id', 'gtin', 'item_uuid', 'source', 'name', 'description', 'images', 'categories', 'url', 'brand', 'provider', 'ingredients', 'raw_html', 'raw_product', 'last_modified', 'is_active']
             # pprint(to_insert)
             Product.insert_batch_qry(to_insert, 'product', 'product_uuid', cols=cols)
             insrt_count = 0
