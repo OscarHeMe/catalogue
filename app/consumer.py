@@ -34,7 +34,7 @@ insrt_count = 0
 
 # sys.exit()
 
-CONSUMER_BATCH_SZ = 100
+CONSUMER_BATCH_SZ = 1
 
 # Logging
 logger = applogger.get_logger()
