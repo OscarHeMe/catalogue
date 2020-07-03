@@ -75,7 +75,8 @@ CREATE TABLE "product" (
     provider text,
     url text,
     images text,
-    last_modified timestamp
+    last_modified timestamp,
+    is_active boolean
 );
 
 CREATE TABLE "product_image" (
