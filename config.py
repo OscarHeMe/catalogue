@@ -37,6 +37,10 @@ SQL_DB = SQL_DB+"_test" if TESTING else SQL_DB
 SQL_DB = SQL_DB+"_dev" if ENV.upper() == 'DEV' or ENV.upper() == 'DEVELOPMENT' else SQL_DB
 SRV_GEOLOCATION = "dev."+SRV_GEOLOCATION if ENV.upper() == 'DEV' else SRV_GEOLOCATION
 
+SQLALCHEMY_DATABASE_URI = str('postgresql+psycopg2://' + SQL_USER + ':' +
+                                  SQL_PASSWORD + '@' + SQL_HOST + ':' + SQL_PORT + '/' + SQL_DB)
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 # Consumer vars
 STREAMER = os.getenv('STREAMER', 'rabbitmq')
 STREAMER_HOST = os.getenv('STREAMER_HOST', 'rabbitmq')
