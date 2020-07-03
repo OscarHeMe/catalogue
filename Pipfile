@@ -4,6 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+sqlacodegen = "*"
 
 [packages]
 certifi = "==2018.4.16"
@@ -30,6 +31,8 @@ Jinja2 = "==2.10"
 SQLAlchemy = "==1.2.8"
 Werkzeug = "==0.14.1"
 ByHelpers = "==0.1.5"
+memory-profiler = "*"
+flask_sqlalchemy = "*"
 
 [requires]
 python_version = "3.6"
