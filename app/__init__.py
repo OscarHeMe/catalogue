@@ -14,9 +14,14 @@ from app.utils.proxy import ReverseProxied
 if APP_MODE == 'CONSUMER':
     from app import consumer
 
+from flask_sqlalchemy import SQLAlchemy
+
 app = Flask(__name__)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 app.config.from_object('config')
+db = SQLAlchemy(app)
+
+
 CORS(app)
 
 # Logger
