@@ -10,6 +10,7 @@ from ByHelpers import applogger
 import app.utils.errors as errors
 import app.utils.db as db
 from app.utils.postgresql import Postgresql as psqldb
+from app.utils.cursor import CursorCache
 from app.utils.proxy import ReverseProxied
 if APP_MODE == 'CONSUMER':
     from app import consumer
@@ -23,6 +24,7 @@ CORS(app)
 applogger.create_logger()
 logger = applogger.get_logger()
 
+cursor_dict = CursorCache(3600)
 
 @app.cli.command('new_retailer')
 def new_retailer_cmd():
@@ -76,6 +78,8 @@ def get_psqldb():
     """
     if not hasattr(g, '_psql_db'):
         g._psql_db = psqldb()
+    if not hasattr(g, '_cursor_dict'):
+        g._cursor_dict = cursor_dict     
     return g._psql_db    
 
 

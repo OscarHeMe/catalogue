@@ -8,12 +8,14 @@ import requests
 import ast
 import json
 from app.norm.normalize_text import key_format, tuplify
+from app.utils.postgresql import Postgresql
+from app.utils.postgresql_queries import *
+from psycopg2.extras import DictCursor
 from uuid import UUID as ConstructUUID
 from app.utils.gtin import *
 
 geo_stores_url = 'http://' + SRV_GEOLOCATION + '/store/retailer?key=%s'
 logger = applogger.get_logger()
-
 
 class Item(object):
     """ Class perform Query methods on PostgreSQL items
@@ -1065,7 +1067,7 @@ class Item(object):
             """
 
 
-        qry_item_uuids = """
+        qry_item_uuids = f"""
             {qry_select_item}
                     FROM item i 
                     INNER JOIN product p ON i.item_uuid=p.item_uuid
@@ -1073,7 +1075,7 @@ class Item(object):
                     WHERE p.source NOT IN ('gs1', 'ims', 'plm', 'mara')
                     AND p.item_uuid IS NOT NULL
                     {qry_categories}
-
+            
             UNION ALL
             
             {qry_select_product}
@@ -1083,13 +1085,42 @@ class Item(object):
                     AND p.item_uuid IS NULL
                     {qry_categories}
                 {qry_group}
-            OFFSET {from_}
-            LIMIT {size_}
-            """.format(qry_select_item=qry_select_item, qry_select_product=qry_select_product, size_=size_, from_=from_,
-                       qry_categories=qry_categories, qry_group=qry_group, qry_join_categories=qry_join_categories)
+            """
+            
         logger.debug(qry_item_uuids)
-        df = pd.read_sql(qry_item_uuids, g._db.conn)
-        if is_count is False: # TODO Checar si debe hacerse esta validacion
+
+        cursor_dict = g._cursor_dict.get('server_cursor', {})
+        
+        if not cursor_dict or cursor_dict.get('query') != qry_item_uuids:
+            psql_db = Postgresql()
+            connection = psql_db.connection
+            cursor = connection.cursor(name = 'server_cursor',
+                                            cursor_factory = RealDictCursor,
+                                            scrollable = True)
+            cursor_dict = {
+                'cursor': cursor,
+                'connection': connection,
+                'query': None,
+                'from': int(from_)
+            }
+
+            cursor_dict['cursor'].execute(qry_item_uuids, None)
+            cursor_dict['query'] = qry_item_uuids
+
+        try:
+            cursor_dict['cursor'].scroll(int(from_), mode = 'absolute')
+            g._cursor_dict['server_cursor'] = cursor_dict
+
+            retailer_product = cursor_dict['cursor'].fetchmany(int(size_))
+
+        except Exception as e:
+            logger.error(e)
+            cursor_dict['cursor'].close()
+            cursor_dict['connection'].close()
+            return pd.DataFrame()
+
+        df = pd.DataFrame(retailer_product)
+        if is_count is False and not df.empty: # TODO Checar si debe hacerse esta validacion
             df['product_uuid'] = [[puuid] for puuid in df.product_uuid]
         return df
 
